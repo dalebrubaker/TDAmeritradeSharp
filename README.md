@@ -1,4 +1,10 @@
-DTC Server for TD Ameritrade
-============================
+C# data and trading library for TD Ameritrade
+=============================================
 
-Uses my DTCSharp package and the TDAmeritrade.DotNetCore project by NVentimiglia to support data and trading from Sierra Chart or any DTC application to TD Ameritrade.
+1. Desktop program to assist setting access token for the https://developer.tdameritrade.com/ APIs.
+2. Library for the TD Ameritrade developer APIs.
+
+The Desktop program is .Net 6 Winforms
+The Libray is .net standard 2.0
+
+
