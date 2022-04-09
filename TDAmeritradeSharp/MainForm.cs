@@ -15,11 +15,13 @@ namespace TDAmeritradeSharp
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            if (DesignMode) return;
             _logger.LogInformation("Loading");
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (DesignMode) return;
             _logger.LogInformation("Closing");
         }
     }
