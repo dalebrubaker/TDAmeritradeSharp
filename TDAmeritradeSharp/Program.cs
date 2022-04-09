@@ -5,6 +5,11 @@ using Serilog;
 
 namespace TDAmeritradeSharp
 {
+    /// <summary>
+    /// Good video: 
+    /// For Seq do this command in PowerShell: https://youtu.be/_iryZxv8Rxw C# Logging with Serilog and Seq - Structured Logging Made Easy by IAmTimCorey
+    ///     docker run -d  --restart unless-stopped --name seq -e ACCEPT_EULA=Y -v D:\Logs\TDAmeritradeSharp:/data -p 8081:80 datalust/seq:latest
+    /// </summary>
     internal static class Program
     {
         /// <summary>
@@ -16,11 +21,6 @@ namespace TDAmeritradeSharp
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            DefaultBuilderStart();
-        }
-
-        private static void DefaultBuilderStart()
-        {
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
