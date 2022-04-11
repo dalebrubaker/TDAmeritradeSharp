@@ -14,12 +14,12 @@ namespace TDAmeritradeSharp
             InitializeComponent();
         }
 
-        private MainFormSettings Settings { get; set; } = new();
-
         /// <summary>
         ///     This is used by user controls created by the designer (empty constructor) to access a logger or other services
         /// </summary>
         public IServiceProvider ServiceProvider { get; }
+
+        private MainFormSettings Settings { get; set; } = new();
 
         private string SettingsPath => Path.Combine(Program.UserSettingsDirectory, $"{GetType().Name}.json");
 
@@ -32,6 +32,15 @@ namespace TDAmeritradeSharp
             LoadConfig();
         }
 
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (DesignMode)
+            {
+                return;
+            }
+            SaveConfig();
+        }
+
         private void LoadConfig()
         {
             if (File.Exists(SettingsPath))
@@ -41,15 +50,6 @@ namespace TDAmeritradeSharp
                 WindowPlacement.RestoreWindow(Handle, Settings.WindowPlacementJson);
             }
             mainFormSettingsBindingSource.DataSource = Settings;
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (DesignMode)
-            {
-                return;
-            }
-            SaveConfig();
         }
 
         private void SaveConfig()
