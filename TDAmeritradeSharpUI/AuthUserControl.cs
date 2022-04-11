@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI
 {

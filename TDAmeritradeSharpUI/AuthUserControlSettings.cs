@@ -1,4 +1,6 @@
-﻿namespace TDAmeritradeSharpUI
+﻿using TDAmeritradeSharpClient;
+
+namespace TDAmeritradeSharpUI
 {
     public class AuthUserControlSettings
     {

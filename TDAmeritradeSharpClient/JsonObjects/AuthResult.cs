@@ -1,4 +1,4 @@
-﻿namespace TDAmeritradeSharpUI
+﻿namespace TDAmeritradeSharpClient
 {
     [Serializable]
     public class AuthResult
