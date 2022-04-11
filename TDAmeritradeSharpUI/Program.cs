@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI
 {
@@ -46,7 +47,10 @@ namespace TDAmeritradeSharpUI
             {
                 Log.Verbose("Application starting");
                 var host = Host.CreateDefaultBuilder()
-                    .ConfigureServices((hostContext, services) => { services.AddScoped<MainForm>(); })
+                    .ConfigureServices((hostContext, services) => {
+                        services.AddScoped<MainForm>();
+                        services.AddScoped<Client>();
+                    })
                     .UseSerilog()
                     .Build();
                 using var serviceScope = host.Services.CreateScope();

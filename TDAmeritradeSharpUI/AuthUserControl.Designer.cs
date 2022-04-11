@@ -72,8 +72,8 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(782, 15);
             this.label2.TabIndex = 1;
-            this.label2.Text = "Authentication data is stored privately in your Users directory under TDAmeritrad" +
-    "eSharp, e.g. C:\\Users\\dale\\AppData\\Roaming\\TDAmeritradeSharp\\AuthResult.json ";
+            this.label2.Text = "Authentication data is stored privately in your Users directory under TDAmeritradeSharpClient," +
+                " e.g. C:\\Users\\dale\\AppData\\Roaming\\TDAmeritradeSharpClient\\AuthResult.json ";
             // 
             // label1
             // 

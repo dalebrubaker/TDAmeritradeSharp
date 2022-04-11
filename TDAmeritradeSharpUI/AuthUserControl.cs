@@ -1,15 +1,15 @@
 ﻿using System.Diagnostics;
-using System.Net;
-using System.Text.Json;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI
 {
     public partial class AuthUserControl : UserControl
     {
+        private Client? _client;
         private ILogger<AuthUserControl>? _logger;
 
         public AuthUserControl()
@@ -35,6 +35,8 @@ namespace TDAmeritradeSharpUI
             _logger?.LogTrace("Loading AuthUserControl");
 
             LoadConfig();
+
+            _client = mainForm.ServiceProvider.GetRequiredService<Client>();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -52,14 +54,14 @@ namespace TDAmeritradeSharpUI
             if (File.Exists(SettingsPath))
             {
                 var json = File.ReadAllText(SettingsPath);
-                Settings = JsonSerializer.Deserialize<AuthUserControlSettings>(json) ?? new AuthUserControlSettings();
+                Settings = JsonConvert.DeserializeObject<AuthUserControlSettings>(json) ?? new AuthUserControlSettings();
             }
             authUserControlSettingsBindingSource.DataSource = Settings;
         }
 
         private void SaveConfig()
         {
-            var json = JsonSerializer.Serialize(Settings);
+            var json = JsonConvert.SerializeObject(Settings);
             File.WriteAllText(SettingsPath, json);
         }
 
@@ -93,41 +95,21 @@ namespace TDAmeritradeSharpUI
             textBoxDecodedAuthCode.Text = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
         }
 
-        private void buttonRequestAuthCode_Click(object sender, EventArgs e)
-        {
-            var client = new HttpClient();
-            var url = $"https://api.tdameritrade.com/v1/oauth2/token";
-        }
-
         private async void btnGetAuthCode_Click(object sender, EventArgs e)
         {
-            var decoded = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
-            var path = "https://api.tdameritrade.com/v1/oauth2/token";
-            using var client = new HttpClient();
-            var dict = new Dictionary<string, string>
-                {
-                    { "grant_type", "authorization_code" },
-                    { "access_type", "offline" },
-                    { "client_id", $"{textBoxConsumerKey.Text}@AMER.OAUTHAP" },
-                    { "redirect_uri", textBoxCallbackUrl.Text },
-                    { "code", decoded }
-                };
-            var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
-            var res = await client.SendAsync(req);
-            switch (res.StatusCode)
+            if (_client == null)
             {
-                case HttpStatusCode.OK:
-                    var json = await res.Content.ReadAsStringAsync();
-                    Settings.AuthResult = JsonSerializer.Deserialize<AuthResult>(json) ?? new AuthResult();
-                    Settings.AuthResult.SecurityCode = textBoxEncodedAuthCode.Text;
-                    Settings.AuthResult.ConsumerKey = textBoxConsumerKey.Text;
-                    Settings.AuthResult.RedirectUrl = textBoxCallbackUrl.Text;
-                    SaveConfig();
-                    break;
-                default:
-                    MessageBox.Show($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
-                    break;
+                return;
             }
+            var code = textBoxEncodedAuthCode.Text;
+            var consumerKey = Settings.ConsumerKey;
+            var callback = Settings.CallbackUrl;
+            var error = await _client.SetAuthResults(code, consumerKey, callback);
+            if (!string.IsNullOrEmpty(error))
+            {
+                MessageBox.Show(error);
+            }
+            SaveConfig();
         }
     }
 }
