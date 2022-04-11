@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace TDAmeritradeSharp
@@ -12,13 +12,16 @@ namespace TDAmeritradeSharp
             _logger = logger;
             ServiceProvider = serviceProvider;
             InitializeComponent();
-            _logger.LogTrace("Ctor");
         }
+
+        private MainFormSettings Settings { get; set; } = new();
 
         /// <summary>
         ///     This is used by user controls created by the designer (empty constructor) to access a logger or other services
         /// </summary>
         public IServiceProvider ServiceProvider { get; }
+
+        private string SettingsPath => Path.Combine(Program.UserSettingsDirectory, $"{GetType().Name}.json");
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -26,7 +29,18 @@ namespace TDAmeritradeSharp
             {
                 return;
             }
-            _logger.LogTrace("Loading");
+            LoadConfig();
+        }
+
+        private void LoadConfig()
+        {
+            if (File.Exists(SettingsPath))
+            {
+                var json = File.ReadAllText(SettingsPath);
+                Settings = JsonSerializer.Deserialize<MainFormSettings>(json) ?? new MainFormSettings();
+                WindowPlacement.RestoreWindow(Handle, Settings.WindowPlacementJson);
+            }
+            mainFormSettingsBindingSource.DataSource = Settings;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -35,7 +49,14 @@ namespace TDAmeritradeSharp
             {
                 return;
             }
-            _logger.LogTrace("Closing");
+            SaveConfig();
+        }
+
+        private void SaveConfig()
+        {
+            Settings.WindowPlacementJson = WindowPlacement.SaveWindow(Handle);
+            var json = JsonSerializer.Serialize(Settings);
+            File.WriteAllText(SettingsPath, json);
         }
     }
 }

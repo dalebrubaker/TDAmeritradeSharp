@@ -12,6 +12,20 @@ namespace TDAmeritradeSharp
     /// </summary>
     internal static class Program
     {
+        static Program()
+        {
+            UserSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharp));
+            if (!Directory.Exists(UserSettingsDirectory))
+            {
+                Directory.CreateDirectory(UserSettingsDirectory);
+            }
+        }
+
+        /// <summary>
+        ///     The directory in %AppData% where private application settings are stored, NOT including appsettings.json
+        /// </summary>
+        internal static string UserSettingsDirectory { get; }
+
         /// <summary>
         ///     The main entry point for the application.
         /// </summary>
