@@ -6,8 +6,8 @@ using Serilog;
 namespace TDAmeritradeSharp
 {
     /// <summary>
-    /// Good video: 
-    /// For Seq do this command in PowerShell: https://youtu.be/_iryZxv8Rxw C# Logging with Serilog and Seq - Structured Logging Made Easy by IAmTimCorey
+    ///     Good video:
+    ///     For Seq do this command in PowerShell: https://youtu.be/_iryZxv8Rxw C# Logging with Serilog and Seq - Structured Logging Made Easy by IAmTimCorey
     ///     docker run -d  --restart unless-stopped --name seq -e ACCEPT_EULA=Y -v D:\Logs\TDAmeritradeSharp:/data -p 8081:80 datalust/seq:latest
     /// </summary>
     internal static class Program
@@ -30,7 +30,7 @@ namespace TDAmeritradeSharp
                 .CreateLogger();
             try
             {
-                Log.Information("Application starting");
+                Log.Verbose("Application starting");
                 var host = Host.CreateDefaultBuilder()
                     .ConfigureServices((hostContext, services) => { services.AddScoped<MainForm>(); })
                     .UseSerilog()

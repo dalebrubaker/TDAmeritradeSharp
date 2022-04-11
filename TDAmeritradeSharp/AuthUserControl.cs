@@ -1,18 +1,16 @@
-﻿using Serilog;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace TDAmeritradeSharp
 {
     public partial class AuthUserControl : UserControl
     {
+        private ILogger<AuthUserControl>? _logger;
+
         public AuthUserControl()
         {
             InitializeComponent();
         }
-
-        /// <summary>
-        ///     Can't get constructor into a UserControl, so just do the Serilog static logger
-        /// </summary>
-        private static ILogger Logger => Log.Logger.ForContext<AuthUserControl>();
 
         private void AuthUserControl_Load(object sender, EventArgs e)
         {
@@ -20,7 +18,12 @@ namespace TDAmeritradeSharp
             {
                 return;
             }
-            Logger.Debug("Loading AuthUserControl");
+
+            // Here in Load we now have a ParentForm and can retrieve a logger from DI
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var mainForm = (MainForm)ParentForm;
+            _logger = mainForm.ServiceProvider.GetRequiredService<ILogger<AuthUserControl>>();
+            _logger?.LogTrace("Loading AuthUserControl");
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
