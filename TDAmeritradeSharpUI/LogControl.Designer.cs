@@ -1,4 +1,4 @@
-﻿namespace TDAmeritradeSharp
+﻿namespace TDAmeritradeSharpUI
 {
     partial class LogControl
     {

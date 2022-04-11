@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
 
-namespace TDAmeritradeSharp
+namespace TDAmeritradeSharpUI
 {
     /// <summary>
     /// Log messages at the bottom of a richTextGBox

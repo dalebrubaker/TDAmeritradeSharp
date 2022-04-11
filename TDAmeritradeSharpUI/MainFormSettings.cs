@@ -1,4 +1,4 @@
-﻿namespace TDAmeritradeSharp
+﻿namespace TDAmeritradeSharpUI
 {
     public class MainFormSettings
     {

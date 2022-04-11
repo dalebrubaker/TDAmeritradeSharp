@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace TDAmeritradeSharp
+namespace TDAmeritradeSharpUI
 {
     /// <summary>
     ///     Good video:
@@ -14,7 +14,7 @@ namespace TDAmeritradeSharp
     {
         static Program()
         {
-            UserSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharp));
+            UserSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpUI));
             if (!Directory.Exists(UserSettingsDirectory))
             {
                 Directory.CreateDirectory(UserSettingsDirectory);

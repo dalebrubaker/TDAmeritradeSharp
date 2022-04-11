@@ -7,7 +7,7 @@ using System.Text.Json;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ArrangeModifiersOrder
 
-namespace TDAmeritradeSharp
+namespace TDAmeritradeSharpUI
 {
     // RECT structure required by WINDOWPLACEMENT structure
     [Serializable]

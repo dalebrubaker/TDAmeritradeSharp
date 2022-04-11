@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
-namespace TDAmeritradeSharp
+namespace TDAmeritradeSharpUI
 {
     public partial class MainForm : Form
     {

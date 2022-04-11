@@ -1,4 +1,4 @@
-﻿namespace TDAmeritradeSharp
+﻿namespace TDAmeritradeSharpUI
 {
     partial class MainForm
     {
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.authUserControl1 = new TDAmeritradeSharp.AuthUserControl();
+            this.authUserControl1 = new AuthUserControl();
             this.mainFormSettingsBindingSource = new System.Windows.Forms.BindingSource(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.mainFormSettingsBindingSource)).BeginInit();
             this.SuspendLayout();
@@ -44,7 +44,7 @@
             // 
             // mainFormSettingsBindingSource
             // 
-            this.mainFormSettingsBindingSource.DataSource = typeof(TDAmeritradeSharp.MainFormSettings);
+            this.mainFormSettingsBindingSource.DataSource = typeof(MainFormSettings);
             // 
             // MainForm
             // 

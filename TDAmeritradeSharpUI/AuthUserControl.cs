@@ -5,7 +5,7 @@ using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace TDAmeritradeSharp
+namespace TDAmeritradeSharpUI
 {
     public partial class AuthUserControl : UserControl
     {

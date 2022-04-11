@@ -1,4 +1,4 @@
-﻿namespace TDAmeritradeSharp
+﻿namespace TDAmeritradeSharpUI
 {
     partial class AuthUserControl
     {
@@ -37,7 +37,7 @@
             this.authUserControlSettingsBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.textBoxCallbackUrl = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.logControl1 = new TDAmeritradeSharp.LogControl();
+            this.logControl1 = new LogControl();
             this.textBoxAuthUrl = new System.Windows.Forms.TextBox();
             this.buttonLogin = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
@@ -116,7 +116,7 @@
             // 
             // authUserControlSettingsBindingSource
             // 
-            this.authUserControlSettingsBindingSource.DataSource = typeof(TDAmeritradeSharp.AuthUserControlSettings);
+            this.authUserControlSettingsBindingSource.DataSource = typeof(AuthUserControlSettings);
             // 
             // textBoxCallbackUrl
             // 

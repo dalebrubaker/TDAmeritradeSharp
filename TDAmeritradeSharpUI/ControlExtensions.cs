@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace TDAmeritradeSharp
+namespace TDAmeritradeSharpUI
 {
     public static class ControlExtensions
     {

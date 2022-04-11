@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TDAmeritradeSharp", "TDAmeritradeSharp\TDAmeritradeSharp.csproj", "{34857378-9F84-485D-8D1A-F58CEC6C14D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TDAmeritradeSharpUI", "TDAmeritradeSharpUI\TDAmeritradeSharpUI.csproj", "{34857378-9F84-485D-8D1A-F58CEC6C14D8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{7074E622-C782-46EB-844C-AB3B5514809C}"
 	ProjectSection(SolutionItems) = preProject
