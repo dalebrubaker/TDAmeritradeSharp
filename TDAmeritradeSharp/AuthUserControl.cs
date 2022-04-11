@@ -121,10 +121,7 @@ namespace TDAmeritradeSharp
                     Settings.AuthResult.SecurityCode = textBoxEncodedAuthCode.Text;
                     Settings.AuthResult.ConsumerKey = textBoxConsumerKey.Text;
                     Settings.AuthResult.RedirectUrl = textBoxCallbackUrl.Text;
-                    //_cache.Save("TDAmeritradeKey", JsonConvert.SerializeObject(AuthResult));
-                    //IsSignedIn = true;
-                    //HasConsumerKey = true;
-                    //OnSignedIn(true);
+                    SaveConfig();
                     break;
                 default:
                     MessageBox.Show($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
