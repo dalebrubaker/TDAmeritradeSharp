@@ -39,7 +39,7 @@
             this.authUserControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.authUserControl1.Location = new System.Drawing.Point(0, 0);
             this.authUserControl1.Name = "authUserControl1";
-            this.authUserControl1.Size = new System.Drawing.Size(1008, 450);
+            this.authUserControl1.Size = new System.Drawing.Size(1008, 481);
             this.authUserControl1.TabIndex = 0;
             // 
             // mainFormSettingsBindingSource
@@ -50,7 +50,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1008, 450);
+            this.ClientSize = new System.Drawing.Size(1008, 481);
             this.Controls.Add(this.authUserControl1);
             this.Name = "MainForm";
             this.Text = "Form1";

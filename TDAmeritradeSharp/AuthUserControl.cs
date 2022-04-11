@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -95,6 +96,40 @@ namespace TDAmeritradeSharp
         {
             var client = new HttpClient();
             var url = $"https://api.tdameritrade.com/v1/oauth2/token";
+        }
+
+        private async void btnGetAuthCode_Click(object sender, EventArgs e)
+        {
+            var decoded = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
+            var path = "https://api.tdameritrade.com/v1/oauth2/token";
+            using var client = new HttpClient();
+            var dict = new Dictionary<string, string>
+                {
+                    { "grant_type", "authorization_code" },
+                    { "access_type", "offline" },
+                    { "client_id", $"{textBoxConsumerKey.Text}@AMER.OAUTHAP" },
+                    { "redirect_uri", textBoxCallbackUrl.Text },
+                    { "code", decoded }
+                };
+            var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
+            var res = await client.SendAsync(req);
+            switch (res.StatusCode)
+            {
+                case HttpStatusCode.OK:
+                    var json = await res.Content.ReadAsStringAsync();
+                    Settings.AuthResult = JsonSerializer.Deserialize<AuthResult>(json) ?? new AuthResult();
+                    Settings.AuthResult.SecurityCode = textBoxEncodedAuthCode.Text;
+                    Settings.AuthResult.ConsumerKey = textBoxConsumerKey.Text;
+                    Settings.AuthResult.RedirectUrl = textBoxCallbackUrl.Text;
+                    //_cache.Save("TDAmeritradeKey", JsonConvert.SerializeObject(AuthResult));
+                    //IsSignedIn = true;
+                    //HasConsumerKey = true;
+                    //OnSignedIn(true);
+                    break;
+                default:
+                    MessageBox.Show($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
+                    break;
+            }
         }
     }
 }
