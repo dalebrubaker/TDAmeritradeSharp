@@ -539,13 +539,20 @@ public class Client : IDisposable
         return await SendThrottledRequest(path).ConfigureAwait(false);
     }
 
-    public async Task<string> GetAccount(string testAccount)
+    public async Task<TDAccountModel> GetAccount(string testAccount)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
         var json = await SendThrottledRequest(path).ConfigureAwait(false);
         var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
-
-        return json;
+        return account;
+    }
+    
+    public async Task<IEnumerable<TDAccountModel>> GetAccounts()
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts";
+        var json = await SendThrottledRequest(path).ConfigureAwait(false);
+        var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
+        return accounts;
     }
 
     /// <summary>

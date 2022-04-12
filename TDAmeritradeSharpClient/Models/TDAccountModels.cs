@@ -93,9 +93,19 @@ public class SecuritiesAccount
     public TDInitialBalances InitialBalances { get; set; } = null!;
     public TDCurrentBalances CurrentBalances { get; set; } = null!;
     public TDProjectedBalances ProjectedBalances { get; set; } = null!;
+    
+    public override string ToString()
+    {
+        return $"AccountId={accountId}";
+    }
 }
 
 public class TDAccountModel
 {
-    public SecuritiesAccount securitiesAccount { get; set; }
+    public SecuritiesAccount securitiesAccount { get; set; } = null!;
+
+    public override string ToString()
+    {
+        return $"AccountId={securitiesAccount.accountId}";
+    }
 }

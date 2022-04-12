@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using TDAmeritradeSharpClient;
 
@@ -9,7 +10,7 @@ namespace TDAmeritrade.Tests
     public class Tests
     {
         Client _client;
-        private string _testAccount;
+        private string _testAccountId;
 
         [SetUp]
         public async Task Init()
@@ -20,7 +21,7 @@ namespace TDAmeritrade.Tests
             Assert.IsTrue(_client.IsSignedIn);
             var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
             var testAccountPath = Path.Combine(userSettingsDirectory, $"TestAccount.txt");
-            _testAccount = await File.ReadAllTextAsync(testAccountPath);
+            _testAccountId = await File.ReadAllTextAsync(testAccountPath);
         }
 
         [Test]
@@ -259,8 +260,16 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestGetAccount()
         {
-            var data = await _client.GetAccount(_testAccount);
-            Assert.IsTrue(data.Length > 0);
+            var account = await _client.GetAccount(_testAccountId);
+            Assert.IsTrue(account.securitiesAccount.accountId == _testAccountId);
+        }
+        
+        [Test]
+        public async Task TestGetAccounts()
+        {
+            var accounts = await _client.GetAccounts();
+            var testAccount = accounts.FirstOrDefault(x => x.securitiesAccount.accountId == _testAccountId);
+            Assert.IsNotNull(testAccount);
         }
     }
 }
