@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Security.Authentication;
 using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -71,7 +72,6 @@ public class Client : IDisposable
     {
         var decoded = HttpUtility.UrlDecode(code);
         var path = "https://api.tdameritrade.com/v1/oauth2/token";
-        using var client = new HttpClient();
         var dict = new Dictionary<string, string>
         {
             { "grant_type", "authorization_code" },
@@ -81,7 +81,7 @@ public class Client : IDisposable
             { "code", decoded }
         };
         var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
-        var res = await SendRequest(client, req);
+        var res = await SendRequest(req);
         switch (res.StatusCode)
         {
             case HttpStatusCode.OK:
@@ -103,13 +103,12 @@ public class Client : IDisposable
     /// <summary>
     /// Use this method to send ALL requests to HttpClient
     /// </summary>
-    /// <param name="client"></param>
     /// <param name="req"></param>
     /// <returns></returns>
-    private async Task<HttpResponseMessage> SendRequest(HttpClient client, HttpRequestMessage req)
+    private async Task<HttpResponseMessage> SendRequest(HttpRequestMessage req)
     {
         RequestTimesUtc.Add(DateTime.UtcNow);
-        var res = await client.SendAsync(req);
+        var res = await _httpClient.SendAsync(req);
         return res;
     }
 
@@ -127,5 +126,93 @@ public class Client : IDisposable
     {
         var jsonSave = JsonConvert.SerializeObject(authResult);
         File.WriteAllText(PathAuthResult, jsonSave);
+    }
+
+    /// <summary>
+    /// Get a new access token before it expires
+    /// Get a new refresh token before it expires
+    /// </summary>
+    public async Task RequireNotExpiredTokensAsync()
+    {
+        if (AuthResult.RefreshTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromDays(7))
+        {
+            // Need a new refresh token
+            await GetNewRefreshTokenAsync().ConfigureAwait(false);
+        }
+        if (AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromMinutes(1))
+        {
+            // Need a new access token
+            await GetNewAccessTokenAsync().ConfigureAwait(false);
+        }
+        
+    }
+
+    private async Task GetNewRefreshTokenAsync()
+    {
+        if (AuthResult.refresh_token == null)
+        {
+            // Never authorized 
+            return;
+        }
+        var path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var dict = new Dictionary<string, string>
+        {
+            { "grant_type", "refresh_token" },
+            { "refresh_token", AuthResult.refresh_token },
+            { "access_type", "offline" },
+            { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
+        };
+        var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
+        var res = await SendRequest(req);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                var json = await res.Content.ReadAsStringAsync();
+                var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
+                AuthResult.access_token = authResult.access_token;
+                AuthResult.refresh_token = authResult.refresh_token;
+                AuthResult.expires_in = authResult.expires_in;
+                AuthResult.refresh_token_expires_in = authResult.refresh_token_expires_in;
+                AuthResult.CreationTimestampUtc = DateTime.UtcNow;
+                SaveAuthResult(authResult);
+                LoadAuthResult();
+                break;
+            default:
+                throw new AuthenticationException($"Not able to get a new Access Token. {res.StatusCode} {res.ReasonPhrase}");
+        }
+    }
+    
+    private async Task GetNewAccessTokenAsync()
+    {
+        if (AuthResult.refresh_token == null)
+        {
+            // Never authorized 
+            return;
+        }
+        var path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var dict = new Dictionary<string, string>
+        {
+            { "grant_type", "refresh_token" },
+            { "refresh_token", AuthResult.refresh_token },
+            { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
+        };
+        var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
+        var res = await SendRequest(req);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                var json = await res.Content.ReadAsStringAsync();
+                var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
+                AuthResult.access_token = authResult.access_token;
+                AuthResult.refresh_token = authResult.refresh_token;
+                AuthResult.expires_in = authResult.expires_in;
+                AuthResult.refresh_token_expires_in = authResult.refresh_token_expires_in;
+                AuthResult.CreationTimestampUtc = DateTime.UtcNow;
+                SaveAuthResult(authResult);
+                LoadAuthResult();
+                break;
+            default:
+                throw new AuthenticationException($"Not able to get a new Access Token. {res.StatusCode} {res.ReasonPhrase}");
+        }
     }
 }
