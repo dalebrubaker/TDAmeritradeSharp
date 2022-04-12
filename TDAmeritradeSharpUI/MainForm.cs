@@ -1,62 +1,61 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace TDAmeritradeSharpUI
+namespace TDAmeritradeSharpUI;
+
+public partial class MainForm : Form
 {
-    public partial class MainForm : Form
+    private readonly ILogger<MainForm> _logger;
+
+    public MainForm(ILogger<MainForm> logger, IServiceProvider serviceProvider)
     {
-        private readonly ILogger<MainForm> _logger;
+        _logger = logger;
+        ServiceProvider = serviceProvider;
+        InitializeComponent();
+    }
 
-        public MainForm(ILogger<MainForm> logger, IServiceProvider serviceProvider)
+    /// <summary>
+    ///     This is used by user controls created by the designer (empty constructor) to access a logger or other services
+    /// </summary>
+    public IServiceProvider ServiceProvider { get; }
+
+    private MainFormSettings Settings { get; set; } = new();
+
+    private string SettingsPath => Path.Combine(Program.UserSettingsDirectory, $"{GetType().Name}.json");
+
+    private void MainForm_Load(object sender, EventArgs e)
+    {
+        if (DesignMode)
         {
-            _logger = logger;
-            ServiceProvider = serviceProvider;
-            InitializeComponent();
+            return;
         }
+        LoadConfig();
+    }
 
-        /// <summary>
-        ///     This is used by user controls created by the designer (empty constructor) to access a logger or other services
-        /// </summary>
-        public IServiceProvider ServiceProvider { get; }
-
-        private MainFormSettings Settings { get; set; } = new();
-
-        private string SettingsPath => Path.Combine(Program.UserSettingsDirectory, $"{GetType().Name}.json");
-
-        private void MainForm_Load(object sender, EventArgs e)
+    private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+    {
+        if (DesignMode)
         {
-            if (DesignMode)
-            {
-                return;
-            }
-            LoadConfig();
+            return;
         }
+        SaveConfig();
+    }
 
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+    private void LoadConfig()
+    {
+        if (File.Exists(SettingsPath))
         {
-            if (DesignMode)
-            {
-                return;
-            }
-            SaveConfig();
+            var json = File.ReadAllText(SettingsPath);
+            Settings = JsonConvert.DeserializeObject<MainFormSettings>(json) ?? new MainFormSettings();
+            WindowPlacement.RestoreWindow(Handle, Settings.WindowPlacementJson);
         }
+        mainFormSettingsBindingSource.DataSource = Settings;
+    }
 
-        private void LoadConfig()
-        {
-            if (File.Exists(SettingsPath))
-            {
-                var json = File.ReadAllText(SettingsPath);
-                Settings = JsonConvert.DeserializeObject<MainFormSettings>(json) ?? new MainFormSettings();
-                WindowPlacement.RestoreWindow(Handle, Settings.WindowPlacementJson);
-            }
-            mainFormSettingsBindingSource.DataSource = Settings;
-        }
-
-        private void SaveConfig()
-        {
-            Settings.WindowPlacementJson = WindowPlacement.SaveWindow(Handle);
-            var json = JsonConvert.SerializeObject(Settings);
-            File.WriteAllText(SettingsPath, json);
-        }
+    private void SaveConfig()
+    {
+        Settings.WindowPlacementJson = WindowPlacement.SaveWindow(Handle);
+        var json = JsonConvert.SerializeObject(Settings);
+        File.WriteAllText(SettingsPath, json);
     }
 }

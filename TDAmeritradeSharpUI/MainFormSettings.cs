@@ -1,10 +1,9 @@
-﻿namespace TDAmeritradeSharpUI
+﻿namespace TDAmeritradeSharpUI;
+
+public class MainFormSettings
 {
-    public class MainFormSettings
-    {
-        /// <summary>
-        ///     The Form location and state etc.
-        /// </summary>
-        public string WindowPlacementJson { get; set; } = "";
-    }
+    /// <summary>
+    ///     The Form location and state etc.
+    /// </summary>
+    public string WindowPlacementJson { get; set; } = "";
 }

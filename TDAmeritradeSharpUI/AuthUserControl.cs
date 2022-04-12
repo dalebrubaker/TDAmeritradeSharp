@@ -5,111 +5,111 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TDAmeritradeSharpClient;
 
-namespace TDAmeritradeSharpUI
+namespace TDAmeritradeSharpUI;
+
+public partial class AuthUserControl : UserControl
 {
-    public partial class AuthUserControl : UserControl
+    private Client? _client;
+    private ILogger<AuthUserControl>? _logger;
+
+    public AuthUserControl()
     {
-        private Client? _client;
-        private ILogger<AuthUserControl>? _logger;
+        InitializeComponent();
+    }
 
-        public AuthUserControl()
+    private AuthUserControlSettings Settings { get; set; } = new();
+
+    private string SettingsPath => Path.Combine(Program.UserSettingsDirectory, $"{GetType().Name}.json");
+
+    private void AuthUserControl_Load(object sender, EventArgs e)
+    {
+        if (DesignMode)
         {
-            InitializeComponent();
+            return;
         }
 
-        private AuthUserControlSettings Settings { get; set; } = new();
+        // Here in Load we now have a ParentForm and can retrieve a logger from DI
+        // ReSharper disable once AssignNullToNotNullAttribute
+        var mainForm = (MainForm)ParentForm;
+        _logger = mainForm.ServiceProvider.GetRequiredService<ILogger<AuthUserControl>>();
+        _logger?.LogTrace("Loading AuthUserControl");
 
-        private string SettingsPath => Path.Combine(Program.UserSettingsDirectory, $"{GetType().Name}.json");
+        LoadConfig();
 
-        private void AuthUserControl_Load(object sender, EventArgs e)
+        _client = mainForm.ServiceProvider.GetRequiredService<Client>();
+    }
+
+    protected override void OnHandleDestroyed(EventArgs e)
+    {
+        if (DesignMode)
         {
-            if (DesignMode)
-            {
-                return;
-            }
-
-            // Here in Load we now have a ParentForm and can retrieve a logger from DI
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var mainForm = (MainForm)ParentForm;
-            _logger = mainForm.ServiceProvider.GetRequiredService<ILogger<AuthUserControl>>();
-            _logger?.LogTrace("Loading AuthUserControl");
-
-            LoadConfig();
-
-            _client = mainForm.ServiceProvider.GetRequiredService<Client>();
+            return;
         }
+        SaveConfig();
+        base.OnHandleDestroyed(e);
+    }
 
-        protected override void OnHandleDestroyed(EventArgs e)
+    private void LoadConfig()
+    {
+        if (File.Exists(SettingsPath))
         {
-            if (DesignMode)
-            {
-                return;
-            }
-            SaveConfig();
-            base.OnHandleDestroyed(e);
+            var json = File.ReadAllText(SettingsPath);
+            Settings = JsonConvert.DeserializeObject<AuthUserControlSettings>(json) ?? new AuthUserControlSettings();
         }
+        authUserControlSettingsBindingSource.DataSource = Settings;
+    }
 
-        private void LoadConfig()
-        {
-            if (File.Exists(SettingsPath))
-            {
-                var json = File.ReadAllText(SettingsPath);
-                Settings = JsonConvert.DeserializeObject<AuthUserControlSettings>(json) ?? new AuthUserControlSettings();
-            }
-            authUserControlSettingsBindingSource.DataSource = Settings;
-        }
+    private void SaveConfig()
+    {
+        var json = JsonConvert.SerializeObject(Settings);
+        File.WriteAllText(SettingsPath, json);
+    }
 
-        private void SaveConfig()
-        {
-            var json = JsonConvert.SerializeObject(Settings);
-            File.WriteAllText(SettingsPath, json);
-        }
+    private void textBoxConsumerKey_TextChanged(object sender, EventArgs e)
+    {
+        ResetUrlForEncodedAuthorizationCode();
+        textBoxClientId.Text = textBoxConsumerKey.Text + "@AMER.OAUTHAP";
+    }
 
-        private void textBoxConsumerKey_TextChanged(object sender, EventArgs e)
-        {
-            ResetUrlForEncodedAuthorizationCode();
-            textBoxClientId.Text = textBoxConsumerKey.Text + "@AMER.OAUTHAP";
-        }
+    private void textBoxCallbackUrl_TextChanged(object sender, EventArgs e)
+    {
+        ResetUrlForEncodedAuthorizationCode();
+        textBoxRedirectUri.Text = textBoxCallbackUrl.Text;
+    }
 
-        private void textBoxCallbackUrl_TextChanged(object sender, EventArgs e)
-        {
-            ResetUrlForEncodedAuthorizationCode();
-            textBoxRedirectUri.Text = textBoxCallbackUrl.Text;
-        }
+    private void ResetUrlForEncodedAuthorizationCode()
+    {
+        textBoxAuthUrl.Text = $"https://auth.tdameritrade.com/auth?response_type=code&&redirect_uri={textBoxCallbackUrl.Text}&&client_id={textBoxConsumerKey.Text}%40AMER.OAUTHAP";
+    }
 
-        private void ResetUrlForEncodedAuthorizationCode()
+    private void buttonLogin_Click(object sender, EventArgs e)
+    {
+        var psInfo = new ProcessStartInfo
         {
-            textBoxAuthUrl.Text = $"https://auth.tdameritrade.com/auth?response_type=code&&redirect_uri={textBoxCallbackUrl.Text}&&client_id={textBoxConsumerKey.Text}%40AMER.OAUTHAP";
-        }
+            FileName = textBoxAuthUrl.Text, UseShellExecute = true
+        };
+        Process.Start(psInfo);
+    }
 
-        private void buttonLogin_Click(object sender, EventArgs e)
-        {
-            var psInfo = new ProcessStartInfo {
-                FileName = textBoxAuthUrl.Text, UseShellExecute = true
-            };
-            Process.Start(psInfo);
-        }
+    private void textBoxEncodedAuthCode_TextChanged(object sender, EventArgs e)
+    {
+        textBoxDecodedAuthCode.Text = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
+    }
 
-        private void textBoxEncodedAuthCode_TextChanged(object sender, EventArgs e)
+    private async void btnGetAuthCode_Click(object sender, EventArgs e)
+    {
+        if (_client == null)
         {
-            textBoxDecodedAuthCode.Text = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
+            return;
         }
-
-        private async void btnGetAuthCode_Click(object sender, EventArgs e)
+        var code = textBoxEncodedAuthCode.Text;
+        var consumerKey = Settings.ConsumerKey;
+        var callback = Settings.CallbackUrl;
+        var error = await _client.SetAuthResults(code, consumerKey, callback);
+        if (!string.IsNullOrEmpty(error))
         {
-            if (_client == null)
-            {
-                return;
-            }
-            var code = textBoxEncodedAuthCode.Text;
-            var consumerKey = Settings.ConsumerKey;
-            var callback = Settings.CallbackUrl;
-            var error = await _client.SetAuthResults(code, consumerKey, callback);
-            if (!string.IsNullOrEmpty(error))
-            {
-                MessageBox.Show(error);
-            }
-            SaveConfig();
+            MessageBox.Show(error);
         }
+        SaveConfig();
     }
 }
