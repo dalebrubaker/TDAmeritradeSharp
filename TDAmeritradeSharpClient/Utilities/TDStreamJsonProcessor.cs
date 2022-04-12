@@ -33,38 +33,41 @@ public class TDStreamJsonProcessor
         else if (job.ContainsKey("data"))
         {
             var data = job["data"] as JArray;
-            foreach (var item in data)
+            if (data != null)
             {
-                var service = item.Value<string>("service");
-                var contents = item.Value<JArray>("content");
-                var tmstamp = item["timestamp"].Value<long>();
-
-                if (contents == null)
+                foreach (var item in data)
                 {
-                    return;
-                }
+                    var service = item.Value<string>("service");
+                    var contents = item.Value<JArray>("content");
+                    var tmstamp = item["timestamp"].Value<long>();
 
-                foreach (var content in contents.Children<JObject>())
-                {
-                    if (service == "QUOTE")
+                    if (contents == null)
                     {
-                        ParseQuote(tmstamp, content);
+                        return;
                     }
-                    else if (service == "CHART_FUTURES")
+
+                    foreach (var content in contents.Children<JObject>())
                     {
-                        ParseChartFutures(tmstamp, content);
-                    }
-                    else if (service == "CHART_EQUITY")
-                    {
-                        ParseChartEquity(tmstamp, content);
-                    }
-                    else if (service == "LISTED_BOOK" || service == "NASDAQ_BOOK" || service == "OPTIONS_BOOK")
-                    {
-                        ParseBook(tmstamp, content, service);
-                    }
-                    else if (service == "TIMESALE_EQUITY" || service == "TIMESALE_FUTURES" || service == "TIMESALE_FOREX" || service == "TIMESALE_OPTIONS")
-                    {
-                        ParseTimeSaleEquity(tmstamp, content);
+                        if (service == "QUOTE")
+                        {
+                            ParseQuote(tmstamp, content);
+                        }
+                        else if (service == "CHART_FUTURES")
+                        {
+                            ParseChartFutures(tmstamp, content);
+                        }
+                        else if (service == "CHART_EQUITY")
+                        {
+                            ParseChartEquity(tmstamp, content);
+                        }
+                        else if (service == "LISTED_BOOK" || service == "NASDAQ_BOOK" || service == "OPTIONS_BOOK")
+                        {
+                            ParseBook(tmstamp, content, service);
+                        }
+                        else if (service == "TIMESALE_EQUITY" || service == "TIMESALE_FUTURES" || service == "TIMESALE_FOREX" || service == "TIMESALE_OPTIONS")
+                        {
+                            ParseTimeSaleEquity(tmstamp, content);
+                        }
                     }
                 }
             }
@@ -93,10 +96,10 @@ public class TDStreamJsonProcessor
                 //    model.booktime = item.Value.Value<long>();
                 //    break;
                 case "2":
-                    model.bids = (item.Value as JArray).ToObject<TDBookLevel[]>();
+                    model.bids = ((item.Value as JArray)!).ToObject<TDBookLevel[]>();
                     break;
                 case "3":
-                    model.asks = (item.Value as JArray).ToObject<TDBookLevel[]>();
+                    model.asks = ((item.Value as JArray)!).ToObject<TDBookLevel[]>();
                     break;
             }
         }

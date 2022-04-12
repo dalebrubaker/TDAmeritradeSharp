@@ -1,4 +1,5 @@
-﻿namespace TDAmeritradeSharpClient;
+﻿// ReSharper disable InconsistentNaming
+namespace TDAmeritradeSharpClient;
 
 [Serializable]
 public enum MarketTypes
@@ -19,6 +20,6 @@ public enum MarketTypes
 public class TDMarketHour
 {
     public DateTime date { get; set; }
-    public string marketType { get; set; }
+    public string? marketType { get; set; }
     public bool isOpen { get; set; }
 }

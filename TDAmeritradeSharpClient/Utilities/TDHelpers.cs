@@ -96,7 +96,7 @@ public static class TDHelpers
     ///     Merges N candles into totalCandles candles.
     /// </summary>
     /// <param name="candles"></param>
-    /// <param name="totalCandles">if totalCandles == 10, turn 30 1 minute canldes into (10) 3 minute candles.</param>
+    /// <param name="totalCandles">if totalCandles == 10, turn 30 1 minute candles into (10) 3 minute candles.</param>
     /// <returns></returns>
     public static TDPriceCandle[] ConsolidateByTotalCount(this TDPriceCandle[] candles, int totalCandles)
     {
@@ -105,10 +105,10 @@ public static class TDHelpers
     }
 
     /// <summary>
-    ///     Merges N candles X candles divisibable by periodsPerNewCandle candles.
+    ///     Merges N candles X candles divisible by periodsPerNewCandle candles.
     /// </summary>
     /// <param name="candles"></param>
-    /// <param name="periodsToMerge">if periodsPerNewCandle == 3, turn 30 1 minute canldes into 10 (3) minute candles.</param>
+    /// <param name="periodsToMerge">if periodsPerNewCandle == 3, turn 30 1 minute candles into 10 (3) minute candles.</param>
     /// <returns></returns>
     public static TDPriceCandle[] ConsolidateByPeriodCount(this TDPriceCandle[] candles, int periodsPerNewCandle)
     {

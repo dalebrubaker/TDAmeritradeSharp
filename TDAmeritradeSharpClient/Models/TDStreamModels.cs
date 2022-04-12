@@ -1,4 +1,7 @@
 ﻿using Newtonsoft.Json;
+// ReSharper disable IdentifierTypo
+
+// ReSharper disable InconsistentNaming
 
 namespace TDAmeritradeSharpClient;
 
@@ -112,7 +115,8 @@ public struct TDQuoteSignal : ISignal
     /// </summary>
     public double askprice;
 
-    /// 4 Number of shares for bid
+    /// <summary>
+    ///     4 Number of shares for bid
     /// </summary>
     public double bidsize;
 
@@ -132,9 +136,8 @@ public struct TDQuoteSignal : ISignal
     public double lastsize;
 
     /// <summary>
-    ///     <summary>
-    ///         8 Aggregated shares traded throughout the day, including pre/post market hours.
-    ///     </summary>
+    ///     8 Aggregated shares traded throughout the day, including pre/post market hours.
+    /// </summary>
     public long totalvolume;
 
     /// <summary>
@@ -348,34 +351,34 @@ public enum TDQOSLevels
 [Serializable]
 public class TDRealtimeRequest
 {
-    public string service { get; set; }
-    public string command { get; set; }
+    public string? service { get; set; }
+    public string? command { get; set; }
     public int requestid { get; set; }
-    public string account { get; set; }
-    public string source { get; set; }
-    public object parameters { get; set; }
+    public string? account { get; set; }
+    public string? source { get; set; }
+    public object? parameters { get; set; }
 }
 
 [Serializable]
 public class TDRealtimeRequestContainer
 {
-    public TDRealtimeRequest[] requests { get; set; }
+    public TDRealtimeRequest[]? requests { get; set; }
 }
 
 [Serializable]
 public class TDRealtimeResponseContainer
 {
-    public TDRealtimeResponse[] response { get; set; }
+    public TDRealtimeResponse[]? response { get; set; }
 }
 
 [Serializable]
 public class TDRealtimeResponse
 {
-    public string service { get; set; }
-    public string requestid { get; set; }
-    public string command { get; set; }
+    public string? service { get; set; }
+    public string? requestid { get; set; }
+    public string? command { get; set; }
     public double timestamp { get; set; }
-    public TDRealtimeContent content { get; set; }
+    public TDRealtimeContent? content { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
 }
@@ -384,5 +387,5 @@ public class TDRealtimeResponse
 public class TDRealtimeContent
 {
     public int code { get; set; }
-    public string msg { get; set; }
+    public string? msg { get; set; }
 }
