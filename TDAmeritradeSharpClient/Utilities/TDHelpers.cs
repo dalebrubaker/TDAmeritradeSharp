@@ -7,9 +7,9 @@ public static class TDHelpers
         return (long)time * 1000;
     }
 
-    public static double UnixMilisecondsToSeconds(long time)
+    public static double UnixMillisecondsToSeconds(long time)
     {
-        return time / 1000;
+        return time / 1000.0;
     }
 
     public static double ToUnixTimeSeconds(this DateTime time)
