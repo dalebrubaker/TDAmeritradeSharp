@@ -13,7 +13,6 @@ public partial class AuthUserControl : UserControl
     private Client? _client;
 
     private int _counter;
-    private string? _decodedAuthCode;
     private ILogger<AuthUserControl>? _logger;
 
     public AuthUserControl()
@@ -94,11 +93,6 @@ public partial class AuthUserControl : UserControl
         Process.Start(psInfo);
     }
 
-    private void textBoxEncodedAuthCode_TextChanged(object sender, EventArgs e)
-    {
-        _decodedAuthCode = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
-    }
-
     private async void btnGetAuthCode_Click(object sender, EventArgs e)
     {
         if (_client == null)
@@ -130,9 +124,10 @@ public partial class AuthUserControl : UserControl
         logControl1.LogMessage("grant_type\tauthorization_code");
         logControl1.LogMessage("access_type\toffline");
         var code = textBoxEncodedAuthCode.Text;
+        var decoded = HttpUtility.HtmlDecode(code);
         var consumerKey = Settings.ConsumerKey;
         var callback = Settings.CallbackUrl;
-        logControl1.LogMessage($"code\t\t{_decodedAuthCode}");
+        logControl1.LogMessage($"code\t\t{decoded}");
         logControl1.LogMessage($"client_id\t\t{consumerKey}@AMER.OAUTHAP");
         logControl1.LogMessage($"redirect_uri\t{callback}");
     }
@@ -168,7 +163,18 @@ public partial class AuthUserControl : UserControl
         }
         if (_client.AuthResult.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date)
         {
-            lblRefreshTokenExpires.Text = $"Refresh token expires {_client.AuthResult.RefreshTokenExpirationUtc.Date:d}";
+            if (_client.AuthResult.RefreshTokenExpirationUtc.Date - DateTime.UtcNow.Date < TimeSpan.FromDays(7))
+            {
+                await _client.RequireNotExpiredTokensAsync();
+            }
+            if (_client.AuthResult.RefreshTokenExpirationUtc.Date == DateTime.UtcNow.Date)
+            {
+                lblRefreshTokenExpires.Text = $"Refresh token is expired. Reinitialize using buttons above.";
+            }
+            else
+            {
+                lblRefreshTokenExpires.Text = $"Refresh token expires {_client.AuthResult.RefreshTokenExpirationUtc.Date:d}";
+            }
         }
         else
         {

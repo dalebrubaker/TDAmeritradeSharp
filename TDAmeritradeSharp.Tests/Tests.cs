@@ -12,13 +12,10 @@ namespace TDAmeritrade.Tests
         [SetUp]
         public async Task Init()
         {
-            await Task.Delay(1);
-            // // Please sign in first, following services uses the client file
-            // var cache = new TDUnprotectedCache();
-            // client = new TDAmeritradeSharpClient(cache);
-            // await client.SignIn();
-            // Assert.IsTrue(client.IsSignedIn);
+            // Please sign in first, following services uses the client file
             _client = new Client();
+            await _client.SignIn().ConfigureAwait(false);
+            Assert.IsTrue(_client.IsSignedIn);
         }
 
         [Test]
@@ -69,11 +66,11 @@ namespace TDAmeritrade.Tests
             {
                 array[i] = new TDPriceCandle { close = i, high = i, low = i, open = i, volume = i, datetime = i };
             }
-            var merge1 = TDHelpers.ConsolidateByTotalCount(array, 3);
+            var merge1 = array.ConsolidateByTotalCount(3);
             Assert.IsTrue(merge1.Length == 3);
-            var merge2 = TDHelpers.ConsolidateByTotalCount(array, 5);
+            var merge2 = array.ConsolidateByTotalCount(5);
             Assert.IsTrue(merge2.Length == 5);
-            var merge3 = TDHelpers.ConsolidateByTotalCount(array, 1);
+            var merge3 = array.ConsolidateByTotalCount(1);
             Assert.IsTrue(merge3.Length == 1);
 
             Assert.IsTrue(merge3[0].open == 0);
@@ -137,7 +134,6 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestPriceHistory_NoAuth()
         {
-            _client.SignOut(true, false);
             var data = await _client.GetPriceHistory(new TDPriceHistoryRequest
             {
                 symbol = "MSFT",
@@ -173,61 +169,51 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestQOSRequest()
         {
-            await _client.SignIn();
-            using (var socket = new ClientStream(_client))
-            {
-                await socket.Connect();
-                await socket.RequestQOS(TDQOSLevels.FAST);
-            }
+            using var socket = new ClientStream(_client);
+            await socket.Connect();
+            await socket.RequestQOS(TDQOSLevels.FAST);
         }
 
         [Test]
         public async Task TestRealtimeStream()
         {
-            await _client.SignIn();
-            using (var socket = new ClientStream(_client))
-            {
-                var symbol = "SPY";
-                socket.OnHeartbeatSignal += o => { };
-                socket.OnQuoteSignal += o => { };
-                socket.OnTimeSaleSignal += o => { };
-                socket.OnChartSignal += o => { };
-                socket.OnBookSignal += o => { };
-                await socket.Connect();
-                await socket.SubscribeQuote(symbol);
-                await socket.SubscribeChart(symbol, TDChartSubs.CHART_EQUITY);
-                await socket.SubscribeTimeSale(symbol, TDTimeSaleServices.TIMESALE_EQUITY);
-                await socket.SubscribeBook(symbol, TDBookOptions.LISTED_BOOK);
-                await socket.SubscribeBook(symbol, TDBookOptions.NASDAQ_BOOK);
-                await Task.Delay(1000);
-                Assert.IsTrue(socket.IsConnected);
-                await socket.Disconnect();
-            }
+            using var socket = new ClientStream(_client);
+            var symbol = "SPY";
+            socket.OnHeartbeatSignal += o => { };
+            socket.OnQuoteSignal += o => { };
+            socket.OnTimeSaleSignal += o => { };
+            socket.OnChartSignal += o => { };
+            socket.OnBookSignal += o => { };
+            await socket.Connect();
+            await socket.SubscribeQuote(symbol);
+            await socket.SubscribeChart(symbol, TDChartSubs.CHART_EQUITY);
+            await socket.SubscribeTimeSale(symbol, TDTimeSaleServices.TIMESALE_EQUITY);
+            await socket.SubscribeBook(symbol, TDBookOptions.LISTED_BOOK);
+            await socket.SubscribeBook(symbol, TDBookOptions.NASDAQ_BOOK);
+            await Task.Delay(1000);
+            Assert.IsTrue(socket.IsConnected);
+            await socket.Disconnect();
         }
 
         [Test]
         public async Task TestRealtimeStreamFuture()
         {
-            await _client.SignIn();
-            using (var socket = new ClientStream(_client))
-            {
-                var symbol = "/NQ";
+            using var socket = new ClientStream(_client);
+            var symbol = "/NQ";
 
-                socket.OnHeartbeatSignal += o => { };
-                socket.OnQuoteSignal += o => { };
-                socket.OnTimeSaleSignal += o => { };
-                socket.OnChartSignal += o => { };
-                socket.OnBookSignal += o => { };
+            socket.OnHeartbeatSignal += o => { };
+            socket.OnQuoteSignal += o => { };
+            socket.OnTimeSaleSignal += o => { };
+            socket.OnChartSignal += o => { };
+            socket.OnBookSignal += o => { };
 
-                await socket.Connect();
-                await socket.SubscribeQuote(symbol);
-                await socket.SubscribeChart(symbol, TDChartSubs.CHART_FUTURES);
-                await socket.SubscribeTimeSale(symbol, TDTimeSaleServices.TIMESALE_FUTURES);
-                await Task.Delay(1000);
-                Assert.IsTrue(socket.IsConnected);
-                Assert.IsTrue(socket.IsConnected);
-                await socket.Disconnect();
-            }
+            await socket.Connect();
+            await socket.SubscribeQuote(symbol);
+            await socket.SubscribeChart(symbol, TDChartSubs.CHART_FUTURES);
+            await socket.SubscribeTimeSale(symbol, TDTimeSaleServices.TIMESALE_FUTURES);
+            await Task.Delay(2000);
+            Assert.IsTrue(socket.IsConnected);
+            await socket.Disconnect();
         }
 
         [Test]

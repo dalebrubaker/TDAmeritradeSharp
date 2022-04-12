@@ -119,6 +119,7 @@ public class Client : IDisposable
         }
         var json = File.ReadAllText(PathAuthResult);
         AuthResult = JsonConvert.DeserializeObject<TDAuthResult>(json);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
     }
 
     private void SaveAuthResult(TDAuthResult authResult)
@@ -152,9 +153,6 @@ public class Client : IDisposable
             // Never authorized 
             return;
         }
-        var code = AuthResult.security_code;
-        var consumerKey = AuthResult.consumer_key;
-        var callback = AuthResult.redirect_url;
         var dict = new Dictionary<string, string>
         {
             { "grant_type", "refresh_token" },
@@ -162,7 +160,7 @@ public class Client : IDisposable
             { "access_type", "offline" },
             { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
         };
-        var result = await AuthenticateAsync(code, consumerKey, callback, dict);
+        var result = await ReAuthenticateAsync(dict);
         if (result != Success)
         {
             throw new AuthenticationException($"Not able to get a new Access Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
@@ -176,22 +174,27 @@ public class Client : IDisposable
             // Never authorized 
             return;
         }
-        var code = AuthResult.security_code;
-        var consumerKey = AuthResult.consumer_key;
-        var callback = AuthResult.redirect_url;
         var dict = new Dictionary<string, string>
         {
             { "grant_type", "refresh_token" },
             { "refresh_token", AuthResult.refresh_token },
             { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
         };
-        var result = await AuthenticateAsync(code, consumerKey, callback, dict);
+        var result = await ReAuthenticateAsync(dict);
         if (result != Success)
         {
             throw new AuthenticationException($"Not able to get a new Access Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
         }
     }
 
+    /// <summary>
+    /// Do the initial authentication
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="consumerKey"></param>
+    /// <param name="callback"></param>
+    /// <param name="dict"></param>
+    /// <returns></returns>
     private async Task<string> AuthenticateAsync(string? code, string? consumerKey, string? callback, Dictionary<string, string> dict)
     {
         const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
@@ -206,7 +209,36 @@ public class Client : IDisposable
             authResult.CreationTimestampUtc = DateTime.UtcNow;
             SaveAuthResult(authResult);
             LoadAuthResult();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
+            return Success;
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+    }
+    
+    private async Task<string> ReAuthenticateAsync(Dictionary<string, string> dict)
+    {
+        const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
+        try
+        {
+            var json = await SendThrottledRequest(req);
+            var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
+            authResult.security_code = AuthResult.security_code;
+            authResult.consumer_key = AuthResult.consumer_key;
+            authResult.redirect_url = AuthResult.redirect_url;
+            if (authResult.expires_in == 0)
+            {
+                authResult.expires_in = AuthResult.expires_in;
+            }
+            if (authResult.refresh_token_expires_in == 0)
+            {
+                authResult.refresh_token_expires_in = AuthResult.refresh_token_expires_in;
+            }
+            authResult.CreationTimestampUtc = DateTime.UtcNow;
+            SaveAuthResult(authResult);
+            LoadAuthResult();
             return Success;
         }
         catch (Exception ex)
@@ -218,26 +250,6 @@ public class Client : IDisposable
     public async Task SignIn()
     {
         await RequireNotExpiredTokensAsync().ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     Removes security key, does not
-    /// </summary>
-    public void SignOut(bool keeyConsumerKey = false, bool deleteCache = true)
-    {
-        // TODO
-        // AuthResult = new TDAuthResult
-        // {
-        //     consumer_key = keeyConsumerKey? AuthResult.consumer_key : null
-        // };
-        //
-        // if (deleteCache)
-        // {
-        //     _cache.Save("TDAmeritradeKey", JsonConvert.SerializeObject(AuthResult));
-        // }
-        //
-        // IsSignedIn = false;
-        // OnSignedIn(false);
     }
 
     #endregion Auth
