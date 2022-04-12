@@ -7,4 +7,8 @@ C# data and trading library for TD Ameritrade
 The Desktop program is .Net 6 Winform
 The Library is .net standard 2.0
 
+Credits
+=======
+Big thanks to Nicholas Ventimiglia and his .Net 5 web-based project: https://github.com/NVentimiglia/TDAmeritrade.DotNetCore
+
 
