@@ -10,7 +10,7 @@ namespace TDAmeritradeSharpUI;
 public partial class AuthUserControl : UserControl
 {
     private string? _authCodeUrl;
-    private Client? _client;
+    private Client _client = null!;
 
     private int _counter;
     private ILogger<AuthUserControl>? _logger;

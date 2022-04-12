@@ -12,9 +12,9 @@ namespace TDAmeritradeSharpClient;
 public class Client : IDisposable
 {
     public const string Success = "Authorization was successful";
-    private readonly HttpClient _httpClient;
     private readonly ILogger<Client>? _logger;
     private readonly List<DateTime> _throttledRequestTimesUtc = new();
+    private HttpClient _httpClient;
 
     public Client()
     {
@@ -108,7 +108,7 @@ public class Client : IDisposable
             { "redirect_uri", callback },
             { "code", decoded }
         };
-        return await AuthenticateAsync(code, consumerKey, callback, dict).ConfigureAwait(false);
+        return await AuthenticateInitAsync(code, consumerKey, callback, dict).ConfigureAwait(false);
     }
 
     private void LoadAuthResult()
@@ -188,15 +188,16 @@ public class Client : IDisposable
     }
 
     /// <summary>
-    /// Do the initial authentication
+    ///     Do the initial authentication
     /// </summary>
     /// <param name="code"></param>
     /// <param name="consumerKey"></param>
     /// <param name="callback"></param>
     /// <param name="dict"></param>
     /// <returns></returns>
-    private async Task<string> AuthenticateAsync(string? code, string? consumerKey, string? callback, Dictionary<string, string> dict)
+    private async Task<string> AuthenticateInitAsync(string? code, string? consumerKey, string? callback, Dictionary<string, string> dict)
     {
+        _httpClient = new HttpClient(); // remove old Auth headers
         const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
@@ -216,9 +217,10 @@ public class Client : IDisposable
             return ex.Message;
         }
     }
-    
+
     private async Task<string> ReAuthenticateAsync(Dictionary<string, string> dict)
     {
+        _httpClient = new HttpClient(); // remove old Auth headers
         const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
@@ -528,11 +530,6 @@ public class Client : IDisposable
     /// </summary>
     public async Task<string> GetMarketHoursJson(MarketTypes type, DateTime day)
     {
-        if (!IsSignedIn)
-        {
-            throw new Exception("ConsumerKey is null");
-        }
-
         var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
         var dayString = day.ToString("yyyy-MM-dd").Replace("/", "-");
         var path = IsSignedIn
@@ -540,6 +537,15 @@ public class Client : IDisposable
             : $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?apikey={key}&date={dayString}";
 
         return await SendThrottledRequest(path).ConfigureAwait(false);
+    }
+
+    public async Task<string> GetAccount(string testAccount)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
+        var json = await SendThrottledRequest(path).ConfigureAwait(false);
+        var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
+
+        return json;
     }
 
     /// <summary>
