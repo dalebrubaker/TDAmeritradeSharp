@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace TDAmeritradeSharpUI;
@@ -111,7 +112,6 @@ public partial class LogControl : UserControl
                     sb.AppendLine(msg);
                 }
             }
-            sb.AppendLine(rtbMessages.Text);
             if (sb.Length > MaximumLogLengthChars)
             {
                 var oldLength = sb.Length;
@@ -123,7 +123,9 @@ public partial class LogControl : UserControl
                     .AppendLine(" characters");
                 sb.AppendLine(saveStr);
             }
-            rtbMessages.Text = sb.ToString();
+            var t = rtbMessages.Text;
+            rtbMessages.AppendText(sb.ToString());
+            rtbMessages.ScrollToCaret();
         });
     }
 
@@ -136,4 +138,15 @@ public partial class LogControl : UserControl
     {
         Clear();
     }
+    //
+    // [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    // private static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
+    // private const int WM_VSCROLL = 277;
+    // private const int SB_PAGEBOTTOM = 7;
+    //
+    // private void ScrollToBottom(RichTextBox richTextBox)
+    // {
+    //     SendMessage(richTextBox.Handle, WM_VSCROLL, (IntPtr)SB_PAGEBOTTOM, IntPtr.Zero);
+    //     richTextBox.SelectionStart = richTextBox.Text.Length;
+    // }
 }
