@@ -247,11 +247,6 @@ public class Client : IDisposable
         }
     }
 
-    public async Task SignIn()
-    {
-        await RequireNotExpiredTokensAsync().ConfigureAwait(false);
-    }
-
     #endregion Auth
 
     #region Options

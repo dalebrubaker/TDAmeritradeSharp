@@ -14,7 +14,7 @@ namespace TDAmeritrade.Tests
         {
             // Please sign in first, following services uses the client file
             _client = new Client();
-            await _client.SignIn().ConfigureAwait(false);
+            await _client.RequireNotExpiredTokensAsync().ConfigureAwait(false);
             Assert.IsTrue(_client.IsSignedIn);
         }
 

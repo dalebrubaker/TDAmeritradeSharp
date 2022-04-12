@@ -112,6 +112,7 @@ public partial class AuthUserControl : UserControl
             var authResultJsonLines = await File.ReadAllLinesAsync(_client.PathAuthResult);
             logControl1.LogMessage($"The following json is saved at {_client.PathAuthResult}");
             logControl1.LogMessages(authResultJsonLines);
+            timer1.Enabled = true;
         }
     }
 
@@ -119,7 +120,7 @@ public partial class AuthUserControl : UserControl
     {
         logControl1.LogMessage("");
         logControl1.LogMessage(_counter++.ToString());
-        logControl1.LogMessage("Below here is for manual entries at developer.tdameritrade.com");
+        logControl1.LogMessage("Below here is for manual authentication at developer.tdameritrade.com");
         logControl1.LogMessage("Browse to https://developer.tdameritrade.com/authentication/apis/post/token-0 and enter the following:");
         logControl1.LogMessage("grant_type\tauthorization_code");
         logControl1.LogMessage("access_type\toffline");
@@ -128,8 +129,15 @@ public partial class AuthUserControl : UserControl
         var consumerKey = Settings.ConsumerKey;
         var callback = Settings.CallbackUrl;
         logControl1.LogMessage($"code\t\t{decoded}");
-        logControl1.LogMessage($"client_id\t\t{consumerKey}@AMER.OAUTHAP");
+        var apiKey = $"{consumerKey}@AMER.OAUTHAP";
+        logControl1.LogMessage($"client_id\t\t{apiKey}");
         logControl1.LogMessage($"redirect_uri\t{callback}");
+        logControl1.LogMessage("");
+        logControl1.LogMessage("For manual entry at developer.tdameritrade.com, e.g. https://developer.tdameritrade.com/quotes/apis/get/marketdata/%7Bsymbol%7D/quotes");
+        logControl1.LogMessage($"apikey:\t\t{apiKey}");
+        var decodedAccessToken = HttpUtility.HtmlDecode(_client.AuthResult.access_token);
+        var bearerCode = $"Bearer<{decodedAccessToken}>";
+        logControl1.LogMessage($"Authorization:\t{bearerCode}");
     }
 
     private async void timer1_Tick(object sender, EventArgs e)
@@ -139,13 +147,22 @@ public partial class AuthUserControl : UserControl
             return;
         }
         timer1.Enabled = false;
+        try
+        {
+            await _client.RequireNotExpiredTokensAsync();
+        }
+        catch (Exception ex)
+        {
+            // Show message and return without enabling timer. It will be reenabled on btnGetAuthCode_Click
+            MessageBox.Show(ex.Message);
+            return;
+        }
         lblRequestsInLastMinute.Text = $"Requests in last minute: {_client.ThrottledThrottledRequestTimesUtc.Count}";
         if (_client.AuthResult.AccessTokenExpirationUtc.Date != DateTime.MinValue.Date)
         {
             var timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
             if (timeUntilAccessTokenExpires.Ticks < 0)
             {
-                await _client.RequireNotExpiredTokensAsync();
                 timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
             }
             if (timeUntilAccessTokenExpires.Ticks < 0)
@@ -163,13 +180,9 @@ public partial class AuthUserControl : UserControl
         }
         if (_client.AuthResult.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date)
         {
-            if (_client.AuthResult.RefreshTokenExpirationUtc.Date - DateTime.UtcNow.Date < TimeSpan.FromDays(7))
-            {
-                await _client.RequireNotExpiredTokensAsync();
-            }
             if (_client.AuthResult.RefreshTokenExpirationUtc.Date == DateTime.UtcNow.Date)
             {
-                lblRefreshTokenExpires.Text = $"Refresh token is expired. Reinitialize using buttons above.";
+                lblRefreshTokenExpires.Text = "Refresh token is expired. Reinitialize using buttons above.";
             }
             else
             {
