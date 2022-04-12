@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ public class Client : IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<Client> _logger;
+    private List<DateTime> _requestTimesUtc = new List<DateTime>();
     public const string Success = "Authorization was successful";
 
     /// <summary>
@@ -31,6 +33,27 @@ public class Client : IDisposable
 
     public TDAuthResult AuthResult { get; private set; } = new TDAuthResult();
 
+    /// <summary>
+    /// A list of the DateTime.UtcNow when each request was made, pruned to the last minute
+    /// </summary>
+    public List<DateTime> RequestTimesUtc
+    {
+        get
+        {
+            if (_requestTimesUtc.Count > 0)
+            {}
+            var firstAllowed = DateTime.UtcNow.AddMinutes(-1);
+            for (var i = 0; i < _requestTimesUtc.Count; i++)
+            {
+                var timestamp = _requestTimesUtc[i];
+                if (timestamp < firstAllowed)
+                {
+                    _requestTimesUtc.RemoveAt(i--);
+                }
+            }
+            return _requestTimesUtc;
+        }
+    }
 
     public void Dispose()
     {
@@ -58,7 +81,7 @@ public class Client : IDisposable
             { "code", decoded }
         };
         var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
-        var res = await client.SendAsync(req);
+        var res = await SendRequest(client, req);
         switch (res.StatusCode)
         {
             case HttpStatusCode.OK:
@@ -67,6 +90,7 @@ public class Client : IDisposable
                 authResult.security_code = code;
                 authResult.consumer_key = consumerKey;
                 authResult.redirect_url = callback;
+                authResult.CreationTimestampUtc = DateTime.UtcNow;
                 SaveAuthResult(authResult);
                 LoadAuthResult();
                 break;
@@ -74,6 +98,19 @@ public class Client : IDisposable
                 return $"Bad request: {res.StatusCode} {res.ReasonPhrase}";
         }
         return Success;
+    }
+
+    /// <summary>
+    /// Use this method to send ALL requests to HttpClient
+    /// </summary>
+    /// <param name="client"></param>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    private async Task<HttpResponseMessage> SendRequest(HttpClient client, HttpRequestMessage req)
+    {
+        RequestTimesUtc.Add(DateTime.UtcNow);
+        var res = await client.SendAsync(req);
+        return res;
     }
 
     private void LoadAuthResult()

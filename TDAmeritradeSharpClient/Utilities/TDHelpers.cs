@@ -140,4 +140,48 @@ public static class TDHelpers
 
         return result;
     }
+
+    public static string Pretty(this TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalSeconds < 1)
+        {
+            return $"{timeSpan.TotalMilliseconds:N0} ms";
+        }
+        if (timeSpan.TotalMinutes < 1)
+        {
+            return $"{timeSpan.TotalSeconds:N0} seconds";
+        }
+        if (timeSpan.TotalHours < 1)
+        {
+            // Remove fractional portion so we don't show rounded-up minutes
+            var min = Math.Floor(timeSpan.TotalMinutes);
+            return $"{min:N0}:{timeSpan.Seconds:00}";
+        }
+        if (timeSpan.TotalDays < 1)
+        {
+            // Remove fractional portion so we don't show rounded-up hours
+            var hours = Math.Floor(timeSpan.TotalHours);
+            return $"{hours:N0}:{timeSpan.Minutes:00}:{timeSpan.Seconds:00}";
+        }
+        // Remove fractional portion so we don't show rounded-up days
+        var days = Math.Floor(timeSpan.TotalDays);
+        return $"{days:N0}:{timeSpan.Hours:00}:{timeSpan.Minutes:00}:{timeSpan.Seconds:00}";
+    }
+
+    /// <summary>
+    ///     Truncate to the end of the previous second.
+    ///     Thanks to http://stackoverflow.com/questions/1004698/how-to-truncate-milliseconds-off-of-a-net-datetime
+    /// </summary>
+    /// <param name="dateTime"></param>
+    /// <returns></returns>
+    public static DateTime TruncateToSecond(this DateTime dateTime)
+    {
+        var extraTicks = dateTime.Ticks % TimeSpan.TicksPerSecond;
+        if (extraTicks > 0)
+        {
+            var result = dateTime.AddTicks(-extraTicks);
+            return result;
+        }
+        return dateTime;
+    }
 }

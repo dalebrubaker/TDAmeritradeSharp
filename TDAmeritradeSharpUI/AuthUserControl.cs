@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,10 +9,12 @@ namespace TDAmeritradeSharpUI;
 
 public partial class AuthUserControl : UserControl
 {
-    private Client? _client;
-    private ILogger<AuthUserControl>? _logger;
     private string? _authCodeUrl;
+    private Client? _client;
+
+    private int _counter;
     private string? _decodedAuthCode;
+    private ILogger<AuthUserControl>? _logger;
 
     public AuthUserControl()
     {
@@ -92,7 +93,7 @@ public partial class AuthUserControl : UserControl
         };
         Process.Start(psInfo);
     }
-    
+
     private void textBoxEncodedAuthCode_TextChanged(object sender, EventArgs e)
     {
         _decodedAuthCode = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
@@ -120,7 +121,6 @@ public partial class AuthUserControl : UserControl
         }
     }
 
-    private int _counter = 0;
     private void buttonShowManualAuth_Click(object sender, EventArgs e)
     {
         logControl1.LogMessage("");
@@ -135,5 +135,31 @@ public partial class AuthUserControl : UserControl
         logControl1.LogMessage($"code\t\t{_decodedAuthCode}");
         logControl1.LogMessage($"client_id\t\t{consumerKey}@AMER.OAUTHAP");
         logControl1.LogMessage($"redirect_uri\t{callback}");
+    }
+
+    private void timer1_Tick(object sender, EventArgs e)
+    {
+        if (_client == null)
+        {
+            return;
+        }
+        lblRequestsInLastMinute.Text = $"Requests in last minute: {_client.RequestTimesUtc.Count}";
+        if (_client.AuthResult.AccessTokenExpirationUtc.Date != DateTime.MinValue.Date)
+        {
+            var timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
+            lblAccessTokenExpires.Text = $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
+        }
+        else
+        {
+            lblAccessTokenExpires.Text = "Access token is not valid yet.";
+        }
+        if (_client.AuthResult.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date)
+        {
+            lblRefreshTokenExpires.Text = $"Refresh token expires {_client.AuthResult.RefreshTokenExpirationUtc.Date:d}";
+        }
+        else
+        {
+            lblRefreshTokenExpires.Text = "Refresh token is not valid yet.";
+        }
     }
 }

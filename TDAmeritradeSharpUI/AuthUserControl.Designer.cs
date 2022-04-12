@@ -48,6 +48,10 @@
             this.label18 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.buttonShowManualAuth = new System.Windows.Forms.Button();
+            this.lblRequestsInLastMinute = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.lblAccessTokenExpires = new System.Windows.Forms.Label();
+            this.lblRefreshTokenExpires = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.authUserControlSettingsBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
@@ -130,10 +134,10 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.logControl1.HideTimestamps = false;
-            this.logControl1.Location = new System.Drawing.Point(0, 207);
+            this.logControl1.Location = new System.Drawing.Point(0, 250);
             this.logControl1.MaximumLogLengthChars = 104857600;
             this.logControl1.Name = "logControl1";
-            this.logControl1.Size = new System.Drawing.Size(1051, 198);
+            this.logControl1.Size = new System.Drawing.Size(1051, 155);
             this.logControl1.TabIndex = 8;
             this.logControl1.Title = "Log";
             // 
@@ -221,10 +225,45 @@
             this.buttonShowManualAuth.UseVisualStyleBackColor = true;
             this.buttonShowManualAuth.Click += new System.EventHandler(this.buttonShowManualAuth_Click);
             // 
+            // lblRequestsInLastMinute
+            // 
+            this.lblRequestsInLastMinute.AutoSize = true;
+            this.lblRequestsInLastMinute.Location = new System.Drawing.Point(224, 220);
+            this.lblRequestsInLastMinute.Name = "lblRequestsInLastMinute";
+            this.lblRequestsInLastMinute.Size = new System.Drawing.Size(132, 15);
+            this.lblRequestsInLastMinute.TabIndex = 36;
+            this.lblRequestsInLastMinute.Text = "Requests in last minute:";
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // lblAccessTokenExpires
+            // 
+            this.lblAccessTokenExpires.AutoSize = true;
+            this.lblAccessTokenExpires.Location = new System.Drawing.Point(411, 220);
+            this.lblAccessTokenExpires.Name = "lblAccessTokenExpires";
+            this.lblAccessTokenExpires.Size = new System.Drawing.Size(132, 15);
+            this.lblAccessTokenExpires.TabIndex = 37;
+            this.lblAccessTokenExpires.Text = "Access token expires in:";
+            // 
+            // lblRefreshTokenExpires
+            // 
+            this.lblRefreshTokenExpires.AutoSize = true;
+            this.lblRefreshTokenExpires.Location = new System.Drawing.Point(14, 220);
+            this.lblRefreshTokenExpires.Name = "lblRefreshTokenExpires";
+            this.lblRefreshTokenExpires.Size = new System.Drawing.Size(122, 15);
+            this.lblRefreshTokenExpires.TabIndex = 38;
+            this.lblRefreshTokenExpires.Text = "Refresh token expires:";
+            // 
             // AuthUserControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lblRefreshTokenExpires);
+            this.Controls.Add(this.lblAccessTokenExpires);
+            this.Controls.Add(this.lblRequestsInLastMinute);
             this.Controls.Add(this.buttonShowManualAuth);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.btnGetAuthCode);
@@ -271,5 +310,9 @@
         private Label label18;
         private Button button1;
         private Button buttonShowManualAuth;
+        private Label lblRequestsInLastMinute;
+        private System.Windows.Forms.Timer timer1;
+        private Label lblAccessTokenExpires;
+        private Label lblRefreshTokenExpires;
     }
 }
