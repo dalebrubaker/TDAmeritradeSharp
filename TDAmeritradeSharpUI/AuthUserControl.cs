@@ -137,17 +137,30 @@ public partial class AuthUserControl : UserControl
         logControl1.LogMessage($"redirect_uri\t{callback}");
     }
 
-    private void timer1_Tick(object sender, EventArgs e)
+    private async void timer1_Tick(object sender, EventArgs e)
     {
         if (_client == null)
         {
             return;
         }
-        lblRequestsInLastMinute.Text = $"Requests in last minute: {_client.RequestTimesUtc.Count}";
+        timer1.Enabled = false;
+        lblRequestsInLastMinute.Text = $"Requests in last minute: {_client.ThrottledThrottledRequestTimesUtc.Count}";
         if (_client.AuthResult.AccessTokenExpirationUtc.Date != DateTime.MinValue.Date)
         {
             var timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
-            lblAccessTokenExpires.Text = $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
+            if (timeUntilAccessTokenExpires.Ticks < 0)
+            {
+                await _client.RequireNotExpiredTokensAsync();
+                timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
+            }
+            if (timeUntilAccessTokenExpires.Ticks < 0)
+            {
+                lblAccessTokenExpires.Text = "Access token is no longer valid.";
+            }
+            else
+            {
+                lblAccessTokenExpires.Text = $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
+            }
         }
         else
         {
@@ -161,5 +174,6 @@ public partial class AuthUserControl : UserControl
         {
             lblRefreshTokenExpires.Text = "Refresh token is not valid yet.";
         }
+        timer1.Enabled = true;
     }
 }

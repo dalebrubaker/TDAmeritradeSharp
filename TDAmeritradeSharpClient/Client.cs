@@ -14,7 +14,7 @@ public class Client : IDisposable
     public const string Success = "Authorization was successful";
     private readonly HttpClient _httpClient;
     private readonly ILogger<Client>? _logger;
-    private readonly List<DateTime> _requestTimesUtc = new();
+    private readonly List<DateTime> _throttledRequestTimesUtc = new();
 
     public Client()
     {
@@ -54,23 +54,23 @@ public class Client : IDisposable
     /// <summary>
     ///     A list of the DateTime.UtcNow when each request was made, pruned to the last minute
     /// </summary>
-    public List<DateTime> RequestTimesUtc
+    public List<DateTime> ThrottledThrottledRequestTimesUtc
     {
         get
         {
-            if (_requestTimesUtc.Count > 0)
+            if (_throttledRequestTimesUtc.Count > 0)
             {
             }
             var firstAllowed = DateTime.UtcNow.AddMinutes(-1);
-            for (var i = 0; i < _requestTimesUtc.Count; i++)
+            for (var i = 0; i < _throttledRequestTimesUtc.Count; i++)
             {
-                var timestamp = _requestTimesUtc[i];
+                var timestamp = _throttledRequestTimesUtc[i];
                 if (timestamp < firstAllowed)
                 {
-                    _requestTimesUtc.RemoveAt(i--);
+                    _throttledRequestTimesUtc.RemoveAt(i--);
                 }
             }
-            return _requestTimesUtc;
+            return _throttledRequestTimesUtc;
         }
     }
 
@@ -108,37 +108,7 @@ public class Client : IDisposable
             { "redirect_uri", callback },
             { "code", decoded }
         };
-        var path = "https://api.tdameritrade.com/v1/oauth2/token";
-        var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
-        var res = await SendRequest(req);
-        switch (res.StatusCode)
-        {
-            case HttpStatusCode.OK:
-                var json = await res.Content.ReadAsStringAsync();
-                var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
-                authResult.security_code = code;
-                authResult.consumer_key = consumerKey;
-                authResult.redirect_url = callback;
-                authResult.CreationTimestampUtc = DateTime.UtcNow;
-                SaveAuthResult(authResult);
-                LoadAuthResult();
-                break;
-            default:
-                return $"Bad request: {res.StatusCode} {res.ReasonPhrase}";
-        }
-        return Success;
-    }
-
-    /// <summary>
-    ///     Use this method to send ALL requests to HttpClient
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    private async Task<HttpResponseMessage> SendRequest(HttpRequestMessage req)
-    {
-        RequestTimesUtc.Add(DateTime.UtcNow);
-        var res = await _httpClient.SendAsync(req);
-        return res;
+        return await AuthenticateAsync(code, consumerKey, callback, dict).ConfigureAwait(false);
     }
 
     private void LoadAuthResult()
@@ -182,7 +152,9 @@ public class Client : IDisposable
             // Never authorized 
             return;
         }
-        var path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var code = AuthResult.security_code;
+        var consumerKey = AuthResult.consumer_key;
+        var callback = AuthResult.redirect_url;
         var dict = new Dictionary<string, string>
         {
             { "grant_type", "refresh_token" },
@@ -190,23 +162,10 @@ public class Client : IDisposable
             { "access_type", "offline" },
             { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
         };
-        var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
-        var res = await SendRequest(req);
-        switch (res.StatusCode)
+        var result = await AuthenticateAsync(code, consumerKey, callback, dict);
+        if (result != Success)
         {
-            case HttpStatusCode.OK:
-                var json = await res.Content.ReadAsStringAsync();
-                var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
-                AuthResult.access_token = authResult.access_token;
-                AuthResult.refresh_token = authResult.refresh_token;
-                AuthResult.expires_in = authResult.expires_in;
-                AuthResult.refresh_token_expires_in = authResult.refresh_token_expires_in;
-                AuthResult.CreationTimestampUtc = DateTime.UtcNow;
-                SaveAuthResult(authResult);
-                LoadAuthResult();
-                break;
-            default:
-                throw new AuthenticationException($"Not able to get a new Access Token. {res.StatusCode} {res.ReasonPhrase}. Run TDAmeritradeSharpUI to authenticate.");
+            throw new AuthenticationException($"Not able to get a new Access Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
         }
     }
 
@@ -217,30 +176,42 @@ public class Client : IDisposable
             // Never authorized 
             return;
         }
-        var path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var code = AuthResult.security_code;
+        var consumerKey = AuthResult.consumer_key;
+        var callback = AuthResult.redirect_url;
         var dict = new Dictionary<string, string>
         {
             { "grant_type", "refresh_token" },
             { "refresh_token", AuthResult.refresh_token },
             { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
         };
-        var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = new FormUrlEncodedContent(dict) };
-        var res = await SendRequest(req);
-        switch (res.StatusCode)
+        var result = await AuthenticateAsync(code, consumerKey, callback, dict);
+        if (result != Success)
         {
-            case HttpStatusCode.OK:
-                var json = await res.Content.ReadAsStringAsync();
-                var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
-                AuthResult.access_token = authResult.access_token;
-                AuthResult.refresh_token = authResult.refresh_token;
-                AuthResult.expires_in = authResult.expires_in;
-                AuthResult.refresh_token_expires_in = authResult.refresh_token_expires_in;
-                AuthResult.CreationTimestampUtc = DateTime.UtcNow;
-                SaveAuthResult(authResult);
-                LoadAuthResult();
-                break;
-            default:
-                throw new AuthenticationException($"Not able to get a new Access Token. {res.StatusCode} {res.ReasonPhrase}. Run TDAmeritradeSharpUI to authenticate.");
+            throw new AuthenticationException($"Not able to get a new Access Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
+        }
+    }
+
+    private async Task<string> AuthenticateAsync(string? code, string? consumerKey, string? callback, Dictionary<string, string> dict)
+    {
+        const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
+        try
+        {
+            var json = await SendThrottledRequest(req);
+            var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
+            authResult.security_code = code;
+            authResult.consumer_key = consumerKey;
+            authResult.redirect_url = callback;
+            authResult.CreationTimestampUtc = DateTime.UtcNow;
+            SaveAuthResult(authResult);
+            LoadAuthResult();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
+            return Success;
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
         }
     }
 
@@ -248,9 +219,9 @@ public class Client : IDisposable
     {
         await RequireNotExpiredTokensAsync().ConfigureAwait(false);
     }
-    
+
     /// <summary>
-    /// Removes security key, does not 
+    ///     Removes security key, does not
     /// </summary>
     public void SignOut(bool keeyConsumerKey = false, bool deleteCache = true)
     {
@@ -346,20 +317,8 @@ public class Client : IDisposable
         var q = queryString.ToString();
 
         var path = $"https://api.tdameritrade.com/v1/marketdata/chains?{q}";
-
-        using (var client = new HttpClient())
-        {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
-            var res = await client.GetAsync(path);
-
-            switch (res.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return await res.Content.ReadAsStringAsync();
-                default:
-                    throw new Exception($"{res.StatusCode} {res.ReasonPhrase}");
-            }
-        }
+        var result = await SendThrottledRequest(path).ConfigureAwait(false);
+        return result;
     }
 
     #endregion Options
@@ -389,7 +348,7 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public async Task<string> GetPriceHistoryJson(TDPriceHistoryRequest model)
+    private async Task<string> GetPriceHistoryJson(TDPriceHistoryRequest model)
     {
         if (!HasConsumerKey)
         {
@@ -425,23 +384,7 @@ public class Client : IDisposable
         }
         builder.Query = query.ToString();
         var url = builder.ToString();
-
-        using (var client = new HttpClient())
-        {
-            if (IsSignedIn)
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
-            }
-            var res = await client.GetAsync(url);
-
-            switch (res.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return await res.Content.ReadAsStringAsync();
-                default:
-                    throw new Exception($"{res.StatusCode} {res.ReasonPhrase}");
-            }
-        }
+        return await SendThrottledRequest(url).ConfigureAwait(false);
     }
 
     #endregion PriceHistory
@@ -516,22 +459,8 @@ public class Client : IDisposable
             ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
             : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
 
-        using (var client = new HttpClient())
-        {
-            if (IsSignedIn)
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
-            }
-            var res = await client.GetAsync(path);
-
-            switch (res.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return await res.Content.ReadAsStringAsync();
-                default:
-                    throw new Exception($"{res.StatusCode} {res.ReasonPhrase}");
-            }
-        }
+        var json = await SendThrottledRequest(path).ConfigureAwait(false);
+        return json;
     }
 
     #endregion Quotes
@@ -558,30 +487,15 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
     /// <returns></returns>
-    public async Task<string> GetPrincipalsJson(params TDPrincipalsFields[] fields)
+    private async Task<string> GetPrincipalsJson(params TDPrincipalsFields[] fields)
     {
         if (!IsSignedIn)
         {
             throw new Exception("Not authenticated");
         }
-
         var arg = string.Join(",", fields.Select(o => o.ToString()));
-
         var path = $"https://api.tdameritrade.com/v1/userprincipals?fields={arg}";
-
-        using (var client = new HttpClient())
-        {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
-            var res = await client.GetAsync(path);
-
-            switch (res.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return await res.Content.ReadAsStringAsync();
-                default:
-                    throw new Exception($"{res.StatusCode} {res.ReasonPhrase}");
-            }
-        }
+        return await SendThrottledRequest(path).ConfigureAwait(false);
     }
 
     #endregion UserInfo
@@ -618,21 +532,42 @@ public class Client : IDisposable
             ? $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?date={dayString}"
             : $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?apikey={key}&date={dayString}";
 
-        using (var client = new HttpClient())
-        {
-            if (IsSignedIn)
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
-            }
-            var res = await client.GetAsync(path);
+        return await SendThrottledRequest(path).ConfigureAwait(false);
+    }
 
-            switch (res.StatusCode)
-            {
-                case HttpStatusCode.OK:
-                    return await res.Content.ReadAsStringAsync();
-                default:
-                    throw new Exception($"{res.StatusCode} {res.ReasonPhrase}");
-            }
+    /// <summary>
+    ///     All requests except order-related requests are throttled
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns>the Content.ReadAsStringAsync()</returns>
+    private async Task<string> SendThrottledRequest(string path)
+    {
+        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
+        var res = await _httpClient.GetAsync(path);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                return await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            default:
+                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
+        }
+    }
+
+    /// <summary>
+    ///     Use this method to send ALL requests to HttpClient
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns>the Content.ReadAsStringAsync()</returns>
+    private async Task<string> SendThrottledRequest(HttpRequestMessage req)
+    {
+        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
+        var res = await _httpClient.SendAsync(req);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                return await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            default:
+                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
 

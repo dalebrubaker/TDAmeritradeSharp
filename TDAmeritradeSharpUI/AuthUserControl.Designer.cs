@@ -41,7 +41,6 @@
             this.buttonLogin = new System.Windows.Forms.Button();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.textBoxEncodedAuthCode = new System.Windows.Forms.TextBox();
-            this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.btnGetAuthCode = new System.Windows.Forms.Button();
@@ -159,15 +158,6 @@
             this.textBoxEncodedAuthCode.TabIndex = 13;
             this.textBoxEncodedAuthCode.TextChanged += new System.EventHandler(this.textBoxEncodedAuthCode_TextChanged);
             // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(990, 232);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(16, 15);
-            this.label14.TabIndex = 29;
-            this.label14.Text = "...";
-            // 
             // label15
             // 
             this.label15.AutoSize = true;
@@ -270,7 +260,6 @@
             this.Controls.Add(this.label18);
             this.Controls.Add(this.label17);
             this.Controls.Add(this.label15);
-            this.Controls.Add(this.label14);
             this.Controls.Add(this.textBoxEncodedAuthCode);
             this.Controls.Add(this.buttonLogin);
             this.Controls.Add(this.logControl1);
@@ -303,7 +292,6 @@
         private Button buttonLogin;
         private FolderBrowserDialog folderBrowserDialog1;
         private TextBox textBoxEncodedAuthCode;
-        private Label label14;
         private Label label15;
         private Label label17;
         private Button btnGetAuthCode;

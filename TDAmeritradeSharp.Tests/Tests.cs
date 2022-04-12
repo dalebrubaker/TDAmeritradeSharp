@@ -7,7 +7,7 @@ namespace TDAmeritrade.Tests
 {
     public class Tests
     {
-        Client client;
+        Client _client;
 
         [SetUp]
         public async Task Init()
@@ -18,13 +18,13 @@ namespace TDAmeritrade.Tests
             // client = new TDAmeritradeSharpClient(cache);
             // await client.SignIn();
             // Assert.IsTrue(client.IsSignedIn);
-            client = new Client();
+            _client = new Client();
         }
 
         [Test]
         public void TestTimeConverter()
         {
-            double stamp1 = 1464148800000 / 1000;
+            double stamp1 = 1464148800000 / 1000.0;
             var time1 = TDHelpers.FromUnixTimeSeconds(stamp1);
             Assert.IsTrue(time1.Minute == 00);
             Assert.IsTrue(time1.Hour == 4);
@@ -45,7 +45,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestOptionChain()
         {
-            var chain = await client.GetOptionsChain(new TDOptionChainRequest
+            var chain = await _client.GetOptionsChain(new TDOptionChainRequest
             {
                 symbol = "QQQ"
             });
@@ -56,7 +56,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestMarketHours()
         {
-            var hours = await client.GetMarketHours(MarketTypes.EQUITY, DateTime.Now);
+            var hours = await _client.GetMarketHours(MarketTypes.EQUITY, DateTime.Now);
             Assert.IsTrue(hours.marketType == "EQUITY");
         }
 
@@ -109,36 +109,36 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestTDQuoteClient_Equity()
         {
-            var data = await client.GetQuote_Equity("MSFT");
+            var data = await _client.GetQuote_Equity("MSFT");
             Assert.IsTrue(data.symbol == "MSFT");
         }
 
         [Test]
         public async Task TestTDQuoteClient_Index()
         {
-            var data = await client.GetQuote_Index("$SPX.X");
+            var data = await _client.GetQuote_Index("$SPX.X");
             Assert.IsTrue(data.symbol == "$SPX.X");
         }
 
         [Test]
         public async Task TestTDQuoteClient_Future()
         {
-            var data = await client.GetQuote_Future("/ES");
+            var data = await _client.GetQuote_Future("/ES");
             Assert.IsTrue(data.symbol == "ES");
         }
 
         [Test]
         public async Task TestTDQuoteClient_Option()
         {
-            var data = await client.GetQuote_Option("SPY_231215C500");
+            var data = await _client.GetQuote_Option("SPY_231215C500");
             Assert.IsTrue(data.symbol == "SPY_231215C500");
         }
 
         [Test]
         public async Task TestPriceHistory_NoAuth()
         {
-            client.SignOut(true, false);
-            var data = await client.GetPriceHistory(new TDPriceHistoryRequest
+            _client.SignOut(true, false);
+            var data = await _client.GetPriceHistory(new TDPriceHistoryRequest
             {
                 symbol = "MSFT",
                 frequencyType = TDPriceHistoryRequest.FrequencyType.minute,
@@ -152,7 +152,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestPriceHistory()
         {
-            var data = await client.GetPriceHistory(new TDPriceHistoryRequest
+            var data = await _client.GetPriceHistory(new TDPriceHistoryRequest
             {
                 symbol = "MSFT",
                 frequencyType = TDPriceHistoryRequest.FrequencyType.minute,
@@ -166,15 +166,15 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestTDPrincipalClient()
         {
-            var data = await client.GetPrincipals(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
+            var data = await _client.GetPrincipals(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
             Assert.IsTrue(!string.IsNullOrEmpty(data.accessLevel));
         }
 
         [Test]
         public async Task TestQOSRequest()
         {
-            await client.SignIn();
-            using (var socket = new ClientStream(client))
+            await _client.SignIn();
+            using (var socket = new ClientStream(_client))
             {
                 await socket.Connect();
                 await socket.RequestQOS(TDQOSLevels.FAST);
@@ -184,8 +184,8 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestRealtimeStream()
         {
-            await client.SignIn();
-            using (var socket = new ClientStream(client))
+            await _client.SignIn();
+            using (var socket = new ClientStream(_client))
             {
                 var symbol = "SPY";
                 socket.OnHeartbeatSignal += o => { };
@@ -208,8 +208,8 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestRealtimeStreamFuture()
         {
-            await client.SignIn();
-            using (var socket = new ClientStream(client))
+            await _client.SignIn();
+            using (var socket = new ClientStream(_client))
             {
                 var symbol = "/NQ";
 
