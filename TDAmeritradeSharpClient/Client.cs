@@ -9,8 +9,12 @@ public class Client : IDisposable
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<Client> _logger;
-    private readonly string _pathAuthResult;
-    private AuthResult? _authResult;
+    public const string Success = "Authorization was successful";
+
+    /// <summary>
+    /// The fully-qualified path to the json file in Users that holds the Authorization information 
+    /// </summary>
+    public string PathAuthResult { get; }
 
     public Client(ILogger<Client> logger)
     {
@@ -21,9 +25,12 @@ public class Client : IDisposable
         {
             Directory.CreateDirectory(userSettingsDirectory);
         }
-        _pathAuthResult = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
+        PathAuthResult = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
     }
+
+    public TDAuthResult AuthResult { get; private set; } = new TDAuthResult();
+
 
     public void Dispose()
     {
@@ -56,32 +63,32 @@ public class Client : IDisposable
         {
             case HttpStatusCode.OK:
                 var json = await res.Content.ReadAsStringAsync();
-                var authResult = JsonConvert.DeserializeObject<AuthResult>(json) ?? new AuthResult();
-                authResult.SecurityCode = code;
-                authResult.ConsumerKey = consumerKey;
-                authResult.RedirectUrl = callback;
+                var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
+                authResult.security_code = code;
+                authResult.consumer_key = consumerKey;
+                authResult.redirect_url = callback;
                 SaveAuthResult(authResult);
                 LoadAuthResult();
                 break;
             default:
                 return $"Bad request: {res.StatusCode} {res.ReasonPhrase}";
         }
-        return "";
+        return Success;
     }
 
     private void LoadAuthResult()
     {
-        if (!File.Exists(_pathAuthResult))
+        if (!File.Exists(PathAuthResult))
         {
             return;
         }
-        var json = File.ReadAllText(_pathAuthResult);
-        _authResult = JsonConvert.DeserializeObject<AuthResult>(json);
+        var json = File.ReadAllText(PathAuthResult);
+        AuthResult = JsonConvert.DeserializeObject<TDAuthResult>(json);
     }
 
-    private void SaveAuthResult(AuthResult authResult)
+    private void SaveAuthResult(TDAuthResult authResult)
     {
         var jsonSave = JsonConvert.SerializeObject(authResult);
-        File.WriteAllText(_pathAuthResult, jsonSave);
+        File.WriteAllText(PathAuthResult, jsonSave);
     }
 }

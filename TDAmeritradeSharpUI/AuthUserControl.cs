@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,8 @@ public partial class AuthUserControl : UserControl
 {
     private Client? _client;
     private ILogger<AuthUserControl>? _logger;
+    private string? _authCodeUrl;
+    private string? _decodedAuthCode;
 
     public AuthUserControl()
     {
@@ -68,32 +71,31 @@ public partial class AuthUserControl : UserControl
     private void textBoxConsumerKey_TextChanged(object sender, EventArgs e)
     {
         ResetUrlForEncodedAuthorizationCode();
-        textBoxClientId.Text = textBoxConsumerKey.Text + "@AMER.OAUTHAP";
     }
 
     private void textBoxCallbackUrl_TextChanged(object sender, EventArgs e)
     {
         ResetUrlForEncodedAuthorizationCode();
-        textBoxRedirectUri.Text = textBoxCallbackUrl.Text;
     }
 
     private void ResetUrlForEncodedAuthorizationCode()
     {
-        textBoxAuthUrl.Text = $"https://auth.tdameritrade.com/auth?response_type=code&&redirect_uri={textBoxCallbackUrl.Text}&&client_id={textBoxConsumerKey.Text}%40AMER.OAUTHAP";
+        _authCodeUrl = $"https://auth.tdameritrade.com/auth?response_type=code&&redirect_uri={textBoxCallbackUrl.Text}&&client_id={textBoxConsumerKey.Text}%40AMER.OAUTHAP";
     }
 
     private void buttonLogin_Click(object sender, EventArgs e)
     {
+        logControl1.LogMessage($"Starting web page: {_authCodeUrl}");
         var psInfo = new ProcessStartInfo
         {
-            FileName = textBoxAuthUrl.Text, UseShellExecute = true
+            FileName = _authCodeUrl, UseShellExecute = true
         };
         Process.Start(psInfo);
     }
-
+    
     private void textBoxEncodedAuthCode_TextChanged(object sender, EventArgs e)
     {
-        textBoxDecodedAuthCode.Text = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
+        _decodedAuthCode = HttpUtility.UrlDecode(textBoxEncodedAuthCode.Text);
     }
 
     private async void btnGetAuthCode_Click(object sender, EventArgs e)
@@ -102,14 +104,36 @@ public partial class AuthUserControl : UserControl
         {
             return;
         }
+        logControl1.LogMessage($"Setting access tokens: {_authCodeUrl}");
         var code = textBoxEncodedAuthCode.Text;
         var consumerKey = Settings.ConsumerKey;
         var callback = Settings.CallbackUrl;
-        var error = await _client.SetAuthResults(code, consumerKey, callback);
-        if (!string.IsNullOrEmpty(error))
+        var result = await _client.SetAuthResults(code, consumerKey, callback);
+        logControl1.LogMessage(result);
+        MessageBox.Show(result);
+        if (result == Client.Success)
         {
-            MessageBox.Show(error);
+            SaveConfig();
+            var authResultJsonLines = await File.ReadAllLinesAsync(_client.PathAuthResult);
+            logControl1.LogMessage($"The following json is saved at {_client.PathAuthResult}");
+            logControl1.LogMessages(authResultJsonLines);
         }
-        SaveConfig();
+    }
+
+    private int _counter = 0;
+    private void buttonShowManualAuth_Click(object sender, EventArgs e)
+    {
+        logControl1.LogMessage("");
+        logControl1.LogMessage(_counter++.ToString());
+        logControl1.LogMessage("Below here is for manual entries at developer.tdameritrade.com");
+        logControl1.LogMessage("Browse to https://developer.tdameritrade.com/authentication/apis/post/token-0 and enter the following:");
+        logControl1.LogMessage("grant_type\tauthorization_code");
+        logControl1.LogMessage("access_type\toffline");
+        var code = textBoxEncodedAuthCode.Text;
+        var consumerKey = Settings.ConsumerKey;
+        var callback = Settings.CallbackUrl;
+        logControl1.LogMessage($"code\t\t{_decodedAuthCode}");
+        logControl1.LogMessage($"client_id\t\t{consumerKey}@AMER.OAUTHAP");
+        logControl1.LogMessage($"redirect_uri\t{callback}");
     }
 }
