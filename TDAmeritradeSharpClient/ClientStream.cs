@@ -573,7 +573,7 @@ public class ClientStream : IDisposable
         }
     }
 
-    private async void CleReanupAsync()
+    private async void CleanupAsync()
     {
         if (_socket != null)
         {
