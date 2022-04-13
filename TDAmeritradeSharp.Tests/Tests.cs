@@ -41,7 +41,7 @@ namespace TDAmeritrade.Tests
             Assert.IsTrue(time3.Hour == 0);
 
             var stamp2 = time2.ToUnixTimeSeconds();
-            var stamp3 = stamp2.UnixSecondsToMiliseconds();
+            var stamp3 = stamp2.UnixSecondsToMilliseconds();
             Assert.IsTrue(stamp3 == 1464148800000);
         }
 

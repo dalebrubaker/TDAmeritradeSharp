@@ -2,7 +2,9 @@
 
 public static class TDHelpers
 {
-    public static long UnixSecondsToMiliseconds(this double time)
+    public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+
+    public static long UnixSecondsToMilliseconds(this double time)
     {
         return (long)time * 1000;
     }
@@ -14,24 +16,24 @@ public static class TDHelpers
 
     public static double ToUnixTimeSeconds(this DateTime time)
     {
-        var t = time - new DateTime(1970, 1, 1);
+        var t = time - UnixEpoch;
         return t.TotalSeconds;
     }
 
     public static DateTime FromUnixTimeSeconds(double time)
     {
-        return new DateTime(1970, 1, 1) + TimeSpan.FromSeconds(time);
+        return UnixEpoch + TimeSpan.FromSeconds(time);
     }
 
     public static double ToUnixTimeMilliseconds(this DateTime time)
     {
-        var t = time - new DateTime(1970, 1, 1);
+        var t = time - UnixEpoch;
         return t.TotalMilliseconds;
     }
 
     public static DateTime FromUnixTimeMilliseconds(double time)
     {
-        return new DateTime(1970, 1, 1) + TimeSpan.FromMilliseconds(time);
+        return UnixEpoch + TimeSpan.FromMilliseconds(time);
     }
 
     public static DateTime ToEST(this DateTime time)
