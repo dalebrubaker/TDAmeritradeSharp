@@ -49,7 +49,7 @@ public class Client : IDisposable
     /// <summary>
     ///     Client has a consumer key (limited non-authenticated access)
     /// </summary>
-    public bool HasConsumerKey => !string.IsNullOrEmpty(AuthResult.consumer_key);
+    private bool HasConsumerKey => !string.IsNullOrEmpty(AuthResult.consumer_key);
 
     /// <summary>
     ///     A list of the DateTime.UtcNow when each request was made, pruned to the last minute
@@ -134,15 +134,24 @@ public class Client : IDisposable
     /// </summary>
     public async Task RequireNotExpiredTokensAsync()
     {
-        if (AuthResult.RefreshTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromDays(7))
+        if (AuthResult.refresh_token == null)
         {
-            // Need a new refresh token
-            await GetNewRefreshTokenAsync().ConfigureAwait(false);
+            // Not possible
+            return;
         }
         if (AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromMinutes(1))
         {
-            // Need a new access token
-            await GetNewAccessTokenAsync().ConfigureAwait(false);
+            // Check RefreshTokenExpirationUtc only when we need a new access token
+            if (AuthResult.RefreshTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromDays(7))
+            {
+                // Need a new refresh token
+                await GetNewRefreshTokenAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                // Need a new access token
+                await GetNewAccessTokenAsync().ConfigureAwait(false);
+            }
         }
     }
 
@@ -151,7 +160,7 @@ public class Client : IDisposable
         if (AuthResult.refresh_token == null)
         {
             // Never authorized 
-            return;
+            throw new AuthenticationException("Not able to get a new Refresh Token. Run TDAmeritradeSharpUI to authenticate.");
         }
         var dict = new Dictionary<string, string>
         {
@@ -163,7 +172,7 @@ public class Client : IDisposable
         var result = await ReAuthenticateAsync(dict);
         if (result != Success)
         {
-            throw new AuthenticationException($"Not able to get a new Access Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
+            throw new AuthenticationException($"Not able to get a new Refresh Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
         }
     }
 
@@ -363,9 +372,7 @@ public class Client : IDisposable
         {
             throw new Exception("ConsumerKey is null");
         }
-
         var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
-
         var builder = new UriBuilder($"https://api.tdameritrade.com/v1/marketdata/{model.symbol}/pricehistory");
         var query = HttpUtility.ParseQueryString(builder.Query);
         if (!IsSignedIn)
@@ -461,9 +468,7 @@ public class Client : IDisposable
         {
             throw new Exception("ConsumerKey is null");
         }
-
         var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
-
         var path = IsSignedIn
             ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
             : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
@@ -530,6 +535,10 @@ public class Client : IDisposable
     /// </summary>
     public async Task<string> GetMarketHoursJson(MarketTypes type, DateTime day)
     {
+        if (!HasConsumerKey)
+        {
+            throw new Exception("ConsumerKey is null");
+        }
         var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
         var dayString = day.ToString("yyyy-MM-dd").Replace("/", "-");
         var path = IsSignedIn

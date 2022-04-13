@@ -142,10 +142,6 @@ public partial class AuthUserControl : UserControl
 
     private async void timer1_Tick(object sender, EventArgs e)
     {
-        if (_client == null)
-        {
-            return;
-        }
         timer1.Enabled = false;
         try
         {
@@ -165,34 +161,17 @@ public partial class AuthUserControl : UserControl
             {
                 timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
             }
-            if (timeUntilAccessTokenExpires.Ticks < 0)
-            {
-                lblAccessTokenExpires.Text = "Access token is no longer valid.";
-            }
-            else
-            {
-                lblAccessTokenExpires.Text = $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
-            }
+            lblAccessTokenExpires.Text = timeUntilAccessTokenExpires.Ticks < 0 
+                ? "Access token is no longer valid." 
+                : $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
         }
         else
         {
             lblAccessTokenExpires.Text = "Access token is not valid yet.";
         }
-        if (_client.AuthResult.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date)
-        {
-            if (_client.AuthResult.RefreshTokenExpirationUtc.Date == DateTime.UtcNow.Date)
-            {
-                lblRefreshTokenExpires.Text = "Refresh token is expired. Reinitialize using buttons above.";
-            }
-            else
-            {
-                lblRefreshTokenExpires.Text = $"Refresh token expires {_client.AuthResult.RefreshTokenExpirationUtc.Date:d}";
-            }
-        }
-        else
-        {
-            lblRefreshTokenExpires.Text = "Refresh token is not valid yet.";
-        }
+        lblRefreshTokenExpires.Text = _client.AuthResult.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date 
+            ? $"Refresh token expires {_client.AuthResult.RefreshTokenExpirationUtc.Date:d}" 
+            : "Refresh token is expired or never was set. Initialize using buttons above.";
         timer1.Enabled = true;
     }
 }
