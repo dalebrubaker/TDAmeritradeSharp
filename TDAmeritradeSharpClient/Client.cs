@@ -555,8 +555,8 @@ public class Client : IDisposable
     }
 
     /// <summary>
-    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account based on the properties of the application you specified during the application registration
-    ///     process.
+    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account
+    ///     based on the properties of the application you specified during the application registration process.
     ///     GET order requests will be unthrottled.
     /// </summary>
     /// <param name="path"></param>
@@ -576,8 +576,8 @@ public class Client : IDisposable
     }
 
     /// <summary>
-    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account based on the properties of the application you specified during the application registration
-    ///     process.
+    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account
+    ///     based on the properties of the application you specified during the application registration process.
     ///     GET order requests will be unthrottled.
     /// </summary>
     /// <param name="req"></param>
@@ -623,7 +623,15 @@ public class Client : IDisposable
     public async Task CancelOrder(string accountId, string orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
-        await SendRequest(path).ConfigureAwait(false);
+        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
+        var res = await _httpClient.DeleteAsync(path);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                break;
+            default:
+                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
+        }
     }
 
     /// <summary>

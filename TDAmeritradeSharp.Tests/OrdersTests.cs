@@ -52,7 +52,7 @@ public class OrdersTests
     }
 
     [Test]
-    [Ignore("Places order")]
+    //[Ignore("Places order")]
     public async Task TestSingleLimitOrder()
     {
         var close = _testQuote.closePrice;
@@ -76,6 +76,9 @@ public class OrdersTests
         };
        var orderId = await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
        Assert.IsNotNull(orderId);
+       var orderPlaced = await _client.GetOrder(_testAccountId, orderId).ConfigureAwait(false);
+       Assert.AreEqual(orderId, orderPlaced.orderId);
+       await _client.CancelOrder(_testAccountId, orderId);
     }
 
     [Test]
