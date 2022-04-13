@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritrade.Tests
@@ -17,7 +18,15 @@ namespace TDAmeritrade.Tests
         {
             // Please sign in first, following services uses the client file
             _client = new Client();
-            await _client.RequireNotExpiredTokensAsync().ConfigureAwait(false);
+            try
+            {
+                await _client.RequireNotExpiredTokensAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Assert.IsTrue(false);
+                throw;
+            }
             Assert.IsTrue(_client.IsSignedIn);
             var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
             var testAccountPath = Path.Combine(userSettingsDirectory, $"TestAccount.txt");
@@ -138,31 +147,33 @@ namespace TDAmeritrade.Tests
         }
 
         [Test]
-        public async Task TestPriceHistory_NoAuth()
-        {
-            var data = await _client.GetPriceHistory(new TDPriceHistoryRequest
-            {
-                symbol = "MSFT",
-                frequencyType = TDPriceHistoryRequest.FrequencyType.minute,
-                frequency = 5,
-                periodType = TDPriceHistoryRequest.PeriodTypes.day,
-                period = 5,
-            });
-            Assert.IsTrue(data.Length > 0);
-        }
-
-        [Test]
         public async Task TestPriceHistory()
         {
-            var data = await _client.GetPriceHistory(new TDPriceHistoryRequest
+            var candles = await _client.GetPriceHistory(new TDPriceHistoryRequest
             {
+                // limit is 20 years of daily or 10 days of minute 
                 symbol = "MSFT",
                 frequencyType = TDPriceHistoryRequest.FrequencyType.minute,
                 frequency = 5,
                 periodType = TDPriceHistoryRequest.PeriodTypes.day,
                 period = 5,
             });
-            Assert.IsTrue(data.Length > 0);
+            Assert.IsTrue(candles.Length > 0);
+        }
+        
+        [Test]
+        public async Task TestPriceHistoryMaxDays()
+        {
+            var candles = await _client.GetPriceHistory(new TDPriceHistoryRequest
+            {
+                // limit is 20 years of daily or 10 days of minute 
+                symbol = "MSFT",
+                frequencyType = TDPriceHistoryRequest.FrequencyType.daily,
+                frequency = 1,
+                periodType = TDPriceHistoryRequest.PeriodTypes.year,
+                period = 20,
+            });
+            Assert.IsTrue(candles.Length > 0);
         }
 
         [Test]

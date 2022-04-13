@@ -12,11 +12,19 @@ public struct TDPriceCandle
     public double open { get; set; }
     public double volume { get; set; }
 
+    /// <summary>
+    /// Timestamp of the START of the bar
+    /// </summary>
     [JsonIgnore]
     public DateTime DateTime
     {
-        get => TDHelpers.FromUnixTimeSeconds(datetime);
+        get => TDHelpers.FromUnixTimeMilliseconds(datetime);
         set => datetime = value.ToUnixTimeSeconds();
+    }
+
+    public override string ToString()
+    {
+        return $"{DateTime:g}";
     }
 }
 
