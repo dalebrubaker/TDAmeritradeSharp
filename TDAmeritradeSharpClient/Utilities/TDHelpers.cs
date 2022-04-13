@@ -145,29 +145,30 @@ public static class TDHelpers
 
     public static string Pretty(this TimeSpan timeSpan)
     {
-        if (timeSpan.TotalSeconds < 1)
+        var str = $"{timeSpan:c}";
+        var startIndex = 0;
+        var length = 0;
+        var isDroppingLeadingChars = true;
+        foreach (var ch in str)
         {
-            return $"{timeSpan.TotalMilliseconds:N0} ms";
+            if (ch == '.')
+            {
+                // Drop fraction
+                break;
+            }
+            if (isDroppingLeadingChars && (ch == '0' || ch == ':'))
+            {
+                // drop leading 0: and 00: and 0:00:
+                startIndex++;
+            }
+            else
+            {
+                isDroppingLeadingChars = false;
+                length++;
+            }
         }
-        if (timeSpan.TotalMinutes < 1)
-        {
-            return $"{timeSpan.TotalSeconds:N0} seconds";
-        }
-        if (timeSpan.TotalHours < 1)
-        {
-            // Remove fractional portion so we don't show rounded-up minutes
-            var min = Math.Floor(timeSpan.TotalMinutes);
-            return $"{min:N0}:{timeSpan.Seconds:00}";
-        }
-        if (timeSpan.TotalDays < 1)
-        {
-            // Remove fractional portion so we don't show rounded-up hours
-            var hours = Math.Floor(timeSpan.TotalHours);
-            return $"{hours:N0}:{timeSpan.Minutes:00}:{timeSpan.Seconds:00}";
-        }
-        // Remove fractional portion so we don't show rounded-up days
-        var days = Math.Floor(timeSpan.TotalDays);
-        return $"{days:N0}:{timeSpan.Hours:00}:{timeSpan.Minutes:00}:{timeSpan.Seconds:00}";
+        str = str.Substring(startIndex, length);
+        return str;
     }
 
     /// <summary>
