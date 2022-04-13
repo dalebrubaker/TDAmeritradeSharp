@@ -52,7 +52,6 @@ public class OrdersTests
     }
 
     [Test]
-    //[Ignore("Places order")]
     public async Task TestSingleLimitOrder()
     {
         var close = _testQuote.closePrice;
@@ -109,6 +108,57 @@ public class OrdersTests
         };
         await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
     }
+    
+    [Test]
+    public async Task TestReplaceLimitOrder()
+    {
+        var close = _testQuote.closePrice;
+        var limitPrice = close * 0.5; // attempt to avoid a fill
+        var quantity = 1;
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            price = limitPrice,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = quantity,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        Assert.IsNotNull(orderId);
+        
+        var replaceLimitPrice = close * 0.5; // attempt to avoid a fill
+        var replaceQuantity = 2;
+        var replacementOrder = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            price = limitPrice ,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = replaceQuantity,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        
+        await _client.ReplaceOrderAsync(replacementOrder, _testAccountId, orderId);
+
+    }
+
 
     [Test]
     public async Task TestGetOrdersForAccount()
@@ -124,4 +174,6 @@ public class OrdersTests
         var order = await _client.GetOrderAsync(_testAccountId, OrderId).ConfigureAwait(false);
         Assert.AreEqual(OrderId, order.orderId);
     }
+    
+    
 }

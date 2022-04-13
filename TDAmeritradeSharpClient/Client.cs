@@ -661,6 +661,26 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
+    
+    public async Task ReplaceOrderAsync(OrderBase replacementOrder, string accountId, string orderId)
+    {
+        var existingOrder = await GetOrderAsync(accountId, orderId).ConfigureAwait(false);
+        var json = replacementOrder.GetJson();
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        // TODO fix path etc.
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
+        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
+        var res = await _httpClient.PutAsync(path, content);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                // TODO Return the replacementOrder.orderId?
+                break;
+            default:
+                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
+        }
+    }
 
     /// <summary>
     /// Do GetOrdersByPath
