@@ -103,7 +103,7 @@ public partial class AuthUserControl : UserControl
         var code = textBoxEncodedAuthCode.Text;
         var consumerKey = Settings.ConsumerKey;
         var callback = Settings.CallbackUrl;
-        var result = await _client.SetAuthResults(code, consumerKey, callback);
+        var result = await _client.SetAuthResultsAsync(code, consumerKey, callback);
         logControl1.LogMessage(result);
         MessageBox.Show(result);
         if (result == Client.Success)

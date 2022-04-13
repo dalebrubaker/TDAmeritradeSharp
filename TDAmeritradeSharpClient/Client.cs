@@ -98,7 +98,7 @@ public class Client : IDisposable
     /// <param name="consumerKey"></param>
     /// <param name="callback"></param>
     /// <returns></returns>
-    public async Task<string> SetAuthResults(string code, string consumerKey, string callback)
+    public async Task<string> SetAuthResultsAsync(string code, string consumerKey, string callback)
     {
         var decoded = HttpUtility.UrlDecode(code);
         var dict = new Dictionary<string, string>
@@ -216,7 +216,7 @@ public class Client : IDisposable
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
         {
-            var json = await SendRequest(req);
+            var json = await SendRequestAsync(req);
             var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
             authResult.security_code = code;
             authResult.consumer_key = consumerKey;
@@ -239,7 +239,7 @@ public class Client : IDisposable
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
         {
-            var json = await SendRequest(req);
+            var json = await SendRequestAsync(req);
             var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
             authResult.security_code = AuthResult.security_code;
             authResult.consumer_key = AuthResult.consumer_key;
@@ -272,9 +272,9 @@ public class Client : IDisposable
     ///     Get option chain for an optionable Symbol
     ///     https://developer.tdameritrade.com/option-chains/apis/get/marketdata/chains
     /// </summary>
-    public async Task<TDOptionChain?> GetOptionsChain(TDOptionChainRequest request)
+    public async Task<TDOptionChain?> GetOptionsChainAsync(TDOptionChainRequest request)
     {
-        var json = await GetOptionsChainJson(request);
+        var json = await GetOptionsChainJsonAsync(request);
         if (!IsNullOrEmpty(json))
         {
             return JsonConvert.DeserializeObject<TDOptionChain>(json, new TDOptionChainConverter());
@@ -286,7 +286,7 @@ public class Client : IDisposable
     ///     Get option chain for an optionable Symbol
     ///     https://developer.tdameritrade.com/option-chains/apis/get/marketdata/chains
     /// </summary>
-    public async Task<string> GetOptionsChainJson(TDOptionChainRequest request)
+    public async Task<string> GetOptionsChainJsonAsync(TDOptionChainRequest request)
     {
         if (!HasConsumerKey)
         {
@@ -341,7 +341,7 @@ public class Client : IDisposable
         var q = queryString.ToString();
 
         var path = $"https://api.tdameritrade.com/v1/marketdata/chains?{q}";
-        var result = await SendRequest(path).ConfigureAwait(false);
+        var result = await SendRequestAsync(path).ConfigureAwait(false);
         return result;
     }
 
@@ -354,9 +354,9 @@ public class Client : IDisposable
     ///     https://developer.tdameritrade.com/price-history/apis/get/marketdata/%7Bsymbol%7D/pricehistory
     ///     https://developer.tdameritrade.com/content/price-history-samples
     /// </summary>
-    public async Task<TDPriceCandle[]?> GetPriceHistory(TDPriceHistoryRequest model)
+    public async Task<TDPriceCandle[]?> GetPriceHistoryAsync(TDPriceHistoryRequest model)
     {
-        var json = await GetPriceHistoryJson(model);
+        var json = await GetPriceHistoryJsonAsync(model);
         if (!IsNullOrEmpty(json))
         {
             var doc = JObject.Parse(json);
@@ -372,7 +372,7 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    private async Task<string> GetPriceHistoryJson(TDPriceHistoryRequest model)
+    private async Task<string> GetPriceHistoryJsonAsync(TDPriceHistoryRequest model)
     {
         if (!HasConsumerKey)
         {
@@ -406,41 +406,41 @@ public class Client : IDisposable
         }
         builder.Query = query.ToString();
         var url = builder.ToString();
-        return await SendRequest(url).ConfigureAwait(false);
+        return await SendRequestAsync(url).ConfigureAwait(false);
     }
 
     #endregion PriceHistory
 
     #region Quotes
 
-    public Task<TDEquityQuote> GetQuote_Equity(string symbol)
+    public Task<TDEquityQuote> GetQuote_EquityAsync(string symbol)
     {
-        return GetQuote<TDEquityQuote>(symbol);
+        return GetQuoteAsync<TDEquityQuote>(symbol);
     }
 
-    public Task<TDIndexQuote> GetQuote_Index(string symbol)
+    public Task<TDIndexQuote> GetQuote_IndexAsync(string symbol)
     {
-        return GetQuote<TDIndexQuote>(symbol);
+        return GetQuoteAsync<TDIndexQuote>(symbol);
     }
 
-    public Task<FutureQuote> GetQuote_Future(string symbol)
+    public Task<FutureQuote> GetQuote_FutureAsync(string symbol)
     {
-        return GetQuote<FutureQuote>(symbol);
+        return GetQuoteAsync<FutureQuote>(symbol);
     }
 
     public Task<FutureOptionsQuote> GetQuote_FutureOption(string symbol)
     {
-        return GetQuote<FutureOptionsQuote>(symbol);
+        return GetQuoteAsync<FutureOptionsQuote>(symbol);
     }
 
-    public Task<TDOptionQuote> GetQuote_Option(string symbol)
+    public Task<TDOptionQuote> GetQuote_OptionAsync(string symbol)
     {
-        return GetQuote<TDOptionQuote>(symbol);
+        return GetQuoteAsync<TDOptionQuote>(symbol);
     }
 
-    public Task<TDForexQuote> GetQuote_Forex(string symbol)
+    public Task<TDForexQuote> GetQuote_ForexAsync(string symbol)
     {
-        return GetQuote<TDForexQuote>(symbol);
+        return GetQuoteAsync<TDForexQuote>(symbol);
     }
 
     /// <summary>
@@ -450,9 +450,9 @@ public class Client : IDisposable
     /// <typeparam name="T"></typeparam>
     /// <param name="symbol"></param>
     /// <returns></returns>
-    public async Task<T> GetQuote<T>(string symbol) where T : TDQuoteBase
+    public async Task<T> GetQuoteAsync<T>(string symbol) where T : TDQuoteBase
     {
-        var json = await GetQuoteJson(symbol);
+        var json = await GetQuoteJsonAsync(symbol);
         if (!IsNullOrEmpty(json))
         {
             var doc = JObject.Parse(json);
@@ -468,7 +468,7 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="symbol"></param>
     /// <returns></returns>
-    public async Task<string> GetQuoteJson(string symbol)
+    public async Task<string> GetQuoteJsonAsync(string symbol)
     {
         if (!HasConsumerKey)
         {
@@ -479,7 +479,7 @@ public class Client : IDisposable
             ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
             : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
 
-        var json = await SendRequest(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
         return json;
     }
 
@@ -492,9 +492,9 @@ public class Client : IDisposable
     ///     <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
     ///     <returns></returns>
     /// </summary>
-    public async Task<TDPrincipal> GetPrincipals(params TDPrincipalsFields[] fields)
+    public async Task<TDPrincipal> GetPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
-        var json = await GetPrincipalsJson(fields);
+        var json = await GetPrincipalsJsonAsync(fields);
         if (!IsNullOrEmpty(json))
         {
             return JsonConvert.DeserializeObject<TDPrincipal>(json);
@@ -507,7 +507,7 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
     /// <returns></returns>
-    private async Task<string> GetPrincipalsJson(params TDPrincipalsFields[] fields)
+    private async Task<string> GetPrincipalsJsonAsync(params TDPrincipalsFields[] fields)
     {
         if (!IsSignedIn)
         {
@@ -515,7 +515,7 @@ public class Client : IDisposable
         }
         var arg = string.Join(",", fields.Select(o => o.ToString()));
         var path = $"https://api.tdameritrade.com/v1/userprincipals?fields={arg}";
-        return await SendRequest(path).ConfigureAwait(false);
+        return await SendRequestAsync(path).ConfigureAwait(false);
     }
 
     #endregion UserInfo
@@ -525,9 +525,9 @@ public class Client : IDisposable
     /// <summary>
     ///     Retrieve market hours for specified single market
     /// </summary>
-    public async Task<TDMarketHour> GetMarketHours(MarketTypes type, DateTime day)
+    public async Task<TDMarketHour> GetMarketHoursAsync(MarketTypes type, DateTime day)
     {
-        var json = await GetMarketHoursJson(type, day);
+        var json = await GetMarketHoursJsonAsync(type, day);
         if (!IsNullOrEmpty(json))
         {
             var doc = JObject.Parse(json);
@@ -539,7 +539,7 @@ public class Client : IDisposable
     /// <summary>
     ///     Retrieve market hours for specified single market
     /// </summary>
-    public async Task<string> GetMarketHoursJson(MarketTypes type, DateTime day)
+    public async Task<string> GetMarketHoursJsonAsync(MarketTypes type, DateTime day)
     {
         if (!HasConsumerKey)
         {
@@ -551,7 +551,7 @@ public class Client : IDisposable
             ? $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?date={dayString}"
             : $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?apikey={key}&date={dayString}";
 
-        return await SendRequest(path).ConfigureAwait(false);
+        return await SendRequestAsync(path).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -562,7 +562,7 @@ public class Client : IDisposable
     /// <param name="path"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    private async Task<string> SendRequest(string path)
+    private async Task<string> SendRequestAsync(string path)
     {
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
         var res = await _httpClient.GetAsync(path);
@@ -583,7 +583,7 @@ public class Client : IDisposable
     /// <param name="req"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    private async Task<string> SendRequest(HttpRequestMessage req)
+    private async Task<string> SendRequestAsync(HttpRequestMessage req)
     {
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
         var res = await _httpClient.SendAsync(req);
@@ -600,18 +600,18 @@ public class Client : IDisposable
 
     #region Accounts
 
-    public async Task<TDAccountModel> GetAccount(string testAccount)
+    public async Task<TDAccountModel> GetAccountAsync(string testAccount)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
-        var json = await SendRequest(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
         var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
         return account;
     }
 
-    public async Task<IEnumerable<TDAccountModel>> GetAccounts()
+    public async Task<IEnumerable<TDAccountModel>> GetAccountsAsync()
     {
         var path = "https://api.tdameritrade.com/v1/accounts";
-        var json = await SendRequest(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
         var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
         return accounts;
     }
@@ -620,7 +620,7 @@ public class Client : IDisposable
 
     #region Orders
 
-    public async Task CancelOrder(string accountId, string orderId)
+    public async Task CancelOrderAsync(string accountId, string orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
@@ -641,7 +641,7 @@ public class Client : IDisposable
     /// <param name="accountId"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> PlaceOrder(OrderBase order, string accountId)
+    public async Task<string> PlaceOrderAsync(OrderBase order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
         var json = order.GetJson();
@@ -664,10 +664,10 @@ public class Client : IDisposable
         }
     }
 
-    public async Task<IEnumerable<TDOrderResponse>> GetOrdersForAccount(string accountId)
+    public async Task<IEnumerable<TDOrderResponse>> GetOrdersForAccountAsync(string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = await SendRequest(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
         var result0 = JsonConvert.DeserializeObject(json);
         try
         {
@@ -683,10 +683,10 @@ public class Client : IDisposable
 
     #endregion Orders
 
-    public async Task<TDOrderResponse> GetOrder(string accountId, string orderId)
+    public async Task<TDOrderResponse> GetOrderAsync(string accountId, string orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
-        var json = await SendRequest(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
         var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
         return result;
     }

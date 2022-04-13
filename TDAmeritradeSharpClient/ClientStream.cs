@@ -54,7 +54,7 @@ public class ClientStream : IDisposable
 
     public void Dispose()
     {
-        Cleanup();
+        CleanupAsync();
     }
 
     /// <summary>Client sent errors</summary>
@@ -99,7 +99,7 @@ public class ClientStream : IDisposable
                 throw new Exception("Busy");
             }
 
-            _prince = await _client.GetPrincipals(TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys, TDPrincipalsFields.preferences);
+            _prince = await _client.GetPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys, TDPrincipalsFields.preferences);
             _account = _prince.accounts?.Find(o => o.accountId == _prince.primaryAccountId);
 
             var path = new Uri("wss://" + _prince.streamerInfo?.streamerSocketUrl + "/ws");
@@ -109,15 +109,15 @@ public class ClientStream : IDisposable
 
             if (_socket.State == WebSocketState.Open)
             {
-                await Login();
-                Receive();
+                await LoginAsync();
+                ReceiveAsync();
                 IsConnected = true;
             }
         }
         catch (Exception ex)
         {
             OnException(ex);
-            Cleanup();
+            CleanupAsync();
         }
     }
 
@@ -131,7 +131,7 @@ public class ClientStream : IDisposable
         {
             if (_socket.State == WebSocketState.Open)
             {
-                await LogOut();
+                await LogOutAsync();
                 await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
                 OnConnect(IsConnected);
             }
@@ -150,7 +150,7 @@ public class ClientStream : IDisposable
     /// <param name="symbols">spy,qqq,amd</param>
     /// <param name="isFutureSymbol">true if symbols are for futures</param>
     /// <returns></returns>
-    public Task SubscribeChart(string symbols, TDChartSubs service)
+    public Task SubscribeChartAsync(string symbols, TDChartSubs service)
     {
         var request = new TDRealtimeRequestContainer
         {
@@ -172,7 +172,7 @@ public class ClientStream : IDisposable
             }
         };
         var data = JsonConvert.SerializeObject(request, _settings);
-        return SendToServer(data);    }
+        return SendToServerAsync(data);    }
 
    /// <summary>
         /// Unsubscribed to the chart event service
@@ -180,7 +180,7 @@ public class ClientStream : IDisposable
         /// <param name="symbols">spy,qqq,amd</param>
         /// <param name="isFutureSymbol">true if symbols are for futures</param>
         /// <returns></returns>
-        public Task UnsubscribeChart(string symbols, TDChartSubs service)
+        public Task UnsubscribeChartAsync(string symbols, TDChartSubs service)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -201,7 +201,7 @@ public class ClientStream : IDisposable
                     }
             };
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ public class ClientStream : IDisposable
         /// </summary>
         /// <param name="symbols"></param>
         /// <returns></returns>
-        public Task SubscribeQuote(string symbols)
+        public Task SubscribeQuoteAsync(string symbols)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -232,7 +232,7 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ public class ClientStream : IDisposable
         /// </summary>
         /// <param name="symbols"></param>
         /// <returns></returns>
-        public Task UnsubscribeQuote(string symbols)
+        public Task UnsubscribeQuoteAsync(string symbols)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -262,7 +262,7 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ public class ClientStream : IDisposable
         /// <param name="symbols">spy,qqq,amd</param>
         /// <param name="service">data service to subscribe to</param>
         /// <returns></returns>
-        public Task SubscribeTimeSale(string symbols, TDTimeSaleServices service)
+        public Task SubscribeTimeSaleAsync(string symbols, TDTimeSaleServices service)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -294,7 +294,7 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ public class ClientStream : IDisposable
         /// <param name="symbols">spy,qqq,amd</param>
         /// <param name="service">data service to subscribe to</param>
         /// <returns></returns>
-        public Task UnsubscribeTimeSale(string symbols, TDTimeSaleServices service)
+        public Task UnsubscribeTimeSaleAsync(string symbols, TDTimeSaleServices service)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -325,14 +325,14 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
         /// Subscribe to the level two order book. Note this stream has no official documentation, and it's not entirely clear what exchange it corresponds to.Use at your own risk.
         /// </summary>
         /// <returns></returns>
-        public Task SubscribeBook(string symbols, TDBookOptions option)
+        public Task SubscribeBookAsync(string symbols, TDBookOptions option)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -355,14 +355,14 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
         /// Unsubscribe to the level two order book. Note this stream has no official documentation, and it's not entirely clear what exchange it corresponds to.Use at your own risk.
         /// </summary>
         /// <returns></returns>
-        public Task UnsubscribeBook(string symbols, TDBookOptions option)
+        public Task UnsubscribeBookAsync(string symbols, TDBookOptions option)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -384,7 +384,7 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ public class ClientStream : IDisposable
         /// </summary>
         /// <param name="quality">Quality of Service, or the rate the data will be sent to the client.</param>
         /// <returns></returns>
-        public Task RequestQOS(TDQOSLevels quality)
+        public Task RequestQOSAsync(TDQOSLevels quality)
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -414,14 +414,14 @@ public class ClientStream : IDisposable
             };
 
             var data = JsonConvert.SerializeObject(request, _settings);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
         /// <summary>
         /// Sends a request to the server
         /// </summary>
         /// <param name="data"></param>
-        public async Task SendToServer(string data)
+        public async Task SendToServerAsync(string data)
         {
             await _slim.WaitAsync();
             try
@@ -436,7 +436,7 @@ public class ClientStream : IDisposable
             catch (Exception ex)
             {
                 OnException(ex);
-                Cleanup();
+                CleanupAsync();
             }
             finally
             {
@@ -446,7 +446,7 @@ public class ClientStream : IDisposable
 
     //
 
-    private async void Receive()
+    private async void ReceiveAsync()
     {
         var buffer = new ArraySegment<byte>(new byte[2048]);
         try
@@ -481,11 +481,11 @@ public class ClientStream : IDisposable
         catch (Exception ex)
         {
             OnException(ex);
-            Cleanup();
+            CleanupAsync();
         }
     }
 
-    private Task Login()
+    private Task LoginAsync()
         {
             if (_account == null)
             {
@@ -535,10 +535,10 @@ public class ClientStream : IDisposable
                 }
             };
             var data = JsonConvert.SerializeObject(request);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
-        private Task LogOut()
+        private Task LogOutAsync()
         {
             var request = new TDRealtimeRequestContainer
             {
@@ -556,7 +556,7 @@ public class ClientStream : IDisposable
                 }
             };
             var data = JsonConvert.SerializeObject(request);
-            return SendToServer(data);
+            return SendToServerAsync(data);
         }
 
     private void HandleMessage(string msg)
@@ -573,13 +573,13 @@ public class ClientStream : IDisposable
         }
     }
 
-    private async void Cleanup()
+    private async void CleReanupAsync()
     {
         if (_socket != null)
         {
             if (_socket.State == WebSocketState.Open)
             {
-                await LogOut();
+                await LogOutAsync();
                 if (_socket != null)
                 {
                     await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);

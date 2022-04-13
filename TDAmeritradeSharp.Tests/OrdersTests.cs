@@ -32,21 +32,21 @@ public class OrdersTests
         var testAccountPath = Path.Combine(userSettingsDirectory, "TestAccount.txt");
         _testAccountId = await File.ReadAllTextAsync(testAccountPath);
 
-        _testQuote = await _client.GetQuote_Equity("BTG"); // a low-priced stock
+        _testQuote = await _client.GetQuote_EquityAsync("BTG"); // a low-priced stock
         Assert.IsTrue(_testQuote.symbol == "BTG");
     }
 
     [Test]
     public async Task TestGetAccount()
     {
-        var account = await _client.GetAccount(_testAccountId);
+        var account = await _client.GetAccountAsync(_testAccountId);
         Assert.IsTrue(account.securitiesAccount.accountId == _testAccountId);
     }
 
     [Test]
     public async Task TestGetAccounts()
     {
-        var accounts = await _client.GetAccounts();
+        var accounts = await _client.GetAccountsAsync();
         var testAccount = accounts.FirstOrDefault(x => x.securitiesAccount.accountId == _testAccountId);
         Assert.IsNotNull(testAccount);
     }
@@ -74,11 +74,11 @@ public class OrdersTests
                 }
             }
         };
-       var orderId = await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
+       var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
        Assert.IsNotNull(orderId);
-       var orderPlaced = await _client.GetOrder(_testAccountId, orderId).ConfigureAwait(false);
+       var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
        Assert.AreEqual(orderId, orderPlaced.orderId);
-       await _client.CancelOrder(_testAccountId, orderId);
+       await _client.CancelOrderAsync(_testAccountId, orderId);
     }
 
     [Test]
@@ -101,13 +101,13 @@ public class OrdersTests
                 }
             }
         };
-        await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
+        await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
     }
 
     [Test]
     public async Task TestGetOrdersForAccount()
     {
-        var orders = await _client.GetOrdersForAccount(_testAccountId).ConfigureAwait(false);
+        var orders = await _client.GetOrdersForAccountAsync(_testAccountId).ConfigureAwait(false);
         Assert.NotNull(orders);
     }
 
@@ -115,7 +115,7 @@ public class OrdersTests
     public async Task TestGetOrder()
     {
         const string OrderId = "8134476058";
-        var order = await _client.GetOrder(_testAccountId, OrderId).ConfigureAwait(false);
+        var order = await _client.GetOrderAsync(_testAccountId, OrderId).ConfigureAwait(false);
         Assert.AreEqual(OrderId, order.orderId);
     }
 }

@@ -53,7 +53,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestOptionChain()
         {
-            var chain = await _client.GetOptionsChain(new TDOptionChainRequest
+            var chain = await _client.GetOptionsChainAsync(new TDOptionChainRequest
             {
                 symbol = "QQQ"
             });
@@ -64,7 +64,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestMarketHours()
         {
-            var hours = await _client.GetMarketHours(MarketTypes.EQUITY, DateTime.Now);
+            var hours = await _client.GetMarketHoursAsync(MarketTypes.EQUITY, DateTime.Now);
             Assert.IsTrue(hours.marketType == "EQUITY");
         }
 
@@ -117,35 +117,35 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestTDQuoteClient_Equity()
         {
-            var data = await _client.GetQuote_Equity("MSFT");
+            var data = await _client.GetQuote_EquityAsync("MSFT");
             Assert.IsTrue(data.symbol == "MSFT");
         }
 
         [Test]
         public async Task TestTDQuoteClient_Index()
         {
-            var data = await _client.GetQuote_Index("$SPX.X");
+            var data = await _client.GetQuote_IndexAsync("$SPX.X");
             Assert.IsTrue(data.symbol == "$SPX.X");
         }
 
         [Test]
         public async Task TestTDQuoteClient_Future()
         {
-            var data = await _client.GetQuote_Future("/ES");
+            var data = await _client.GetQuote_FutureAsync("/ES");
             Assert.IsTrue(data.symbol == "ES");
         }
 
         [Test]
         public async Task TestTDQuoteClient_Option()
         {
-            var data = await _client.GetQuote_Option("SPY_231215C500");
+            var data = await _client.GetQuote_OptionAsync("SPY_231215C500");
             Assert.IsTrue(data.symbol == "SPY_231215C500");
         }
 
         [Test]
         public async Task TestPriceHistory()
         {
-            var candles = await _client.GetPriceHistory(new TDPriceHistoryRequest
+            var candles = await _client.GetPriceHistoryAsync(new TDPriceHistoryRequest
             {
                 // limit is 20 years of daily or 10 days of minute 
                 symbol = "MSFT",
@@ -160,7 +160,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestPriceHistoryMaxDays()
         {
-            var candles = await _client.GetPriceHistory(new TDPriceHistoryRequest
+            var candles = await _client.GetPriceHistoryAsync(new TDPriceHistoryRequest
             {
                 // limit is 20 years of daily or 10 days of minute 
                 symbol = "MSFT",
@@ -175,7 +175,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestTDPrincipalClient()
         {
-            var data = await _client.GetPrincipals(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
+            var data = await _client.GetPrincipalsAsync(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
             Assert.IsTrue(!string.IsNullOrEmpty(data.accessLevel));
         }
 
@@ -184,7 +184,7 @@ namespace TDAmeritrade.Tests
         {
             using var socket = new ClientStream(_client);
             await socket.Connect();
-            await socket.RequestQOS(TDQOSLevels.FAST);
+            await socket.RequestQOSAsync(TDQOSLevels.FAST);
         }
 
         [Test]
@@ -198,11 +198,11 @@ namespace TDAmeritrade.Tests
             socket.OnChartSignal += o => { };
             socket.OnBookSignal += o => { };
             await socket.Connect();
-            await socket.SubscribeQuote(symbol);
-            await socket.SubscribeChart(symbol, TDChartSubs.CHART_EQUITY);
-            await socket.SubscribeTimeSale(symbol, TDTimeSaleServices.TIMESALE_EQUITY);
-            await socket.SubscribeBook(symbol, TDBookOptions.LISTED_BOOK);
-            await socket.SubscribeBook(symbol, TDBookOptions.NASDAQ_BOOK);
+            await socket.SubscribeQuoteAsync(symbol);
+            await socket.SubscribeChartAsync(symbol, TDChartSubs.CHART_EQUITY);
+            await socket.SubscribeTimeSaleAsync(symbol, TDTimeSaleServices.TIMESALE_EQUITY);
+            await socket.SubscribeBookAsync(symbol, TDBookOptions.LISTED_BOOK);
+            await socket.SubscribeBookAsync(symbol, TDBookOptions.NASDAQ_BOOK);
             await Task.Delay(1000);
             Assert.IsTrue(socket.IsConnected);
             await socket.Disconnect();
@@ -221,9 +221,9 @@ namespace TDAmeritrade.Tests
             socket.OnBookSignal += o => { };
 
             await socket.Connect();
-            await socket.SubscribeQuote(symbol);
-            await socket.SubscribeChart(symbol, TDChartSubs.CHART_FUTURES);
-            await socket.SubscribeTimeSale(symbol, TDTimeSaleServices.TIMESALE_FUTURES);
+            await socket.SubscribeQuoteAsync(symbol);
+            await socket.SubscribeChartAsync(symbol, TDChartSubs.CHART_FUTURES);
+            await socket.SubscribeTimeSaleAsync(symbol, TDTimeSaleServices.TIMESALE_FUTURES);
             await Task.Delay(2000);
             Assert.IsTrue(socket.IsConnected);
             await socket.Disconnect();
