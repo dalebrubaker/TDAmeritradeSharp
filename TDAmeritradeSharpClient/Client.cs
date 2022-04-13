@@ -646,5 +646,30 @@ public class Client : IDisposable
         }
     }
 
+    public async Task<IEnumerable<TDOrderResponse>> GetOrdersForAccount(string accountId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
+        var json = await SendRequest(path).ConfigureAwait(false);
+        var result0 = JsonConvert.DeserializeObject(json);
+        try
+        {
+            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
     #endregion Orders
+
+    public async Task<TDOrderResponse> GetOrder(string accountId, string orderId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
+        var json = await SendRequest(path).ConfigureAwait(false);
+        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
+        return result;
+    }
 }

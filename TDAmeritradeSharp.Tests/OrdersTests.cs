@@ -52,6 +52,7 @@ public class OrdersTests
     }
 
     [Test]
+    [Ignore("Places order")]
     public async Task TestSingleLimitOrder()
     {
         var close = _testQuote.closePrice;
@@ -97,5 +98,20 @@ public class OrdersTests
             }
         };
         await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
+    }
+
+    [Test]
+    public async Task TestGetOrdersForAccount()
+    {
+        var orders = await _client.GetOrdersForAccount(_testAccountId).ConfigureAwait(false);
+        Assert.NotNull(orders);
+    }
+
+    [Test]
+    public async Task TestGetOrder()
+    {
+        const string OrderId = "8134476058";
+        var order = await _client.GetOrder(_testAccountId, OrderId).ConfigureAwait(false);
+        Assert.AreEqual(OrderId, order.orderId);
     }
 }

@@ -13,40 +13,49 @@ public class CancelTime
     public bool shortFormat { get; set; }
 }
 
-public class OrderLeg : OrderLegBase
+public class OrderLeg
 {
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.instruction instruction { get; set; }
+
+    public Instrument instrument { get; set; } = null!;
+
+    public double quantity { get; set; }
+
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.orderLegType orderLegType { get; set; }
 
-    public int legId { get; set; }
+    public double legId { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.positionEffect positionEffect { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.quantityType quantityType { get; set; }
+
+    public override string ToString()
+    {
+        return $"{instrument.symbol} {instruction} {quantity}";
+    }
 }
 
-public abstract class OrderInstrumentBase
+public class OrderInstrumentBase
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public abstract TDOrderModelsEnums.assetType assetType { get; }
-
     public string symbol { get; set; } = null!;
-    //public string cusip { get; set; } = null!;
-    //public string description { get; set; } = null!;
+    public string cusip { get; set; } = null!;
+    public string description { get; set; } = null!;
 }
 
 public class EquityOrderInstrument : OrderInstrumentBase
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public override TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.EQUITY;
+    public TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.EQUITY;
 }
 
 public class FixedIncomeOrderInstrument : OrderInstrumentBase
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public override TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.FIXED_INCOME;
+    public TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.FIXED_INCOME;
 
     public string maturityDate { get; set; } = null!;
     public double variableRate { get; set; }
@@ -56,7 +65,7 @@ public class FixedIncomeOrderInstrument : OrderInstrumentBase
 public class MutualFundOrderInstrument : OrderInstrumentBase
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public override TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.MUTUAL_FUND;
+    public TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.MUTUAL_FUND;
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.typeMutualFund type { get; set; }
@@ -65,7 +74,7 @@ public class MutualFundOrderInstrument : OrderInstrumentBase
 public class CashEquivalentOrderInstrument : OrderInstrumentBase
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public override TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.CASH_EQUIVALENT;
+    public TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.CASH_EQUIVALENT;
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.typeCashEquivalent type { get; set; }
@@ -74,7 +83,7 @@ public class CashEquivalentOrderInstrument : OrderInstrumentBase
 public class OptionOrderInstrument : OrderInstrumentBase
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public override TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.OPTION;
+    public TDOrderModelsEnums.assetType assetType => TDOrderModelsEnums.assetType.OPTION;
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.typeOption type { get; set; }
@@ -105,7 +114,7 @@ public class OrderActivity
     public TDOrderModelsEnums.activityType activityType { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
-    public TDOrderModelsEnums.executionType executionType { get; set; }
+    public TDOrderModelsEnums.activityTypeExecution executionType { get; set; }
 
     public double quantity { get; set; }
     public double orderRemainingQuantity { get; set; }
@@ -145,7 +154,7 @@ public class TDOrder : OrderBase
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.stopPriceLinkType stopPriceLinkType { get; set; }
 
-    public int stopPriceOffset { get; set; }
+    public double stopPriceOffset { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.stopType stopType { get; set; }
@@ -235,7 +244,7 @@ public class OrderLegBase
 
     public OrderInstrumentBase instrument { get; set; } = null!;
 
-    public int quantity { get; set; }
+    public double quantity { get; set; }
 }
 
 public class EquityOrderLeg : OrderLegBase
@@ -243,5 +252,100 @@ public class EquityOrderLeg : OrderLegBase
     public EquityOrderLeg()
     {
         instrument = new EquityOrderInstrument();
+    }
+}
+
+public class Instrument
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.assetType assetType { get; set; }
+
+    public string cusip { get; set; } = null!;
+    public string symbol { get; set; } = null!;
+}
+
+public class TDOrderResponse
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.orderType orderType { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.session session { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.duration duration { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.orderStrategyType orderStrategyType { get; set; }
+
+    public List<OrderLeg> orderLegCollection { get; set; } = new();
+
+    public double price { get; set; }
+    public CancelTime cancelTime { get; set; } = null!;
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.complexOrderStrategyType complexOrderStrategyType { get; set; }
+
+    public double quantity { get; set; }
+    public double filledQuantity { get; set; }
+    public double remainingQuantity { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.requestedDestination requestedDestination { get; set; }
+
+    public string destinationLinkName { get; set; } = null!;
+    public string releaseTime { get; set; } = null!;
+    public double stopPrice { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.stopPriceLinkBasis stopPriceLinkBasis { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.stopPriceLinkType stopPriceLinkType { get; set; }
+
+    public double stopPriceOffset { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.stopType stopType { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.priceLinkBasis priceLinkBasis { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.priceLinkType priceLinkType { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.taxLotMethod taxLotMethod { get; set; }
+
+    public double activationPrice { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.specialInstruction specialInstruction { get; set; }
+
+    public string orderId { get; set; } = null!;
+    public bool cancelable { get; set; }
+    public bool editable { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.status status { get; set; }
+
+    public string enteredTime { get; set; } = null!;
+    public string closeTime { get; set; } = null!;
+    public string accountId { get; set; } = null!;
+    public List<OrderActivity> orderActivityCollection { get; set; } = null!;
+    public List<TDOrder> replacingOrderCollection { get; set; } = null!;
+    public List<TDOrder> childOrderStrategies { get; set; } = null!;
+    public string statusDescription { get; set; } = null!;
+
+    public string tag { get; set; } = null!;
+
+    public override string ToString()
+    {
+        var result = $"accountId={accountId} orderId={orderId} {orderLegCollection[0]} {orderType}";
+        if (price != 0)
+        {
+            result += $" {price}";
+        }
+        return result;
     }
 }
