@@ -1,4 +1,6 @@
-﻿namespace TDAmeritradeSharpClient;
+﻿// ReSharper disable IdentifierTypo
+// ReSharper disable ClassNeverInstantiated.Global
+namespace TDAmeritradeSharpClient;
 
 // ReSharper disable InconsistentNaming
 public class CancelTime
@@ -82,7 +84,7 @@ public class ExecutionLeg
     public string time { get; set; } = null!;
 }
 
-public class Root
+public class TDOrder
 {
     public TDOrderModelsEnums.session session { get; set; }
     public TDOrderModelsEnums.duration duration { get; set; }
@@ -116,7 +118,7 @@ public class Root
     public string closeTime { get; set; } = null!;
     public int accountId { get; set; }
     public List<OrderActivity> orderActivityCollection { get; set; } = null!;
-    public List<OrderActivity> replacingOrderCollection { get; set; } = null!;
-    public List<OrderActivity> childOrderStrategies { get; set; } = null!;
+    public List<TDOrder> replacingOrderCollection { get; set; } = null!;
+    public List<TDOrder> childOrderStrategies { get; set; } = null!;
     public string statusDescription { get; set; } = null!;
 }
