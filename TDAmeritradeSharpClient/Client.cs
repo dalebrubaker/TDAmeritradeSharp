@@ -626,7 +626,14 @@ public class Client : IDisposable
         await SendRequest(path).ConfigureAwait(false);
     }
 
-    public async Task PlaceOrder(OrderBase order, string accountId)
+    /// <summary>
+    /// Places an order and returns its orderId
+    /// </summary>
+    /// <param name="order"></param>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<string> PlaceOrder(OrderBase order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
         var json = order.GetJson();
@@ -639,8 +646,11 @@ public class Client : IDisposable
         switch (httpResponseMessage.StatusCode)
         {
             case HttpStatusCode.Created:
-                var res = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
-                break;
+                var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
+                var value = location.Value.First();
+                var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
+                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                return orderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }

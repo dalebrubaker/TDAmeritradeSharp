@@ -74,7 +74,8 @@ public class OrdersTests
                 }
             }
         };
-        await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
+       var orderId = await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
+       Assert.IsNotNull(orderId);
     }
 
     [Test]
