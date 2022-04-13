@@ -78,6 +78,9 @@ public class OrdersTests
        Assert.IsNotNull(orderId);
        var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
        Assert.AreEqual(orderId, orderPlaced.orderId);
+       var allOrders = await _client.GetOrdersForAccountAsync(_testAccountId, 2, fromEnteredTime: DateTime.Today,
+           status:TDOrderModelsEnums.status.CANCELED);
+       Assert.GreaterOrEqual(allOrders.Count(), 0);
        await _client.CancelOrderAsync(_testAccountId, orderId);
     }
 
