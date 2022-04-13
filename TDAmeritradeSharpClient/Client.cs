@@ -1,7 +1,9 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
+using System.Text;
 using System.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -124,6 +126,10 @@ public class Client : IDisposable
 
     private void SaveAuthResult(TDAuthResult authResult)
     {
+        if (authResult.refresh_token == null)
+        {
+            throw new Exception("Why?");
+        }
         var jsonSave = JsonConvert.SerializeObject(authResult);
         File.WriteAllText(PathAuthResult, jsonSave);
     }
@@ -211,7 +217,7 @@ public class Client : IDisposable
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
         {
-            var json = await SendThrottledRequest(req);
+            var json = await SendRequest(req);
             var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
             authResult.security_code = code;
             authResult.consumer_key = consumerKey;
@@ -234,11 +240,12 @@ public class Client : IDisposable
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
         {
-            var json = await SendThrottledRequest(req);
+            var json = await SendRequest(req);
             var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
             authResult.security_code = AuthResult.security_code;
             authResult.consumer_key = AuthResult.consumer_key;
-            authResult.redirect_url = AuthResult.redirect_url;
+            authResult.redirect_url = AuthResult.redirect_url; // preserve old refresh token if we are only getting a new access code
+            authResult.refresh_token ??= AuthResult.refresh_token;
             if (authResult.expires_in == 0)
             {
                 authResult.expires_in = AuthResult.expires_in;
@@ -335,7 +342,7 @@ public class Client : IDisposable
         var q = queryString.ToString();
 
         var path = $"https://api.tdameritrade.com/v1/marketdata/chains?{q}";
-        var result = await SendThrottledRequest(path).ConfigureAwait(false);
+        var result = await SendRequest(path).ConfigureAwait(false);
         return result;
     }
 
@@ -400,7 +407,7 @@ public class Client : IDisposable
         }
         builder.Query = query.ToString();
         var url = builder.ToString();
-        return await SendThrottledRequest(url).ConfigureAwait(false);
+        return await SendRequest(url).ConfigureAwait(false);
     }
 
     #endregion PriceHistory
@@ -473,7 +480,7 @@ public class Client : IDisposable
             ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
             : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
 
-        var json = await SendThrottledRequest(path).ConfigureAwait(false);
+        var json = await SendRequest(path).ConfigureAwait(false);
         return json;
     }
 
@@ -509,7 +516,7 @@ public class Client : IDisposable
         }
         var arg = string.Join(",", fields.Select(o => o.ToString()));
         var path = $"https://api.tdameritrade.com/v1/userprincipals?fields={arg}";
-        return await SendThrottledRequest(path).ConfigureAwait(false);
+        return await SendRequest(path).ConfigureAwait(false);
     }
 
     #endregion UserInfo
@@ -545,31 +552,10 @@ public class Client : IDisposable
             ? $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?date={dayString}"
             : $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?apikey={key}&date={dayString}";
 
-        return await SendThrottledRequest(path).ConfigureAwait(false);
+        return await SendRequest(path).ConfigureAwait(false);
     }
 
-    public async Task<TDAccountModel> GetAccount(string testAccount)
-    {
-        var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
-        var json = await SendThrottledRequest(path).ConfigureAwait(false);
-        var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
-        return account;
-    }
-    
-    public async Task<IEnumerable<TDAccountModel>> GetAccounts()
-    {
-        var path = $"https://api.tdameritrade.com/v1/accounts";
-        var json = await SendThrottledRequest(path).ConfigureAwait(false);
-        var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
-        return accounts;
-    }
-
-    /// <summary>
-    ///     All requests except order-related requests are throttled
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns>the Content.ReadAsStringAsync()</returns>
-    private async Task<string> SendThrottledRequest(string path)
+    private async Task<string> SendRequest(string path)
     {
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
         var res = await _httpClient.GetAsync(path);
@@ -581,13 +567,7 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
-
-    /// <summary>
-    ///     Use this method to send ALL requests to HttpClient
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns>the Content.ReadAsStringAsync()</returns>
-    private async Task<string> SendThrottledRequest(HttpRequestMessage req)
+    private async Task<string> SendRequest(HttpRequestMessage req)
     {
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
         var res = await _httpClient.SendAsync(req);
@@ -601,4 +581,98 @@ public class Client : IDisposable
     }
 
     #endregion Misc
+    
+    #region Accounts
+    
+    public async Task<TDAccountModel> GetAccount(string testAccount)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
+        var json = await SendRequest(path).ConfigureAwait(false);
+        var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
+        return account;
+    }
+    
+    public async Task<IEnumerable<TDAccountModel>> GetAccounts()
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts";
+        var json = await SendRequest(path).ConfigureAwait(false);
+        var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
+        return accounts;
+    }
+
+    #endregion Accounts
+
+    #region Orders
+
+    public async Task CancelOrder(string accountId, string orderId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
+        await SendRequest(path).ConfigureAwait(false);
+    }
+
+    public async Task PlaceOrder(TDOrder order, string accountId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
+        var json2 = JsonConvert.SerializeObject(order);
+        var json = GetPlaceOrderJson(order);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
+        var result = await _httpClient.PostAsync(path, content);
+        switch (result.StatusCode)
+        {
+            case HttpStatusCode.Created:
+                break;
+            default:
+                throw new Exception($"Bad request: {result.StatusCode} {result.ReasonPhrase}");
+        }
+    }
+
+    private static string GetPlaceOrderJson(TDOrder order)
+    {
+        var json = JsonConvert.SerializeObject(order);
+        var sb = new StringBuilder("{");
+        sb.AppendLine($"\"orderType\" : \"{order.orderType}\",");
+        sb.AppendLine($"\"session\" : \"{order.session}\",");
+        sb.AppendLine($"\"duration\" : \"{order.duration}\",");
+        if (order.orderType != TDOrderModelsEnums.orderType.MARKET)
+        {
+            sb.AppendLine($"\"price\" : \"{order.price}\",");
+        }
+        sb.AppendLine($"\"orderStrategyType\" : \"{order.orderStrategyType}\",");
+        
+        // Do orderLegCollection
+        sb.AppendLine("\"orderLegCollection\" : [");
+        foreach (var orderLeg in order.orderLegCollection)
+        {
+            sb.AppendLine("{");
+            sb.AppendLine($"\"instruction\": \"{orderLeg.instruction}\",");
+            sb.AppendLine($"\"quantity\": \"{orderLeg.quantity}\",");
+            sb.AppendLine("\"instrument\": {");
+            sb.AppendLine($"\"symbol\": \"{orderLeg.instrument.symbol}\",");
+            sb.AppendLine($"\"assetType\": \"{orderLeg.instrument.assetType}\"");
+            sb.AppendLine("}");
+            sb.AppendLine("}");
+            sb.AppendLine("]");
+        }
+
+        //var jsonOrderLegCollection = JsonConvert.SerializeObject(order.orderLegCollection);
+        //sb.AppendLine(jsonOrderLegCollection);
+        sb.AppendLine("}");
+        var result = sb.ToString();
+
+        try
+        {
+            var test = JsonConvert.DeserializeObject(result);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        
+        return result;
+    }
+
+    #endregion Orders
 }

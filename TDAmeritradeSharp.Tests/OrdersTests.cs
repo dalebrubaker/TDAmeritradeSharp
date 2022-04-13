@@ -1,51 +1,84 @@
-using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using NUnit.Framework;
 using TDAmeritradeSharpClient;
 
-namespace TDAmeritrade.Tests
+namespace TDAmeritrade.Tests;
+
+public class OrdersTests
 {
-    public class OrdersTests
+    private Client _client;
+    private string _testAccountId;
+    private TDEquityQuote _testQuote;
+
+    [SetUp]
+    public async Task Init()
     {
-        Client _client;
-        private string _testAccountId;
+        // Please sign in first, following services uses the client file
+        _client = new Client();
+        try
+        {
+            await _client.RequireNotExpiredTokensAsync().ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            Assert.IsTrue(false);
+            throw;
+        }
+        Assert.IsTrue(_client.IsSignedIn);
+        var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
+        var testAccountPath = Path.Combine(userSettingsDirectory, "TestAccount.txt");
+        _testAccountId = await File.ReadAllTextAsync(testAccountPath);
 
-        [SetUp]
-        public async Task Init()
-        {
-            // Please sign in first, following services uses the client file
-            _client = new Client();
-            try
-            {
-                await _client.RequireNotExpiredTokensAsync().ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                Assert.IsTrue(false);
-                throw;
-            }
-            Assert.IsTrue(_client.IsSignedIn);
-            var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
-            var testAccountPath = Path.Combine(userSettingsDirectory, $"TestAccount.txt");
-            _testAccountId = await File.ReadAllTextAsync(testAccountPath);
-        }
+        _testQuote = await _client.GetQuote_Equity("BTG"); // a low-priced stock
+        Assert.IsTrue(_testQuote.symbol == "BTG");
+    }
 
-        [Test]
-        public async Task TestGetAccount()
+    [Test]
+    public async Task TestGetAccount()
+    {
+        var account = await _client.GetAccount(_testAccountId);
+        Assert.IsTrue(account.securitiesAccount.accountId == _testAccountId);
+    }
+
+    [Test]
+    public async Task TestGetAccounts()
+    {
+        var accounts = await _client.GetAccounts();
+        var testAccount = accounts.FirstOrDefault(x => x.securitiesAccount.accountId == _testAccountId);
+        Assert.IsNotNull(testAccount);
+    }
+
+    [Test]
+    public async Task TestSingleLimitOrder()
+    {
+        //var currentPrice = _testQuote.regularMarketLastPrice;
+        var close = _testQuote.closePrice;
+        var limitPrice = close * 0.5; // attempt to avoid a fill
+        var order = new TDOrder
         {
-            var account = await _client.GetAccount(_testAccountId);
-            Assert.IsTrue(account.securitiesAccount.accountId == _testAccountId);
-        }
-        
-        [Test]
-        public async Task TestGetAccounts()
-        {
-            var accounts = await _client.GetAccounts();
-            var testAccount = accounts.FirstOrDefault(x => x.securitiesAccount.accountId == _testAccountId);
-            Assert.IsNotNull(testAccount);
-        }
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            price = limitPrice,
+            orderLegCollection = new List<OrderLeg>
+            {
+                new()
+                {
+                    //orderLegType = TDOrderModelsEnums.orderLegType.EQUITY,
+                    instruction = TDOrderModelsEnums.instruction.BUY,
+                    quantity = 1,
+                    instrument = new EquityOrderInstrument
+                    {
+                        symbol = _testQuote.symbol!
+                    }
+                }
+            }
+        };
+        await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
     }
 }

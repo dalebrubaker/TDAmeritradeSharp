@@ -1,6 +1,4 @@
 ﻿// ReSharper disable InconsistentNaming
-using System.Diagnostics;
-
 namespace TDAmeritradeSharpClient;
 
 [Serializable]
@@ -20,7 +18,7 @@ public class TDAuthResult
         {
             if (value == null && _refreshToken != null)
             {
-                Debugger.Launch();
+                throw new Exception("Why?");
             }
             _refreshToken = value;
         }
