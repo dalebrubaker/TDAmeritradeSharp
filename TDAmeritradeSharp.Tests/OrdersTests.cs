@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,27 +54,45 @@ public class OrdersTests
     [Test]
     public async Task TestSingleLimitOrder()
     {
-        //var currentPrice = _testQuote.regularMarketLastPrice;
         var close = _testQuote.closePrice;
         var limitPrice = close * 0.5; // attempt to avoid a fill
-        var order = new TDOrder
+        var order = new EquityOrder
         {
             orderType = TDOrderModelsEnums.orderType.LIMIT,
             session = TDOrderModelsEnums.session.NORMAL,
             duration = TDOrderModelsEnums.duration.DAY,
             orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
             price = limitPrice,
-            orderLegCollection = new List<OrderLeg>
+            OrderLeg = new EquityOrderLeg
             {
-                new()
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
                 {
-                    //orderLegType = TDOrderModelsEnums.orderLegType.EQUITY,
-                    instruction = TDOrderModelsEnums.instruction.BUY,
-                    quantity = 1,
-                    instrument = new EquityOrderInstrument
-                    {
-                        symbol = _testQuote.symbol!
-                    }
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        await _client.PlaceOrder(order, _testAccountId).ConfigureAwait(false);
+    }
+
+    [Test]
+    [Ignore("Actually buys!")]
+    public async Task TestSingleMarketOrder()
+    {
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.MARKET,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
                 }
             }
         };

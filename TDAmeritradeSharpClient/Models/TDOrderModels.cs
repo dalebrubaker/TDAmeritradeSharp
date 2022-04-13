@@ -2,6 +2,7 @@
 // ReSharper disable ClassNeverInstantiated.Global
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace TDAmeritradeSharpClient;
 
@@ -12,21 +13,15 @@ public class CancelTime
     public bool shortFormat { get; set; }
 }
 
-public class OrderLeg
+public class OrderLeg : OrderLegBase
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.orderLegType orderLegType { get; set; }
 
     public int legId { get; set; }
-    public OrderInstrumentBase instrument { get; set; } = null!;
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public TDOrderModelsEnums.instruction instruction { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.positionEffect positionEffect { get; set; }
-
-    public int quantity { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.quantityType quantityType { get; set; }
@@ -37,9 +32,9 @@ public abstract class OrderInstrumentBase
     [JsonConverter(typeof(StringEnumConverter))]
     public abstract TDOrderModelsEnums.assetType assetType { get; }
 
-    public string cusip { get; set; } = null!;
     public string symbol { get; set; } = null!;
-    public string description { get; set; } = null!;
+    //public string cusip { get; set; } = null!;
+    //public string description { get; set; } = null!;
 }
 
 public class EquityOrderInstrument : OrderInstrumentBase
@@ -126,17 +121,8 @@ public class ExecutionLeg
     public string time { get; set; } = null!;
 }
 
-public class TDOrder
+public class TDOrder : OrderBase
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public TDOrderModelsEnums.session session { get; set; }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public TDOrderModelsEnums.duration duration { get; set; }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public TDOrderModelsEnums.orderType orderType { get; set; }
-
     public CancelTime cancelTime { get; set; } = null!;
 
     [JsonConverter(typeof(StringEnumConverter))]
@@ -170,19 +156,13 @@ public class TDOrder
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.priceLinkType priceLinkType { get; set; }
 
-    public double price { get; set; }
-
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.taxLotMethod taxLotMethod { get; set; }
 
-    public List<OrderLeg> orderLegCollection { get; set; } = null!;
     public double activationPrice { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.specialInstruction specialInstruction { get; set; }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public TDOrderModelsEnums.orderStrategyType orderStrategyType { get; set; }
 
     public string orderId { get; set; } = null!;
     public bool cancelable { get; set; }
@@ -198,4 +178,70 @@ public class TDOrder
     public List<TDOrder> replacingOrderCollection { get; set; } = null!;
     public List<TDOrder> childOrderStrategies { get; set; } = null!;
     public string statusDescription { get; set; } = null!;
+}
+
+public class OrderBase
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.orderType orderType { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.session session { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.duration duration { get; set; }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.orderStrategyType orderStrategyType { get; set; }
+
+    public List<OrderLegBase> orderLegCollection { get; set; } = new();
+
+    public double price { get; set; }
+
+    public string GetJson()
+    {
+        var json = JsonConvert.SerializeObject(this);
+        if (orderType == TDOrderModelsEnums.orderType.MARKET)
+        {
+            // Remove the price field
+            var obj = JsonConvert.DeserializeObject<dynamic>(json) as JObject;
+            obj?.Remove("price");
+            json = JsonConvert.SerializeObject(obj);
+        }
+        return json;
+    }
+}
+
+public class EquityOrder : OrderBase
+{
+    public EquityOrder()
+    {
+        var orderLeg = new EquityOrderLeg();
+        orderLegCollection.Add(orderLeg);
+    }
+
+    [JsonIgnore]
+    public OrderLegBase OrderLeg
+    {
+        get => orderLegCollection[0];
+        set => orderLegCollection[0] = value;
+    }
+}
+
+public class OrderLegBase
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.instruction instruction { get; set; }
+
+    public OrderInstrumentBase instrument { get; set; } = null!;
+
+    public int quantity { get; set; }
+}
+
+public class EquityOrderLeg : OrderLegBase
+{
+    public EquityOrderLeg()
+    {
+        instrument = new EquityOrderInstrument();
+    }
 }

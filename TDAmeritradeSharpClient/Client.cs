@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
@@ -555,6 +554,14 @@ public class Client : IDisposable
         return await SendRequest(path).ConfigureAwait(false);
     }
 
+    /// <summary>
+    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account based on the properties of the application you specified during the application registration
+    ///     process.
+    ///     GET order requests will be unthrottled.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     private async Task<string> SendRequest(string path)
     {
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
@@ -567,6 +574,15 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
+
+    /// <summary>
+    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account based on the properties of the application you specified during the application registration
+    ///     process.
+    ///     GET order requests will be unthrottled.
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     private async Task<string> SendRequest(HttpRequestMessage req)
     {
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
@@ -581,9 +597,9 @@ public class Client : IDisposable
     }
 
     #endregion Misc
-    
+
     #region Accounts
-    
+
     public async Task<TDAccountModel> GetAccount(string testAccount)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
@@ -591,10 +607,10 @@ public class Client : IDisposable
         var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
         return account;
     }
-    
+
     public async Task<IEnumerable<TDAccountModel>> GetAccounts()
     {
-        var path = $"https://api.tdameritrade.com/v1/accounts";
+        var path = "https://api.tdameritrade.com/v1/accounts";
         var json = await SendRequest(path).ConfigureAwait(false);
         var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
         return accounts;
@@ -610,68 +626,24 @@ public class Client : IDisposable
         await SendRequest(path).ConfigureAwait(false);
     }
 
-    public async Task PlaceOrder(TDOrder order, string accountId)
+    public async Task PlaceOrder(OrderBase order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json2 = JsonConvert.SerializeObject(order);
-        var json = GetPlaceOrderJson(order);
+        var json = order.GetJson();
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        
+
+        // Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account based on the properties of the application you specified during the application registration process.
+        // GET order requests will be unthrottled.
         ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
-        var result = await _httpClient.PostAsync(path, content);
-        switch (result.StatusCode)
+        var httpResponseMessage = await _httpClient.PostAsync(path, content);
+        switch (httpResponseMessage.StatusCode)
         {
             case HttpStatusCode.Created:
+                var res = await httpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false);
                 break;
             default:
-                throw new Exception($"Bad request: {result.StatusCode} {result.ReasonPhrase}");
+                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
-    }
-
-    private static string GetPlaceOrderJson(TDOrder order)
-    {
-        var json = JsonConvert.SerializeObject(order);
-        var sb = new StringBuilder("{");
-        sb.AppendLine($"\"orderType\" : \"{order.orderType}\",");
-        sb.AppendLine($"\"session\" : \"{order.session}\",");
-        sb.AppendLine($"\"duration\" : \"{order.duration}\",");
-        if (order.orderType != TDOrderModelsEnums.orderType.MARKET)
-        {
-            sb.AppendLine($"\"price\" : \"{order.price}\",");
-        }
-        sb.AppendLine($"\"orderStrategyType\" : \"{order.orderStrategyType}\",");
-        
-        // Do orderLegCollection
-        sb.AppendLine("\"orderLegCollection\" : [");
-        foreach (var orderLeg in order.orderLegCollection)
-        {
-            sb.AppendLine("{");
-            sb.AppendLine($"\"instruction\": \"{orderLeg.instruction}\",");
-            sb.AppendLine($"\"quantity\": \"{orderLeg.quantity}\",");
-            sb.AppendLine("\"instrument\": {");
-            sb.AppendLine($"\"symbol\": \"{orderLeg.instrument.symbol}\",");
-            sb.AppendLine($"\"assetType\": \"{orderLeg.instrument.assetType}\"");
-            sb.AppendLine("}");
-            sb.AppendLine("}");
-            sb.AppendLine("]");
-        }
-
-        //var jsonOrderLegCollection = JsonConvert.SerializeObject(order.orderLegCollection);
-        //sb.AppendLine(jsonOrderLegCollection);
-        sb.AppendLine("}");
-        var result = sb.ToString();
-
-        try
-        {
-            var test = JsonConvert.DeserializeObject(result);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-        
-        return result;
     }
 
     #endregion Orders
