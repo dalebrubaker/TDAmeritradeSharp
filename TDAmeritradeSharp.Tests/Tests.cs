@@ -64,7 +64,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestMarketHours()
         {
-            var hours = await _client.GetMarketHoursAsync(MarketTypes.EQUITY, DateTime.Now);
+            var hours = await _client.GetHoursForASingleMarketAsync(MarketTypes.EQUITY, DateTime.Now);
             Assert.IsTrue(hours.marketType == "EQUITY");
         }
 
@@ -175,7 +175,7 @@ namespace TDAmeritrade.Tests
         [Test]
         public async Task TestTDPrincipalClient()
         {
-            var data = await _client.GetPrincipalsAsync(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
+            var data = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
             Assert.IsTrue(!string.IsNullOrEmpty(data.accessLevel));
         }
 

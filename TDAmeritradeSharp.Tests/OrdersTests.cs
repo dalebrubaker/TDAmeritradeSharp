@@ -78,9 +78,12 @@ public class OrdersTests
        Assert.IsNotNull(orderId);
        var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
        Assert.AreEqual(orderId, orderPlaced.orderId);
-       var allOrders = await _client.GetOrdersForAccountAsync(_testAccountId, 2, fromEnteredTime: DateTime.Today,
+       var allOrders = await _client.GetOrdersByPathAsync(_testAccountId, 2, fromEnteredTime: DateTime.Today,
            status:TDOrderModelsEnums.status.CANCELED);
        Assert.GreaterOrEqual(allOrders.Count(), 0);
+       var allOrdersQuery = await _client.GetOrdersByQueryAsync(maxResults:2, fromEnteredTime: DateTime.Today,
+           status:TDOrderModelsEnums.status.CANCELED);
+       Assert.GreaterOrEqual(allOrdersQuery.Count(), 0);
        await _client.CancelOrderAsync(_testAccountId, orderId);
     }
 
@@ -110,7 +113,7 @@ public class OrdersTests
     [Test]
     public async Task TestGetOrdersForAccount()
     {
-        var orders = await _client.GetOrdersForAccountAsync(_testAccountId).ConfigureAwait(false);
+        var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         Assert.NotNull(orders);
     }
 

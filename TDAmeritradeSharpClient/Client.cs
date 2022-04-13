@@ -490,9 +490,9 @@ public class Client : IDisposable
     ///     <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
     ///     <returns></returns>
     /// </summary>
-    public async Task<TDPrincipal> GetPrincipalsAsync(params TDPrincipalsFields[] fields)
+    public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
-        var json = await GetPrincipalsJsonAsync(fields);
+        var json = await GetUserPrincipalsJsonAsync(fields);
         if (!IsNullOrEmpty(json))
         {
             return JsonConvert.DeserializeObject<TDPrincipal>(json);
@@ -505,7 +505,7 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
     /// <returns></returns>
-    private async Task<string> GetPrincipalsJsonAsync(params TDPrincipalsFields[] fields)
+    private async Task<string> GetUserPrincipalsJsonAsync(params TDPrincipalsFields[] fields)
     {
         if (!IsSignedIn)
         {
@@ -523,7 +523,7 @@ public class Client : IDisposable
     /// <summary>
     ///     Retrieve market hours for specified single market
     /// </summary>
-    public async Task<TDMarketHour> GetMarketHoursAsync(MarketTypes type, DateTime day)
+    public async Task<TDMarketHour> GetHoursForASingleMarketAsync(MarketTypes type, DateTime day)
     {
         var json = await GetMarketHoursJsonAsync(type, day);
         if (!IsNullOrEmpty(json))
@@ -670,9 +670,9 @@ public class Client : IDisposable
     /// Bug: 1 gives 1 but greater numbers give maxResults - 1 IFF status is <c>null</c></param>
     /// <param name="fromEnteredTime">Specifies that no orders entered before this time should be returned. <c>null</c> means to start with the current day.</param>
     /// <param name="toEnteredTime">Specifies that no orders entered after this time should be returned. <c>null</c> means to end 60 days after toEnteredTime.</param>
-    /// <param name="status">Specifies that only orders of this status should be returned.  <</param>
-    /// <returns>The list of orders matching this query. <c>null</c> means "all"</returns>
-    public async Task<IEnumerable<TDOrderResponse>> GetOrdersForAccountAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
+    /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".</param>
+    /// <returns>The list of orders matching this query.</returns>
+    public async Task<IEnumerable<TDOrderResponse>> GetOrdersByPathAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
         DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
@@ -695,6 +695,56 @@ public class Client : IDisposable
         }
         var q = queryString.ToString();
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders?{q}";
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
+        try
+        {
+            //var result0 = JsonConvert.DeserializeObject(json);
+            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+     /// <summary>
+    /// Do GetOrdersByQuery
+    /// </summary>
+    /// <param name="accountId">the account Id. <c>null</c> means "all".</param>
+    /// <param name="maxResults">The maximum number of orders to retrieve. <c>null</c> means "all".
+    /// Bug: 1 gives 1 but greater numbers give maxResults - 1 IFF status is <c>null</c></param>
+    /// <param name="fromEnteredTime">Specifies that no orders entered before this time should be returned. <c>null</c> means to start with the current day.</param>
+    /// <param name="toEnteredTime">Specifies that no orders entered after this time should be returned. <c>null</c> means to end 60 days after toEnteredTime.</param>
+    /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
+    /// <returns>The list of orders matching this query.</returns>
+    public async Task<IEnumerable<TDOrderResponse>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
+        DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
+    {
+        // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
+        var queryString = HttpUtility.ParseQueryString(string.Empty);
+        if (accountId != null)
+        {
+            queryString.Add("accountId", accountId.ToString());
+        }
+        if (maxResults != null)
+        {
+            queryString.Add("maxResults", maxResults.ToString());
+        }
+        if (fromEnteredTime != null)
+        {
+            queryString.Add("fromEnteredTime", $"{fromEnteredTime:yyyy-MM-dd}");
+        }
+        if (toEnteredTime != null)
+        {
+            queryString.Add("toEnteredTime", $"{toEnteredTime:yyyy-MM-dd}");
+        }
+        if (status != null)
+        {
+            queryString.Add("status", $"{status.ToString()}");
+        }
+        var q = queryString.ToString();
+        var path = $"https://api.tdameritrade.com/v1/orders?{q}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {

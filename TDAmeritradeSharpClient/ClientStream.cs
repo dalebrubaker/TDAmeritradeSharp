@@ -82,7 +82,7 @@ public class ClientStream : IDisposable
     public event Action<TDBookSignal> OnBookSignal = delegate { };
 
     /// <summary>
-    ///     Connects to the live stream service
+    /// Connects to the live stream service
     /// </summary>
     /// <returns></returns>
     public async Task Connect()
@@ -99,7 +99,7 @@ public class ClientStream : IDisposable
                 throw new Exception("Busy");
             }
 
-            _prince = await _client.GetPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys, TDPrincipalsFields.preferences);
+            _prince = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys, TDPrincipalsFields.preferences);
             _account = _prince.accounts?.Find(o => o.accountId == _prince.primaryAccountId);
 
             var path = new Uri("wss://" + _prince.streamerInfo?.streamerSocketUrl + "/ws");
@@ -122,7 +122,7 @@ public class ClientStream : IDisposable
     }
 
     /// <summary>
-    ///     Disconnects from the live stream service and logs out
+    /// Disconnects from the live stream service and logs out
     /// </summary>
     /// <returns></returns>
     public async Task Disconnect()
@@ -145,10 +145,10 @@ public class ClientStream : IDisposable
     }
 
     /// <summary>
-    ///     Subscribed to the chart event service
+    /// Subscribe to the chart event service
     /// </summary>
     /// <param name="symbols">spy,qqq,amd</param>
-    /// <param name="isFutureSymbol">true if symbols are for futures</param>
+    /// <param name="service"></param>
     /// <returns></returns>
     public Task SubscribeChartAsync(string symbols, TDChartSubs service)
     {
@@ -174,11 +174,11 @@ public class ClientStream : IDisposable
         var data = JsonConvert.SerializeObject(request, _settings);
         return SendToServerAsync(data);    }
 
-   /// <summary>
-        /// Unsubscribed to the chart event service
+        /// <summary>
+        /// Unsubscribe from the chart event service
         /// </summary>
         /// <param name="symbols">spy,qqq,amd</param>
-        /// <param name="isFutureSymbol">true if symbols are for futures</param>
+        /// <param name="service"></param>
         /// <returns></returns>
         public Task UnsubscribeChartAsync(string symbols, TDChartSubs service)
         {
@@ -205,7 +205,7 @@ public class ClientStream : IDisposable
         }
 
         /// <summary>
-        /// Subscribeds to the level one quote event service
+        /// Subscribe to the level one quote event service
         /// </summary>
         /// <param name="symbols"></param>
         /// <returns></returns>
@@ -236,7 +236,7 @@ public class ClientStream : IDisposable
         }
 
         /// <summary>
-        /// Unsubscribeds to the level one quote event service
+        /// Unsubscribe from the level one quote event service
         /// </summary>
         /// <param name="symbols"></param>
         /// <returns></returns>
@@ -266,7 +266,7 @@ public class ClientStream : IDisposable
         }
 
         /// <summary>
-        /// Subscribed to the time&sales event service
+        /// Subscribe to the time&sales event service
         /// </summary>
         /// <param name="symbols">spy,qqq,amd</param>
         /// <param name="service">data service to subscribe to</param>
@@ -298,7 +298,7 @@ public class ClientStream : IDisposable
         }
 
         /// <summary>
-        /// Unsubscribed to the time&sales event service
+        /// Unsubscribe from the time&sales event service
         /// </summary>
         /// <param name="symbols">spy,qqq,amd</param>
         /// <param name="service">data service to subscribe to</param>
@@ -359,7 +359,7 @@ public class ClientStream : IDisposable
         }
 
         /// <summary>
-        /// Unsubscribe to the level two order book. Note this stream has no official documentation, and it's not entirely clear what exchange it corresponds to.Use at your own risk.
+        /// Unsubscribe from the level two order book. Note this stream has no official documentation, and it's not entirely clear what exchange it corresponds to.Use at your own risk.
         /// </summary>
         /// <returns></returns>
         public Task UnsubscribeBookAsync(string symbols, TDBookOptions option)
@@ -421,7 +421,7 @@ public class ClientStream : IDisposable
         /// Sends a request to the server
         /// </summary>
         /// <param name="data"></param>
-        public async Task SendToServerAsync(string data)
+        private async Task SendToServerAsync(string data)
         {
             await _slim.WaitAsync();
             try
