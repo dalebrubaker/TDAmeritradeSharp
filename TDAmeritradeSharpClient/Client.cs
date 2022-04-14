@@ -729,6 +729,32 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
+    
+    /// <summary>
+    ///     Places an order and returns its orderId
+    /// </summary>
+    /// <param name="order">The order to be placed.</param>
+    /// <param name="accountId">The accountId</param>
+    /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<string> PlaceOcoOrderAsync(OcoOrder order, string accountId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
+        var json = order.GetJson();
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
+        switch (httpResponseMessage.StatusCode)
+        {
+            case HttpStatusCode.Created:
+                var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
+                var value = location.Value.First();
+                var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
+                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                return orderId;
+            default:
+                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
+        }
+    }
 
     /// <summary>
     ///     Replace an existing order with replacementOrder

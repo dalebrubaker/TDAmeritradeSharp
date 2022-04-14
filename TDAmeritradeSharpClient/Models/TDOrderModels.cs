@@ -147,7 +147,6 @@ public class TDOrder : OrderBase
 
     public string destinationLinkName { get; set; } = null!;
     public string releaseTime { get; set; } = null!;
-    public double stopPrice { get; set; }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.stopPriceLinkBasis stopPriceLinkBasis { get; set; }
@@ -186,13 +185,13 @@ public class TDOrder : OrderBase
     public string accountId { get; set; } = null!;
     public List<OrderActivity> orderActivityCollection { get; set; } = null!;
     public List<TDOrder> replacingOrderCollection { get; set; } = null!;
-    public List<TDOrder> childOrderStrategies { get; set; } = null!;
     public string statusDescription { get; set; } = null!;
 }
 
 public class OrderBase
 {
     private double _priceNumeric;
+    private double _stopPriceNumeric;
 
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.orderType orderType { get; set; }
@@ -208,6 +207,8 @@ public class OrderBase
 
     public List<OrderLegBase> orderLegCollection { get; set; } = new();
 
+    public List<OrderBase> childOrderStrategies { get; set; } = new();
+
     public string? price { get; set; }
 
     [JsonIgnore]
@@ -219,6 +220,20 @@ public class OrderBase
             // TDA enforces 2 or 4 digits this during ReplaceOrder
             _priceNumeric = Math.Round(value, value < 1 ? 4 : 2);
             price = _priceNumeric.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+    
+    public string? stopPrice { get; set; }
+
+    [JsonIgnore]
+    public double stopPriceNumeric
+    {
+        get => _stopPriceNumeric;
+        set
+        {
+            // TDA enforces 2 or 4 digits this during ReplaceOrder
+            _stopPriceNumeric = Math.Round(value, value < 1 ? 4 : 2);
+            stopPrice = _stopPriceNumeric.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -254,6 +269,40 @@ public class OrderBase
         };
         var json = JsonConvert.SerializeObject(this, settings);
         var clone = JsonConvert.DeserializeObject<OrderBase>(json, settings);
+        return clone;
+    }
+}
+
+public class OcoOrder
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public TDOrderModelsEnums.orderStrategyType orderStrategyType => TDOrderModelsEnums.orderStrategyType.OCO;
+    public List<OrderBase> childOrderStrategies { get; set; } = new();
+    
+    /// <summary>
+    ///     Returns json without type names, suitable for sending to TD Ameritrade
+    /// </summary>
+    /// <returns></returns>
+    public string GetJson()
+    {
+        var json = JsonConvert.SerializeObject(this);
+        return json;
+    }
+
+    /// <summary>
+    ///     Return a deep clone of this order
+    /// </summary>
+    /// <returns></returns>
+    public OcoOrder CloneDeep()
+    {
+        // Must use settings in order to deserialize with proper derived classes
+        var settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All,
+            ObjectCreationHandling = ObjectCreationHandling.Replace
+        };
+        var json = JsonConvert.SerializeObject(this, settings);
+        var clone = JsonConvert.DeserializeObject<OcoOrder>(json, settings);
         return clone;
     }
 }

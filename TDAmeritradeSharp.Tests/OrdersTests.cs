@@ -207,25 +207,13 @@ public class OrdersTests
         Assert.Positive(savedOrders.Count);
         var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].savedOrderId).ConfigureAwait(false);
         Assert.AreEqual(savedOrder0.savedOrderId, savedOrders[0].savedOrderId);
-        foreach (var savedOrder in savedOrders)
-        {
-            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.savedOrderId).ConfigureAwait(false);
-        }
-        var savedOrders2 = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
-        Assert.Zero(savedOrders2.Count);
+        await DeleteExistingSavedOrders().ConfigureAwait(false);
     }
 
     [Test]
     public async Task TestReplaceSavedLimitOrder()
     {
-        // Delete any existing ones
-        var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
-        foreach (var savedOrder in savedOrders)
-        {
-            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.savedOrderId).ConfigureAwait(false);
-        }
-        var savedOrders2 = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
-        Assert.Zero(savedOrders2.Count);
+        await DeleteExistingSavedOrders().ConfigureAwait(false);
 
         var close = _testQuote.closePrice;
         var limitPrice = close * 0.5;
@@ -247,7 +235,7 @@ public class OrdersTests
             }
         };
         await _client.CreateSavedOrderAsync(order, _testAccountId).ConfigureAwait(false);
-        savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
         Assert.AreEqual(1, savedOrders.Count);
         var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].savedOrderId).ConfigureAwait(false);
 
@@ -261,5 +249,182 @@ public class OrdersTests
         var replacementSavedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, replacementOrders[0].savedOrderId).ConfigureAwait(false);
         Assert.AreEqual(2, replacementSavedOrder0.orderLegCollection[0].quantity);
         await _client.DeleteSavedOrderAsync(_testAccountId, replacementSavedOrder0.savedOrderId).ConfigureAwait(false);
+    }
+
+    private async Task DeleteExistingSavedOrders()
+    {
+        var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        foreach (var savedOrder in savedOrders)
+        {
+            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.savedOrderId).ConfigureAwait(false);
+        }
+        var savedOrders2 = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        Assert.Zero(savedOrders2.Count);
+    }
+
+    [Test]
+    public async Task OneTriggersAnotherOrderTest()
+    {
+        // Note that SavedOrders gives "error": "OrderStrategyType TRIGGER is not supported"
+        var close = _testQuote.closePrice;
+        var limitPrice = close * 0.5;
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.TRIGGER,
+            priceNumeric = limitPrice,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        var childOrder = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            priceNumeric = limitPrice + 5,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        order.childOrderStrategies.Add(childOrder);
+        var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        await _client.CancelOrderAsync(_testAccountId, orderId);
+    }
+
+    [Test]
+    public async Task OneTriggerOneCancelsAnotherOrderTest()
+    {
+        // Note that SavedOrders gives "error": "OrderStrategyType TRIGGER is not supported"
+        var close = _testQuote.closePrice;
+        var limitPrice = close * 0.5;
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.TRIGGER,
+            priceNumeric = limitPrice,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };        
+        var target = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            priceNumeric = close * 2,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.SELL,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        var stop = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.STOP_LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            priceNumeric = close * .5,
+            stopPriceNumeric = close * .5 + .03,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.SELL,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        order.childOrderStrategies.Add(target);
+        order.childOrderStrategies.Add(stop);
+        var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
+        var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
+        var status = order2.status;
+        if (status != TDOrderModelsEnums.status.REJECTED)
+        {
+            await _client.CancelOrderAsync(_testAccountId, orderId);
+        }
+    }
+    
+    [Test]
+    public async Task OneCancelsAnotherOrderTest()
+    {
+        // Note that SavedOrders gives "error": "OrderStrategyType TRIGGER is not supported"
+        var close = _testQuote.closePrice;
+        var order = new OcoOrder();
+        var target = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            priceNumeric = close * 2,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.SELL,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        var stop = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.STOP_LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            priceNumeric = close * .5,
+            stopPriceNumeric = close * .5 + .03,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.SELL,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        order.childOrderStrategies.Add(target);
+        order.childOrderStrategies.Add(stop);
+        var orderId = await _client.PlaceOcoOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
+        var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
+        var status = order2.status;
+        if (status != TDOrderModelsEnums.status.REJECTED)
+        {
+            await _client.CancelOrderAsync(_testAccountId, orderId);
+        }
     }
 }
