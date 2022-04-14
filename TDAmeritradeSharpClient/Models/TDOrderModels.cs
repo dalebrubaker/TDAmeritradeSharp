@@ -1,5 +1,6 @@
 ﻿// ReSharper disable IdentifierTypo
 // ReSharper disable ClassNeverInstantiated.Global
+using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -191,6 +192,8 @@ public class TDOrder : OrderBase
 
 public class OrderBase
 {
+    private double _priceNumeric;
+
     [JsonConverter(typeof(StringEnumConverter))]
     public TDOrderModelsEnums.orderType orderType { get; set; }
 
@@ -205,8 +208,24 @@ public class OrderBase
 
     public List<OrderLegBase> orderLegCollection { get; set; } = new();
 
-    public double price { get; set; }
+    public string? price { get; set; }
 
+    [JsonIgnore]
+    public double priceNumeric
+    {
+        get => _priceNumeric;
+        set
+        {
+            // TDA enforces 2 or 4 digits this during ReplaceOrder
+            _priceNumeric = Math.Round(value, value < 1 ? 4 : 2);
+            price = _priceNumeric.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    /// <summary>
+    ///     Returns json without type names, suitable for sending to TD Ameritrade
+    /// </summary>
+    /// <returns></returns>
     public string GetJson()
     {
         var json = JsonConvert.SerializeObject(this);
@@ -218,6 +237,24 @@ public class OrderBase
             json = JsonConvert.SerializeObject(obj);
         }
         return json;
+    }
+
+    /// <summary>
+    ///     Return a deep clone of this order
+    /// </summary>
+    /// <returns></returns>
+    public OrderBase CloneDeep()
+    {
+        // Must use settings in order to deserialize with proper derived classes
+        var settingsDefault = new JsonSerializerSettings();
+        var settings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All,
+            ObjectCreationHandling = ObjectCreationHandling.Replace
+        };
+        var json = JsonConvert.SerializeObject(this, settings);
+        var clone = JsonConvert.DeserializeObject<OrderBase>(json, settings);
+        return clone;
     }
 }
 

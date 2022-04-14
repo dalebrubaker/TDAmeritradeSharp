@@ -4,7 +4,6 @@ using System.Net.Http.Headers;
 using System.Security.Authentication;
 using System.Text;
 using System.Web;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,13 +12,10 @@ namespace TDAmeritradeSharpClient;
 public class Client : IDisposable
 {
     public const string Success = "Authorization was successful";
-    private readonly ILogger<Client>? _logger;
-    private readonly List<DateTime> _throttledRequestTimesUtc = new();
     private HttpClient _httpClient;
 
     public Client()
     {
-        _logger = null;
         _httpClient = new HttpClient();
         var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
         if (!Directory.Exists(userSettingsDirectory))
@@ -28,11 +24,6 @@ public class Client : IDisposable
         }
         PathAuthResult = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
-    }
-
-    public Client(ILogger<Client> logger) : this()
-    {
-        _logger = logger;
     }
 
     /// <summary>
@@ -51,29 +42,6 @@ public class Client : IDisposable
     ///     Client has a consumer key (limited non-authenticated access)
     /// </summary>
     private bool HasConsumerKey => !string.IsNullOrEmpty(AuthResult.consumer_key);
-
-    /// <summary>
-    ///     A list of the DateTime.UtcNow when each request was made, pruned to the last minute
-    /// </summary>
-    public List<DateTime> ThrottledThrottledRequestTimesUtc
-    {
-        get
-        {
-            if (_throttledRequestTimesUtc.Count > 0)
-            {
-            }
-            var firstAllowed = DateTime.UtcNow.AddMinutes(-1);
-            for (var i = 0; i < _throttledRequestTimesUtc.Count; i++)
-            {
-                var timestamp = _throttledRequestTimesUtc[i];
-                if (timestamp < firstAllowed)
-                {
-                    _throttledRequestTimesUtc.RemoveAt(i--);
-                }
-            }
-            return _throttledRequestTimesUtc;
-        }
-    }
 
     public void Dispose()
     {
@@ -552,17 +520,8 @@ public class Client : IDisposable
         return await SendRequestAsync(path).ConfigureAwait(false);
     }
 
-    /// <summary>
-    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account
-    ///     based on the properties of the application you specified during the application registration process.
-    ///     GET order requests will be unthrottled.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     private async Task<string> SendRequestAsync(string path)
     {
-        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
         var res = await _httpClient.GetAsync(path);
         switch (res.StatusCode)
         {
@@ -573,18 +532,9 @@ public class Client : IDisposable
         }
     }
 
-    /// <summary>
-    ///     Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account
-    ///     based on the properties of the application you specified during the application registration process.
-    ///     GET order requests will be unthrottled.
-    /// </summary>
-    /// <param name="req"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     private async Task<string> SendRequestAsync(HttpRequestMessage req)
     {
-        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
-        var res = await _httpClient.SendAsync(req);
+        var res = await _httpClient.Throttle().SendAsync(req);
         switch (res.StatusCode)
         {
             case HttpStatusCode.OK:
@@ -618,76 +568,22 @@ public class Client : IDisposable
 
     #region Orders
 
-    public async Task CancelOrderAsync(string accountId, string orderId)
+    public async Task<TDOrderResponse> GetOrderAsync(string accountId, string orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
-        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
-        var res = await _httpClient.DeleteAsync(path);
-        switch (res.StatusCode)
-        {
-            case HttpStatusCode.OK:
-                break;
-            default:
-                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
-        }
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
+        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
+        return result;
     }
 
     /// <summary>
-    /// Places an order and returns its orderId
-    /// </summary>
-    /// <param name="order"></param>
-    /// <param name="accountId"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    public async Task<string> PlaceOrderAsync(OrderBase order, string accountId)
-    {
-        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = order.GetJson();
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        // Personal application will be throttled to 0-120 POST/PUT/DELETE Order requests per minute per account based on the properties of the application you specified during the application registration process.
-        // GET order requests will be unthrottled.
-        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
-        var httpResponseMessage = await _httpClient.PostAsync(path, content);
-        switch (httpResponseMessage.StatusCode)
-        {
-            case HttpStatusCode.Created:
-                var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
-                var value = location.Value.First();
-                var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
-                return orderId;
-            default:
-                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
-        }
-    }
-    
-    public async Task ReplaceOrderAsync(OrderBase replacementOrder, string accountId, string orderId)
-    {
-        var existingOrder = await GetOrderAsync(accountId, orderId).ConfigureAwait(false);
-        var json = replacementOrder.GetJson();
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        // TODO fix path etc.
-        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
-        ThrottledThrottledRequestTimesUtc.Add(DateTime.UtcNow);
-        var res = await _httpClient.PutAsync(path, content);
-        switch (res.StatusCode)
-        {
-            case HttpStatusCode.OK:
-                // TODO Return the replacementOrder.orderId?
-                break;
-            default:
-                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
-        }
-    }
-
-    /// <summary>
-    /// Do GetOrdersByPath
+    ///     Do GetOrdersByPath
     /// </summary>
     /// <param name="accountId">the account Id</param>
-    /// <param name="maxResults">The maximum number of orders to retrieve. <c>null</c> means "all".
-    /// Bug: 1 gives 1 but greater numbers give maxResults - 1 IFF status is <c>null</c></param>
+    /// <param name="maxResults">
+    ///     The maximum number of orders to retrieve. <c>null</c> means "all".
+    ///     Bug: 1 gives 1 but greater numbers give maxResults - 1 IFF status is <c>null</c>
+    /// </param>
     /// <param name="fromEnteredTime">Specifies that no orders entered before this time should be returned. <c>null</c> means to start with the current day.</param>
     /// <param name="toEnteredTime">Specifies that no orders entered after this time should be returned. <c>null</c> means to end 60 days after toEnteredTime.</param>
     /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".</param>
@@ -697,19 +593,19 @@ public class Client : IDisposable
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);
-        if (maxResults != null)
+        if (maxResults.HasValue)
         {
             queryString.Add("maxResults", maxResults.ToString());
         }
-        if (fromEnteredTime != null)
+        if (fromEnteredTime.HasValue)
         {
             queryString.Add("fromEnteredTime", $"{fromEnteredTime:yyyy-MM-dd}");
         }
-        if (toEnteredTime != null)
+        if (toEnteredTime.HasValue)
         {
             queryString.Add("toEnteredTime", $"{toEnteredTime:yyyy-MM-dd}");
         }
-        if (status != null)
+        if (status.HasValue)
         {
             queryString.Add("status", $"{status.ToString()}");
         }
@@ -728,15 +624,19 @@ public class Client : IDisposable
             throw;
         }
     }
-     /// <summary>
-    /// Do GetOrdersByQuery
+
+    /// <summary>
+    ///     Do GetOrdersByQuery
     /// </summary>
     /// <param name="accountId">the account Id. <c>null</c> means "all".</param>
-    /// <param name="maxResults">The maximum number of orders to retrieve. <c>null</c> means "all".
-    /// Bug: 1 gives 1 but greater numbers give maxResults - 1 IFF status is <c>null</c></param>
+    /// <param name="maxResults">
+    ///     The maximum number of orders to retrieve. <c>null</c> means "all".
+    ///     Bug: 1 gives 1 but greater numbers give maxResults - 1 IFF status is <c>null</c>
+    /// </param>
     /// <param name="fromEnteredTime">Specifies that no orders entered before this time should be returned. <c>null</c> means to start with the current day.</param>
     /// <param name="toEnteredTime">Specifies that no orders entered after this time should be returned. <c>null</c> means to end 60 days after toEnteredTime.</param>
-    /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
+    /// <param name="status">
+    ///     Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
         DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
@@ -745,21 +645,21 @@ public class Client : IDisposable
         var queryString = HttpUtility.ParseQueryString(string.Empty);
         if (accountId != null)
         {
-            queryString.Add("accountId", accountId.ToString());
+            queryString.Add("accountId", accountId);
         }
-        if (maxResults != null)
+        if (maxResults.HasValue)
         {
             queryString.Add("maxResults", maxResults.ToString());
         }
-        if (fromEnteredTime != null)
+        if (fromEnteredTime.HasValue)
         {
             queryString.Add("fromEnteredTime", $"{fromEnteredTime:yyyy-MM-dd}");
         }
-        if (toEnteredTime != null)
+        if (toEnteredTime.HasValue)
         {
             queryString.Add("toEnteredTime", $"{toEnteredTime:yyyy-MM-dd}");
         }
-        if (status != null)
+        if (status.HasValue)
         {
             queryString.Add("status", $"{status.ToString()}");
         }
@@ -779,13 +679,73 @@ public class Client : IDisposable
         }
     }
 
-    #endregion Orders
-
-    public async Task<TDOrderResponse> GetOrderAsync(string accountId, string orderId)
+    public async Task CancelOrderAsync(string accountId, string orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
-        var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
-        return result;
+        var res = await _httpClient.Throttle().DeleteAsync(path);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                break;
+            default:
+                var existingOrder = await GetOrderAsync(accountId, orderId);
+                var status = existingOrder.status;
+                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
+        }
     }
+
+    /// <summary>
+    ///     Places an order and returns its orderId
+    /// </summary>
+    /// <param name="order">The order to be placed.</param>
+    /// <param name="accountId">The accountId</param>
+    /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<string> PlaceOrderAsync(OrderBase order, string accountId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
+        var json = order.GetJson();
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
+        switch (httpResponseMessage.StatusCode)
+        {
+            case HttpStatusCode.Created:
+                var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
+                var value = location.Value.First();
+                var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
+                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                return orderId;
+            default:
+                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
+        }
+    }
+
+    /// <summary>
+    ///     Replace an existing order with replacementOrder
+    /// </summary>
+    /// <param name="replacementOrder">The order to replace the order identified by orderId</param>
+    /// <param name="accountId">The accountId</param>
+    /// <param name="orderId">The orderId of the order to replace.</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<string> ReplaceOrderAsync(OrderBase replacementOrder, string accountId, string orderId)
+    {
+        var json = replacementOrder.GetJson();
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
+        var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
+        switch (httpResponseMessage.StatusCode)
+        {
+            case HttpStatusCode.Created:
+                var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
+                var value = location.Value.First();
+                var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
+                var replacementOrderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                return replacementOrderId;
+            default:
+                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
+        }
+    }
+
+    #endregion Orders
 }

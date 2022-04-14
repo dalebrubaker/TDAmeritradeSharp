@@ -153,7 +153,7 @@ public partial class AuthUserControl : UserControl
             MessageBox.Show(ex.Message);
             return;
         }
-        lblRequestsInLastMinute.Text = $"Requests in last minute: {_client.ThrottledThrottledRequestTimesUtc.Count}";
+        lblRequestsInLastMinute.Text = $"Requests in last minute: {Throttling.ThrottledThrottledRequestTimesUtc.Count}";
         if (_client.AuthResult.AccessTokenExpirationUtc.Date != DateTime.MinValue.Date)
         {
             var timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;

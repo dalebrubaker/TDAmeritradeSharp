@@ -62,7 +62,7 @@ public class OrdersTests
             session = TDOrderModelsEnums.session.NORMAL,
             duration = TDOrderModelsEnums.duration.DAY,
             orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            price = limitPrice,
+            priceNumeric = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderModelsEnums.instruction.BUY,
@@ -108,24 +108,47 @@ public class OrdersTests
         };
         await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
     }
-    
+
     [Test]
-    public async Task TestReplaceLimitOrder()
+    public void TestOrderBaseCloneDeep()
     {
         var close = _testQuote.closePrice;
-        var limitPrice = close * 0.5; // attempt to avoid a fill
-        var quantity = 1;
         var order = new EquityOrder
         {
             orderType = TDOrderModelsEnums.orderType.LIMIT,
             session = TDOrderModelsEnums.session.NORMAL,
             duration = TDOrderModelsEnums.duration.DAY,
             orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            price = limitPrice,
+            priceNumeric = close * 0.5, // attempt to avoid a fill,
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = quantity,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        var clone = order.CloneDeep();
+        Assert.AreEqual(order.GetJson(), clone.GetJson());
+    }
+    
+    [Test]
+    public async Task TestReplaceLimitOrder()
+    {
+        var close = _testQuote.closePrice;
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            priceNumeric = close * 0.5, // attempt to avoid a fill,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
                     symbol = _testQuote.symbol!
@@ -135,28 +158,11 @@ public class OrdersTests
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         Assert.IsNotNull(orderId);
         
-        var replaceLimitPrice = close * 0.5; // attempt to avoid a fill
-        var replaceQuantity = 2;
-        var replacementOrder = new EquityOrder
-        {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            price = limitPrice ,
-            OrderLeg = new EquityOrderLeg
-            {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = replaceQuantity,
-                instrument = new EquityOrderInstrument
-                {
-                    symbol = _testQuote.symbol!
-                }
-            }
-        };
-        
-        await _client.ReplaceOrderAsync(replacementOrder, _testAccountId, orderId);
-
+        var replacementOrder = order.CloneDeep(); // attempt to avoid a fill
+        replacementOrder.priceNumeric = close * 0.6;
+        replacementOrder.orderLegCollection[0].quantity = 2;
+        var replacementOrderId = await _client.ReplaceOrderAsync(replacementOrder, _testAccountId, orderId);
+        await _client.CancelOrderAsync(_testAccountId, replacementOrderId);
     }
 
 
