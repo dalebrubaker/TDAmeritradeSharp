@@ -20,9 +20,15 @@ Orders
 * Get Orders By Path
 * Get Orders By Query
 * Place Order
+* Replace Order
 
 Saved Orders
 -
+* Create Saved Order
+* Delete Saved Order
+* Get Saved Order
+* Get Saved Orders by Path
+* Replace Saved Orders
 
 Accounts
 -
@@ -69,17 +75,7 @@ Streaming Data (ClientStream)
 
 Unsupported APIs (Maybe easy to support, but not supported yet)
 =
-Orders
--
-* Replace Order
 
-Saved Orders
--
-* Create Saved Order
-* Delete Saved Order
-* Get Saved Order
-* Get Saved Orders by Path
-* Replace Saved Orders
 
 Instruments
 - 

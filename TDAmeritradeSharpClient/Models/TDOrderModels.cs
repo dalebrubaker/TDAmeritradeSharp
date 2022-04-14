@@ -375,7 +375,9 @@ public class TDOrderResponse
     public string statusDescription { get; set; } = null!;
 
     public string tag { get; set; } = null!;
-
+    
+    public string savedOrderId { get; set; } = null!;
+    public string savedTime { get; set; } = null!;
     public override string ToString()
     {
         var result = $"accountId={accountId} orderId={orderId} {orderLegCollection[0]} {orderType}";

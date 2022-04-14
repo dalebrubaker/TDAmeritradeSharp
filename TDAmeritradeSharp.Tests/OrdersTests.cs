@@ -73,17 +73,17 @@ public class OrdersTests
                 }
             }
         };
-       var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
-       Assert.IsNotNull(orderId);
-       var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
-       Assert.AreEqual(orderId, orderPlaced.orderId);
-       var allOrders = await _client.GetOrdersByPathAsync(_testAccountId, 2, fromEnteredTime: DateTime.Today,
-           status:TDOrderModelsEnums.status.CANCELED);
-       Assert.GreaterOrEqual(allOrders.Count(), 0);
-       var allOrdersQuery = await _client.GetOrdersByQueryAsync(maxResults:2, fromEnteredTime: DateTime.Today,
-           status:TDOrderModelsEnums.status.CANCELED);
-       Assert.GreaterOrEqual(allOrdersQuery.Count(), 0);
-       await _client.CancelOrderAsync(_testAccountId, orderId);
+        var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        Assert.IsNotNull(orderId);
+        var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
+        Assert.AreEqual(orderId, orderPlaced.orderId);
+        var allOrders = await _client.GetOrdersByPathAsync(_testAccountId, 2, DateTime.Today,
+            status: TDOrderModelsEnums.status.CANCELED);
+        Assert.GreaterOrEqual(allOrders.Count(), 0);
+        var allOrdersQuery = await _client.GetOrdersByQueryAsync(maxResults: 2, fromEnteredTime: DateTime.Today,
+            status: TDOrderModelsEnums.status.CANCELED);
+        Assert.GreaterOrEqual(allOrdersQuery.Count(), 0);
+        await _client.CancelOrderAsync(_testAccountId, orderId);
     }
 
     [Test]
@@ -133,7 +133,7 @@ public class OrdersTests
         var clone = order.CloneDeep();
         Assert.AreEqual(order.GetJson(), clone.GetJson());
     }
-    
+
     [Test]
     public async Task TestReplaceLimitOrder()
     {
@@ -157,14 +157,13 @@ public class OrdersTests
         };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         Assert.IsNotNull(orderId);
-        
+
         var replacementOrder = order.CloneDeep(); // attempt to avoid a fill
         replacementOrder.priceNumeric = close * 0.6;
         replacementOrder.orderLegCollection[0].quantity = 2;
         var replacementOrderId = await _client.ReplaceOrderAsync(replacementOrder, _testAccountId, orderId);
         await _client.CancelOrderAsync(_testAccountId, replacementOrderId);
     }
-
 
     [Test]
     public async Task TestGetOrdersForAccount()
@@ -180,6 +179,87 @@ public class OrdersTests
         var order = await _client.GetOrderAsync(_testAccountId, OrderId).ConfigureAwait(false);
         Assert.AreEqual(OrderId, order.orderId);
     }
-    
-    
+
+    [Test]
+    public async Task TestSavedOrder()
+    {
+        var close = _testQuote.closePrice;
+        var limitPrice = close * 0.5;
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            priceNumeric = limitPrice,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        await _client.CreateSavedOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        Assert.Positive(savedOrders.Count);
+        var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].savedOrderId).ConfigureAwait(false);
+        Assert.AreEqual(savedOrder0.savedOrderId, savedOrders[0].savedOrderId);
+        foreach (var savedOrder in savedOrders)
+        {
+            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.savedOrderId).ConfigureAwait(false);
+        }
+        var savedOrders2 = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        Assert.Zero(savedOrders2.Count);
+    }
+
+    [Test]
+    public async Task TestReplaceSavedLimitOrder()
+    {
+        // Delete any existing ones
+        var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        foreach (var savedOrder in savedOrders)
+        {
+            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.savedOrderId).ConfigureAwait(false);
+        }
+        var savedOrders2 = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        Assert.Zero(savedOrders2.Count);
+
+        var close = _testQuote.closePrice;
+        var limitPrice = close * 0.5;
+        var order = new EquityOrder
+        {
+            orderType = TDOrderModelsEnums.orderType.LIMIT,
+            session = TDOrderModelsEnums.session.NORMAL,
+            duration = TDOrderModelsEnums.duration.DAY,
+            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            priceNumeric = limitPrice,
+            OrderLeg = new EquityOrderLeg
+            {
+                instruction = TDOrderModelsEnums.instruction.BUY,
+                quantity = 1,
+                instrument = new EquityOrderInstrument
+                {
+                    symbol = _testQuote.symbol!
+                }
+            }
+        };
+        await _client.CreateSavedOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        Assert.AreEqual(1, savedOrders.Count);
+        var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].savedOrderId).ConfigureAwait(false);
+
+        var replacementOrder = order.CloneDeep();
+        var replacementLimitPrice = close * 0.6;
+        replacementOrder.priceNumeric = replacementLimitPrice;
+        replacementOrder.orderLegCollection[0].quantity = 2;
+        await _client.ReplaceSavedOrderAsync(replacementOrder, _testAccountId, savedOrder0.savedOrderId);
+        var replacementOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
+        Assert.AreEqual(1, replacementOrders.Count);
+        var replacementSavedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, replacementOrders[0].savedOrderId).ConfigureAwait(false);
+        Assert.AreEqual(2, replacementSavedOrder0.orderLegCollection[0].quantity);
+        await _client.DeleteSavedOrderAsync(_testAccountId, replacementSavedOrder0.savedOrderId).ConfigureAwait(false);
+    }
 }

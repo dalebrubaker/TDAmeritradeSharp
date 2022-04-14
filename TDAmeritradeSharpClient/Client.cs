@@ -757,5 +757,91 @@ public class Client : IDisposable
         }
     }
 
+    /// <summary>
+    ///     Places an order and returns its orderId
+    /// </summary>
+    /// <param name="order">The order to be placed.</param>
+    /// <param name="accountId">The accountId</param>
+    /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
+    /// <exception cref="Exception"></exception>
+    public async Task CreateSavedOrderAsync(OrderBase order, string accountId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
+        var json = order.GetJson();
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
+        switch (httpResponseMessage.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                break;
+            default:
+                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
+        }
+    }
+    
+    public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, string savedOrderId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
+        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
+        return result;
+    }
+
+    
+    public async Task<IEnumerable<TDOrderResponse>> GetSavedOrdersByPathAsync(string accountId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
+        try
+        {
+            var result0 = JsonConvert.DeserializeObject(json);
+            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task DeleteSavedOrderAsync(string accountId, string savedOrderId)
+    {
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
+        var res = await _httpClient.Throttle().DeleteAsync(path);
+        switch (res.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                break;
+            default:
+                // var existingOrder = await GetOrderAsync(accountId, savedOrderId);
+                // var status = existingOrder.status;
+                throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
+        }
+    }
+    
+    /// <summary>
+    ///     Replace an existing order with replacementOrder
+    /// </summary>
+    /// <param name="replacementOrder">The order to replace the order identified by savedOrderId</param>
+    /// <param name="accountId">The accountId</param>
+    /// <param name="savedOrderId">The savedOrderId of the order to replace.</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task ReplaceSavedOrderAsync(OrderBase replacementOrder, string accountId, string savedOrderId)
+    {
+        var json = replacementOrder.GetJson();
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
+        var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
+        switch (httpResponseMessage.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                break;
+            default:
+                throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
+        }
+    }
+    
     #endregion Orders
 }
