@@ -329,7 +329,7 @@ public class OrdersTests
                     symbol = _testQuote.symbol!
                 }
             }
-        };        
+        };
         var target = new EquityOrder
         {
             orderType = TDOrderModelsEnums.orderType.LIMIT,
@@ -375,7 +375,7 @@ public class OrdersTests
             await _client.CancelOrderAsync(_testAccountId, orderId);
         }
     }
-    
+
     [Test]
     public async Task OneCancelsAnotherOrderTest()
     {
@@ -426,5 +426,13 @@ public class OrdersTests
         {
             await _client.CancelOrderAsync(_testAccountId, orderId);
         }
+    }
+
+    [Test]
+    public async Task TestGetAccountPrincipalInfo()
+    {
+        var account = await _client.GetAccountPrincipalInfoAsync(_testAccountId);
+        Assert.AreEqual(_testAccountId, account.accountId);
+        Assert.IsNotNull(account.displayName);
     }
 }

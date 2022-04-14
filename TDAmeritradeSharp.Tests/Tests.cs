@@ -170,6 +170,9 @@ public class Tests
     [Test]
     public async Task TestTDPrincipalClient()
     {
+        //var data1 = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names
+        //var data2 = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo);
+        //var data3 = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerSubscriptionKeys);
         var data = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
         Assert.IsTrue(!string.IsNullOrEmpty(data.accessLevel));
     }
@@ -276,7 +279,7 @@ public class Tests
         Debug.Assert(_client.AuthValues != null, "_client.AuthValues != null");
         Assert.Positive((_client.AuthValues.AccessTokenExpirationUtc - DateTime.UtcNow).Ticks);
     }
-    
+
     [Test]
     public async Task GetNewRefreshTokenTests()
     {
@@ -290,5 +293,4 @@ public class Tests
         Debug.Assert(_client.AuthValues != null, "_client.AuthValues != null");
         Assert.Positive((_client.AuthValues.RefreshTokenExpirationUtc - DateTime.UtcNow).Ticks);
     }
-
 }

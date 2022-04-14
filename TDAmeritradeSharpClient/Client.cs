@@ -475,6 +475,18 @@ public class Client : IDisposable
     }
 
     /// <summary>
+    /// Return account information for accountId, including the display name, or <c>null</c> if not found.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
+    public async Task<TDAccount?> GetAccountPrincipalInfoAsync(string accountId)
+    {
+        var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
+        var account = data.accounts.FirstOrDefault(x => x.accountId == accountId);
+        return account;
+    }
+
+    /// <summary>
     ///     User Principal details.
     /// </summary>
     /// <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
@@ -570,6 +582,7 @@ public class Client : IDisposable
     {
         var path = "https://api.tdameritrade.com/v1/accounts";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
+        //var accountsTmp = JsonConvert.DeserializeObject(json);
         var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
         return accounts;
     }
