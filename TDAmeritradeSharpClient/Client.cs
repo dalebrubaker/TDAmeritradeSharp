@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System.Data;
+using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
@@ -22,26 +24,26 @@ public class Client : IDisposable
         {
             Directory.CreateDirectory(userSettingsDirectory);
         }
-        PathAuthResult = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
+        PathAuthValues = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
     }
 
     /// <summary>
     ///     The fully-qualified path to the json file in Users that holds the Authorization information
     /// </summary>
-    public string PathAuthResult { get; }
+    public string PathAuthValues { get; }
 
-    public TDAuthResult AuthResult { get; private set; } = new();
+    public TDAuthValues? AuthValues { get; private set; }
 
     /// <summary>
     ///     Client has valid token
     /// </summary>
-    public bool IsSignedIn => !string.IsNullOrEmpty(AuthResult.access_token);
+    public bool IsSignedIn => AuthValues != null && !string.IsNullOrEmpty(AuthValues.AccessToken);
 
     /// <summary>
     ///     Client has a consumer key (limited non-authenticated access)
     /// </summary>
-    private bool HasConsumerKey => !string.IsNullOrEmpty(AuthResult.consumer_key);
+    private bool HasConsumerKey => AuthValues != null && !string.IsNullOrEmpty(AuthValues.ConsumerKey);
 
     public void Dispose()
     {
@@ -66,7 +68,7 @@ public class Client : IDisposable
     /// <param name="consumerKey"></param>
     /// <param name="callback"></param>
     /// <returns></returns>
-    public async Task<string> SetAuthResultsAsync(string code, string consumerKey, string callback)
+    public async Task<string> InitializeAuthValuesAsync(string code, string consumerKey, string callback)
     {
         var decoded = HttpUtility.UrlDecode(code);
         var dict = new Dictionary<string, string>
@@ -77,28 +79,43 @@ public class Client : IDisposable
             { "redirect_uri", callback },
             { "code", decoded }
         };
-        return await AuthenticateInitAsync(code, consumerKey, callback, dict).ConfigureAwait(false);
+        _httpClient = new HttpClient(); // remove old Auth headers
+        const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
+        try
+        {
+            var json = await SendRequestAsync(req);
+            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
+            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse);
+            SaveAuthResult(AuthValues);
+            LoadAuthResult();
+            return Success;
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
     }
 
     private void LoadAuthResult()
     {
-        if (!File.Exists(PathAuthResult))
+        if (!File.Exists(PathAuthValues))
         {
             return;
         }
-        var json = File.ReadAllText(PathAuthResult);
-        AuthResult = JsonConvert.DeserializeObject<TDAuthResult>(json);
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthResult.access_token);
+        var json = File.ReadAllText(PathAuthValues);
+        AuthValues = JsonConvert.DeserializeObject<TDAuthValues>(json);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthValues.AccessToken);
     }
 
-    private void SaveAuthResult(TDAuthResult authResult)
+    private void SaveAuthResult(TDAuthValues authValues)
     {
-        if (authResult.refresh_token == null)
+        if (authValues.RefreshToken == null)
         {
             throw new Exception("Why?");
         }
-        var jsonSave = JsonConvert.SerializeObject(authResult);
-        File.WriteAllText(PathAuthResult, jsonSave);
+        var jsonSave = JsonConvert.SerializeObject(authValues);
+        File.WriteAllText(PathAuthValues, jsonSave);
     }
 
     /// <summary>
@@ -107,15 +124,14 @@ public class Client : IDisposable
     /// </summary>
     public async Task RequireNotExpiredTokensAsync()
     {
-        if (AuthResult.refresh_token == null)
+        if (AuthValues == null)
         {
-            // Not possible
-            return;
+            throw new NoNullAllowedException($"AuthValues is null. Must call {nameof(InitializeAuthValuesAsync)}");
         }
-        if (AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromMinutes(1))
+        if (AuthValues.AccessTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromMinutes(1))
         {
             // Check RefreshTokenExpirationUtc only when we need a new access token
-            if (AuthResult.RefreshTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromDays(7))
+            if (AuthValues.RefreshTokenExpirationUtc - DateTime.UtcNow < TimeSpan.FromDays(7))
             {
                 // Need a new refresh token
                 await GetNewRefreshTokenAsync().ConfigureAwait(false);
@@ -128,9 +144,51 @@ public class Client : IDisposable
         }
     }
 
-    private async Task GetNewRefreshTokenAsync()
+    /// <summary>
+    ///     internal for Tests project
+    /// </summary>
+    /// <exception cref="AuthenticationException"></exception>
+    internal async Task GetNewAccessTokenAsync()
     {
-        if (AuthResult.refresh_token == null)
+        if (AuthValues == null)
+        {
+            throw new NoNullAllowedException($"AuthValues is null. Must call {nameof(InitializeAuthValuesAsync)}");
+        }
+        var dict = new Dictionary<string, string>
+        {
+            { "grant_type", "refresh_token" },
+            { "refresh_token", AuthValues.RefreshToken },
+            { "client_id", $"{AuthValues.ConsumerKey}@AMER.OAUTHAP" }
+        };
+        _httpClient = new HttpClient(); // remove old Auth headers
+        const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
+        var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
+        try
+        {
+            var json = await SendRequestAsync(req);
+            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
+            Debug.Assert(authResponse.refresh_token == null, "Refresh token is not returned.");
+            Debug.Assert(authResponse.refresh_token_expires_in == 0);
+            Debug.Assert(authResponse.access_token != null);
+            Debug.Assert(authResponse.expires_in > 0);
+            AuthValues.AccessToken = authResponse.access_token!;
+            AuthValues.AccessTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.expires_in);
+            SaveAuthResult(AuthValues);
+            LoadAuthResult();
+        }
+        catch (Exception ex)
+        {
+            throw new AuthenticationException($"Not able to get a new Access Token. {ex.Message}. Run TDAmeritradeSharpUI to authenticate.");
+        }
+    }
+
+    /// <summary>
+    ///     internal for Tests project
+    /// </summary>
+    /// <exception cref="AuthenticationException"></exception>
+    internal async Task GetNewRefreshTokenAsync()
+    {
+        if (AuthValues == null)
         {
             // Never authorized 
             throw new AuthenticationException("Not able to get a new Refresh Token. Run TDAmeritradeSharpUI to authenticate.");
@@ -138,97 +196,33 @@ public class Client : IDisposable
         var dict = new Dictionary<string, string>
         {
             { "grant_type", "refresh_token" },
-            { "refresh_token", AuthResult.refresh_token },
+            { "refresh_token", AuthValues.RefreshToken },
             { "access_type", "offline" },
-            { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
+            { "client_id", $"{AuthValues.ConsumerKey}@AMER.OAUTHAP" }
         };
-        var result = await ReAuthenticateAsync(dict);
-        if (result != Success)
-        {
-            throw new AuthenticationException($"Not able to get a new Refresh Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
-        }
-    }
-
-    private async Task GetNewAccessTokenAsync()
-    {
-        if (AuthResult.refresh_token == null)
-        {
-            // Never authorized 
-            return;
-        }
-        var dict = new Dictionary<string, string>
-        {
-            { "grant_type", "refresh_token" },
-            { "refresh_token", AuthResult.refresh_token },
-            { "client_id", $"{AuthResult.consumer_key}@AMER.OAUTHAP" }
-        };
-        var result = await ReAuthenticateAsync(dict);
-        if (result != Success)
-        {
-            throw new AuthenticationException($"Not able to get a new Access Token. {result}. Run TDAmeritradeSharpUI to authenticate.");
-        }
-    }
-
-    /// <summary>
-    ///     Do the initial authentication
-    /// </summary>
-    /// <param name="code"></param>
-    /// <param name="consumerKey"></param>
-    /// <param name="callback"></param>
-    /// <param name="dict"></param>
-    /// <returns></returns>
-    private async Task<string> AuthenticateInitAsync(string? code, string? consumerKey, string? callback, Dictionary<string, string> dict)
-    {
         _httpClient = new HttpClient(); // remove old Auth headers
         const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
         var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
         try
         {
             var json = await SendRequestAsync(req);
-            var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
-            authResult.security_code = code;
-            authResult.consumer_key = consumerKey;
-            authResult.redirect_url = callback;
-            authResult.CreationTimestampUtc = DateTime.UtcNow;
-            SaveAuthResult(authResult);
-            LoadAuthResult();
-            return Success;
-        }
-        catch (Exception ex)
-        {
-            return ex.Message;
-        }
-    }
+            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
+            Debug.Assert(authResponse.refresh_token != null);
+            Debug.Assert(authResponse.refresh_token_expires_in > 0);
+            AuthValues.RefreshToken = authResponse.refresh_token!;
+            AuthValues.RefreshTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.refresh_token_expires_in);
 
-    private async Task<string> ReAuthenticateAsync(Dictionary<string, string> dict)
-    {
-        _httpClient = new HttpClient(); // remove old Auth headers
-        const string Path = "https://api.tdameritrade.com/v1/oauth2/token";
-        var req = new HttpRequestMessage(HttpMethod.Post, Path) { Content = new FormUrlEncodedContent(dict) };
-        try
-        {
-            var json = await SendRequestAsync(req);
-            var authResult = JsonConvert.DeserializeObject<TDAuthResult>(json) ?? new TDAuthResult();
-            authResult.security_code = AuthResult.security_code;
-            authResult.consumer_key = AuthResult.consumer_key;
-            authResult.redirect_url = AuthResult.redirect_url; // preserve old refresh token if we are only getting a new access code
-            authResult.refresh_token ??= AuthResult.refresh_token;
-            if (authResult.expires_in == 0)
-            {
-                authResult.expires_in = AuthResult.expires_in;
-            }
-            if (authResult.refresh_token_expires_in == 0)
-            {
-                authResult.refresh_token_expires_in = AuthResult.refresh_token_expires_in;
-            }
-            authResult.CreationTimestampUtc = DateTime.UtcNow;
-            SaveAuthResult(authResult);
+            // We also got a new AccessToken
+            Debug.Assert(authResponse.access_token != null);
+            Debug.Assert(authResponse.expires_in > 0);
+            AuthValues.AccessToken = authResponse.access_token!;
+            AuthValues.AccessTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.expires_in);
+            SaveAuthResult(AuthValues);
             LoadAuthResult();
-            return Success;
         }
         catch (Exception ex)
         {
-            return ex.Message;
+            throw new AuthenticationException($"Not able to get a new Refresh Token. {ex.Message}. Run TDAmeritradeSharpUI to authenticate.");
         }
     }
 
@@ -256,6 +250,10 @@ public class Client : IDisposable
     /// </summary>
     public async Task<string> GetOptionsChainJsonAsync(TDOptionChainRequest request)
     {
+        if (AuthValues == null)
+        {
+            throw new NoNullAllowedException($"AuthValues is null. Must call {nameof(InitializeAuthValuesAsync)}");
+        }
         if (!HasConsumerKey)
         {
             throw new Exception("ConsumerKey is null");
@@ -263,7 +261,7 @@ public class Client : IDisposable
         var queryString = HttpUtility.ParseQueryString(string.Empty);
         if (!IsSignedIn)
         {
-            queryString.Add("apikey", AuthResult.consumer_key);
+            queryString.Add("apikey", AuthValues.ConsumerKey);
         }
         queryString.Add("symbol", request.symbol);
         if (request.contractType.HasValue)
@@ -340,11 +338,15 @@ public class Client : IDisposable
     /// <returns></returns>
     private async Task<string> GetPriceHistoryJsonAsync(TDPriceHistoryRequest model)
     {
+        if (AuthValues == null)
+        {
+            throw new NoNullAllowedException($"AuthValues is null. Must call {nameof(InitializeAuthValuesAsync)}");
+        }
         if (!HasConsumerKey)
         {
             throw new Exception("ConsumerKey is null");
         }
-        var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
+        var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
         var builder = new UriBuilder($"https://api.tdameritrade.com/v1/marketdata/{model.symbol}/pricehistory");
         var query = HttpUtility.ParseQueryString(builder.Query);
         if (!IsSignedIn)
@@ -436,11 +438,15 @@ public class Client : IDisposable
     /// <returns></returns>
     public async Task<string> GetQuoteJsonAsync(string symbol)
     {
+        if (AuthValues == null)
+        {
+            throw new NoNullAllowedException($"AuthValues is null. Must call {nameof(InitializeAuthValuesAsync)}");
+        }
         if (!HasConsumerKey)
         {
             throw new Exception("ConsumerKey is null");
         }
-        var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
+        var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
         var path = IsSignedIn
             ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
             : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
@@ -507,11 +513,15 @@ public class Client : IDisposable
     /// </summary>
     public async Task<string> GetMarketHoursJsonAsync(MarketTypes type, DateTime day)
     {
+        if (AuthValues == null)
+        {
+            throw new NoNullAllowedException($"AuthValues is null. Must call {nameof(InitializeAuthValuesAsync)}");
+        }
         if (!HasConsumerKey)
         {
             throw new Exception("ConsumerKey is null");
         }
-        var key = HttpUtility.UrlEncode(AuthResult.consumer_key);
+        var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
         var dayString = day.ToString("yyyy-MM-dd").Replace("/", "-");
         var path = IsSignedIn
             ? $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?date={dayString}"

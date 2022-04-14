@@ -95,22 +95,28 @@ public partial class AuthUserControl : UserControl
 
     private async void btnGetAuthCode_Click(object sender, EventArgs e)
     {
-        if (_client == null)
+        await SetAuthValuesAsync();
+    }
+
+    private async Task SetAuthValuesAsync()
+    {
+        if (string.IsNullOrEmpty(textBoxEncodedAuthCode.Text))
         {
+            MessageBox.Show($"Re-authentication is required, using buttons above.");
             return;
         }
-        logControl1.LogMessage($"Setting access tokens: {_authCodeUrl}");
+        logControl1.LogMessage($"Setting authentication values: {_authCodeUrl}");
         var code = textBoxEncodedAuthCode.Text;
         var consumerKey = Settings.ConsumerKey;
         var callback = Settings.CallbackUrl;
-        var result = await _client.SetAuthResultsAsync(code, consumerKey, callback);
+        var result = await _client.InitializeAuthValuesAsync(code, consumerKey, callback);
         logControl1.LogMessage(result);
         MessageBox.Show(result);
         if (result == Client.Success)
         {
             SaveConfig();
-            var authResultJsonLines = await File.ReadAllLinesAsync(_client.PathAuthResult);
-            logControl1.LogMessage($"The following json is saved at {_client.PathAuthResult}");
+            var authResultJsonLines = await File.ReadAllLinesAsync(_client.PathAuthValues);
+            logControl1.LogMessage($"The following json is saved at {_client.PathAuthValues}");
             logControl1.LogMessages(authResultJsonLines);
             timer1.Enabled = true;
         }
@@ -118,6 +124,11 @@ public partial class AuthUserControl : UserControl
 
     private void buttonShowManualAuth_Click(object sender, EventArgs e)
     {
+        if (_client.AuthValues == null)
+        {
+            MessageBox.Show($"Re-authentication is required, using buttons above.");
+            return;
+        }
         logControl1.LogMessage("");
         logControl1.LogMessage(_counter++.ToString());
         logControl1.LogMessage("Below here is for manual authentication at developer.tdameritrade.com");
@@ -135,7 +146,7 @@ public partial class AuthUserControl : UserControl
         logControl1.LogMessage("");
         logControl1.LogMessage("For manual entry at developer.tdameritrade.com, e.g. https://developer.tdameritrade.com/quotes/apis/get/marketdata/%7Bsymbol%7D/quotes");
         logControl1.LogMessage($"apikey:\t\t{apiKey}");
-        var decodedAccessToken = HttpUtility.HtmlDecode(_client.AuthResult.access_token);
+        var decodedAccessToken = HttpUtility.HtmlDecode(_client.AuthValues.AccessToken);
         var bearerCode = $"Bearer<{decodedAccessToken}>";
         logControl1.LogMessage($"Authorization:\t{bearerCode}");
     }
@@ -145,6 +156,11 @@ public partial class AuthUserControl : UserControl
         timer1.Enabled = false;
         try
         {
+            if (_client.AuthValues == null)
+            {
+                await SetAuthValuesAsync();
+                return;
+            }
             await _client.RequireNotExpiredTokensAsync();
         }
         catch (Exception ex)
@@ -154,12 +170,12 @@ public partial class AuthUserControl : UserControl
             return;
         }
         lblRequestsInLastMinute.Text = $"Requests in last minute: {Throttling.ThrottledThrottledRequestTimesUtc.Count}";
-        if (_client.AuthResult.AccessTokenExpirationUtc.Date != DateTime.MinValue.Date)
+        if (_client.AuthValues.AccessTokenExpirationUtc.Date != DateTime.MinValue.Date)
         {
-            var timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
+            var timeUntilAccessTokenExpires = _client.AuthValues.AccessTokenExpirationUtc - DateTime.UtcNow;
             if (timeUntilAccessTokenExpires.Ticks < 0)
             {
-                timeUntilAccessTokenExpires = _client.AuthResult.AccessTokenExpirationUtc - DateTime.UtcNow;
+                timeUntilAccessTokenExpires = _client.AuthValues.AccessTokenExpirationUtc - DateTime.UtcNow;
             }
             lblAccessTokenExpires.Text = timeUntilAccessTokenExpires.Ticks < 0 
                 ? "Access token is no longer valid." 
@@ -169,8 +185,8 @@ public partial class AuthUserControl : UserControl
         {
             lblAccessTokenExpires.Text = "Access token is not valid yet.";
         }
-        lblRefreshTokenExpires.Text = _client.AuthResult.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date 
-            ? $"Refresh token expires {_client.AuthResult.RefreshTokenExpirationUtc.Date:d}" 
+        lblRefreshTokenExpires.Text = _client.AuthValues.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date 
+            ? $"Refresh token expires {_client.AuthValues.RefreshTokenExpirationUtc.Date:d}" 
             : "Refresh token is expired or never was set. Initialize using buttons above.";
         timer1.Enabled = true;
     }
