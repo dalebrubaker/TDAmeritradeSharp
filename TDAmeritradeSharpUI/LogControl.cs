@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace TDAmeritradeSharpUI;
@@ -138,15 +137,4 @@ public partial class LogControl : UserControl
     {
         Clear();
     }
-    //
-    // [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    // private static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
-    // private const int WM_VSCROLL = 277;
-    // private const int SB_PAGEBOTTOM = 7;
-    //
-    // private void ScrollToBottom(RichTextBox richTextBox)
-    // {
-    //     SendMessage(richTextBox.Handle, WM_VSCROLL, (IntPtr)SB_PAGEBOTTOM, IntPtr.Zero);
-    //     richTextBox.SelectionStart = richTextBox.Text.Length;
-    // }
 }
