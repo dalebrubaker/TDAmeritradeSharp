@@ -55,8 +55,8 @@ internal static class Program
                 .UseSerilog()
                 .Build();
             using var serviceScope = host.Services.CreateScope();
-            var services = serviceScope.ServiceProvider;
-            var form1 = services.GetRequiredService<MainForm>();
+            var serviceProvider = serviceScope.ServiceProvider;
+            var form1 = serviceProvider.GetRequiredService<MainForm>();
             Application.Run(form1);
         }
         catch (Exception ex)
