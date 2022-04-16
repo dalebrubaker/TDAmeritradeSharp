@@ -5,19 +5,10 @@ namespace TDAmeritradeSharpUI;
 
 public partial class MainForm : Form
 {
-    private readonly ILogger<MainForm> _logger;
-
-    public MainForm(ILogger<MainForm> logger, IServiceProvider serviceProvider)
+    public MainForm()
     {
-        _logger = logger;
-        ServiceProvider = serviceProvider;
         InitializeComponent();
     }
-
-    /// <summary>
-    ///     This is used by user controls created by the designer (empty constructor) to access a logger or other services
-    /// </summary>
-    public IServiceProvider ServiceProvider { get; }
 
     private MainFormSettings Settings { get; set; } = new();
 

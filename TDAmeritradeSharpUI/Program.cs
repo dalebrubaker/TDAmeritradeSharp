@@ -6,11 +6,6 @@ using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI;
 
-/// <summary>
-///     Good video:
-///     For Seq do this command in PowerShell: https://youtu.be/_iryZxv8Rxw C# Logging with Serilog and Seq - Structured Logging Made Easy by IAmTimCorey
-///     docker run -d  --restart unless-stopped --name seq -e ACCEPT_EULA=Y -v D:\Logs\TDAmeritradeSharp:/data -p 8081:80 datalust/seq:latest
-/// </summary>
 internal static class Program
 {
     static Program()
@@ -39,33 +34,36 @@ internal static class Program
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json")
             .Build();
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom
-            .Configuration(configuration)
-            .CreateLogger();
+        var seqURL = Environment.GetEnvironmentVariable("SeqURL");
+        var apiKey = Environment.GetEnvironmentVariable("SeqApiKeyTDAmeritradeSharp");
+        if (string.IsNullOrEmpty(seqURL))
+        {
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom
+                .Configuration(configuration)
+                .CreateLogger();
+        }
+        else
+        {
+            // Add Seq using environment variables, to keep them out of appsettings.json
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Seq(seqURL, apiKey:apiKey)
+                .ReadFrom
+                .Configuration(configuration)
+                .CreateLogger();
+        }
         try
         {
             Log.Verbose("Application starting");
-            var host = Host.CreateDefaultBuilder()
-                .ConfigureServices((hostContext, services) =>
-                {
-                    services.AddScoped<MainForm>();
-                    services.AddScoped<Client>();
-                })
-                .UseSerilog()
-                .Build();
-            using var serviceScope = host.Services.CreateScope();
-            var serviceProvider = serviceScope.ServiceProvider;
-            var form1 = serviceProvider.GetRequiredService<MainForm>();
-            Application.Run(form1);
+            Application.Run(new MainForm());
         }
         catch (Exception ex)
         {
             Log.Fatal(ex, "Application failed to run");
-            throw;
         }
         finally
         {
+            Log.Verbose("Exiting");
             Log.CloseAndFlush();
         }
     }

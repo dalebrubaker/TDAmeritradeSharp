@@ -1,19 +1,20 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Web;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Serilog;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI;
 
 public partial class AuthUserControl : UserControl
 {
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()!.DeclaringType);
+
     private string? _authCodeUrl;
     private Client _client = null!;
 
     private int _counter;
-    private ILogger<AuthUserControl>? _logger;
 
     public AuthUserControl()
     {
@@ -31,15 +32,10 @@ public partial class AuthUserControl : UserControl
             return;
         }
 
-        // Here in Load we now have a ParentForm and can retrieve a logger from DI
-        // ReSharper disable once AssignNullToNotNullAttribute
-        var mainForm = (MainForm)ParentForm;
-        _logger = mainForm.ServiceProvider.GetRequiredService<ILogger<AuthUserControl>>();
-        _logger?.LogTrace("Loading AuthUserControl");
-
+        s_logger.Verbose($"Loading {nameof(AuthUserControl)}");
         LoadConfig();
 
-        _client = mainForm.ServiceProvider.GetRequiredService<Client>();
+        _client = new Client();
     }
 
     protected override void OnHandleDestroyed(EventArgs e)
@@ -102,7 +98,7 @@ public partial class AuthUserControl : UserControl
     {
         if (string.IsNullOrEmpty(textBoxEncodedAuthCode.Text))
         {
-            MessageBox.Show($"Re-authentication is required, using buttons above.");
+            MessageBox.Show("Re-authentication is required, using buttons above.");
             return;
         }
         logControl1.LogMessage($"Setting authentication values: {_authCodeUrl}");
@@ -126,7 +122,7 @@ public partial class AuthUserControl : UserControl
     {
         if (_client.AuthValues == null)
         {
-            MessageBox.Show($"Re-authentication is required, using buttons above.");
+            MessageBox.Show("Re-authentication is required, using buttons above.");
             return;
         }
         logControl1.LogMessage("");
@@ -177,16 +173,16 @@ public partial class AuthUserControl : UserControl
             {
                 timeUntilAccessTokenExpires = _client.AuthValues.AccessTokenExpirationUtc - DateTime.UtcNow;
             }
-            lblAccessTokenExpires.Text = timeUntilAccessTokenExpires.Ticks < 0 
-                ? "Access token is no longer valid." 
+            lblAccessTokenExpires.Text = timeUntilAccessTokenExpires.Ticks < 0
+                ? "Access token is no longer valid."
                 : $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
         }
         else
         {
             lblAccessTokenExpires.Text = "Access token is not valid yet.";
         }
-        lblRefreshTokenExpires.Text = _client.AuthValues.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date 
-            ? $"Refresh token expires {_client.AuthValues.RefreshTokenExpirationUtc.Date:d}" 
+        lblRefreshTokenExpires.Text = _client.AuthValues.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date
+            ? $"Refresh token expires {_client.AuthValues.RefreshTokenExpirationUtc.Date:d}"
             : "Refresh token is expired or never was set. Initialize using buttons above.";
         timer1.Enabled = true;
     }
