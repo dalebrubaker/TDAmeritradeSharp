@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,55 +34,97 @@ public class OrdersTests
         _testAccountId = await File.ReadAllTextAsync(testAccountPath);
 
         _testQuote = await _client.GetQuote_EquityAsync("BTG"); // a low-priced stock
-        Assert.IsTrue(_testQuote.symbol == "BTG");
+        Assert.IsTrue(_testQuote.Symbol == "BTG");
     }
 
     [Test]
     public async Task TestGetAccount()
     {
         var account = await _client.GetAccountAsync(_testAccountId);
-        Assert.IsTrue(account.securitiesAccount.accountId == _testAccountId);
+        Assert.IsTrue(account.SecuritiesAccount.AccountId == _testAccountId);
     }
 
     [Test]
     public async Task TestGetAccounts()
     {
         var accounts = await _client.GetAccountsAsync();
-        var testAccount = accounts.FirstOrDefault(x => x.securitiesAccount.accountId == _testAccountId);
+        var testAccount = accounts.FirstOrDefault(x => x.SecuritiesAccount.AccountId == _testAccountId);
         Assert.IsNotNull(testAccount);
+    }
+
+    [Test]
+    public void TestTDInstrumentConverter()
+    {
+        const string Symbol = "TestSymbol";
+        const string UnderlyingSymbol = "TestUnderlyingSymbol";
+        const string DeliverableSymbol = "TestDeliverableSymbol";
+        var instrument = new InstrumentOption
+        {
+            Symbol = Symbol,
+            Type = TDOrderEnums.TypeOption.BINARY,
+            PutCall = TDOrderEnums.PutCall.CALL,
+            UnderlyingSymbol = UnderlyingSymbol,
+            OptionMultiplier = 1.23,
+            OptionDeliverables = new List<OptionDeliverable>
+            {
+                new()
+                {
+                    Symbol = DeliverableSymbol,
+                    DeliverableUnits = 123.4,
+                    CurrencyType = TDOrderEnums.CurrencyType.JPY,
+                    AssetType = TDOrderEnums.AssetType.MUTUAL_FUND
+                },
+                new()
+                {
+                    Symbol = DeliverableSymbol,
+                    DeliverableUnits = 234.5,
+                    CurrencyType = TDOrderEnums.CurrencyType.CAD,
+                    AssetType = TDOrderEnums.AssetType.FIXED_INCOME
+                }
+            }
+        };
+        var json = _client.SerializeInstrument(instrument);
+        Assert.IsNotEmpty(json);
+        var instrumentDeserialized = (InstrumentOption)_client.DeserializeToInstrument(json);
+        Assert.IsNotNull(instrumentDeserialized);
+        Assert.AreEqual(instrument.UnderlyingSymbol, instrumentDeserialized.UnderlyingSymbol);
+        Assert.AreEqual(instrument.OptionDeliverables[1].DeliverableUnits, instrumentDeserialized.OptionDeliverables![1].DeliverableUnits);
     }
 
     [Test]
     public async Task TestSingleLimitOrder()
     {
-        var close = _testQuote.closePrice;
+        var close = _testQuote.ClosePrice;
         var limitPrice = close * 0.5; // attempt to avoid a fill
-        var order = new EquityOrder
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = limitPrice,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         Assert.IsNotNull(orderId);
         var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
-        Assert.AreEqual(orderId, orderPlaced.orderId);
+        Assert.AreEqual(orderId, orderPlaced.OrderId);
         var allOrders = await _client.GetOrdersByPathAsync(_testAccountId, 2, DateTime.Today,
-            status: TDOrderModelsEnums.status.CANCELED);
+            status: TDOrderEnums.Status.CANCELED);
         Assert.GreaterOrEqual(allOrders.Count(), 0);
         var allOrdersQuery = await _client.GetOrdersByQueryAsync(maxResults: 2, fromEnteredTime: DateTime.Today,
-            status: TDOrderModelsEnums.status.CANCELED);
+            status: TDOrderEnums.Status.CANCELED);
         Assert.GreaterOrEqual(allOrdersQuery.Count(), 0);
         await _client.CancelOrderAsync(_testAccountId, orderId);
     }
@@ -90,19 +133,22 @@ public class OrdersTests
     [Ignore("Actually buys!")]
     public async Task TestSingleMarketOrder()
     {
-        var order = new EquityOrder
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.MARKET,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.MARKET,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
@@ -110,57 +156,66 @@ public class OrdersTests
     }
 
     [Test]
-    public void TestOrderBaseCloneDeep()
+    public void TestCloneDeep()
     {
-        var close = _testQuote.closePrice;
-        var order = new EquityOrder
+        var close = _testQuote.ClosePrice;
+        var limitPrice = close * 0.5; // attempt to avoid a fill,
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = close * 0.5, // attempt to avoid a fill,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        var clone = order.CloneDeep();
-        Assert.AreEqual(order.GetJson(), clone.GetJson());
+        var clone = _client.CloneDeep(order);
+        Assert.AreEqual(_client.GetPlaceOrderJson(order), _client.GetPlaceOrderJson(clone));
     }
 
     [Test]
     public async Task TestReplaceLimitOrder()
     {
-        var close = _testQuote.closePrice;
-        var order = new EquityOrder
+        var close = _testQuote.ClosePrice;
+        var limitPrice = close * 0.5; // attempt to avoid a fill
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = close * 0.5, // attempt to avoid a fill,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         Assert.IsNotNull(orderId);
 
-        var replacementOrder = order.CloneDeep(); // attempt to avoid a fill
-        replacementOrder.priceNumeric = close * 0.6;
-        replacementOrder.orderLegCollection[0].quantity = 2;
+        var replacementOrder = _client.CloneDeep(order);
+        limitPrice = close * 0.6;
+        replacementOrder.Price = limitPrice;
+        replacementOrder.OrderLegCollection[0].Quantity = 2;
         var replacementOrderId = await _client.ReplaceOrderAsync(replacementOrder, _testAccountId, orderId);
         await _client.CancelOrderAsync(_testAccountId, replacementOrderId);
     }
@@ -175,38 +230,41 @@ public class OrdersTests
     [Test]
     public async Task TestGetOrder()
     {
-        const string OrderId = "8134476058";
+        const long OrderId = 8134476058;
         var order = await _client.GetOrderAsync(_testAccountId, OrderId).ConfigureAwait(false);
-        Assert.AreEqual(OrderId, order.orderId);
+        Assert.AreEqual(OrderId, order.OrderId);
     }
 
     [Test]
     public async Task TestSavedOrder()
     {
-        var close = _testQuote.closePrice;
+        var close = _testQuote.ClosePrice;
         var limitPrice = close * 0.5;
-        var order = new EquityOrder
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = limitPrice,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
         await _client.CreateSavedOrderAsync(order, _testAccountId).ConfigureAwait(false);
         var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
         Assert.Positive(savedOrders.Count);
-        var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].savedOrderId).ConfigureAwait(false);
-        Assert.AreEqual(savedOrder0.savedOrderId, savedOrders[0].savedOrderId);
+        var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].SavedOrderId).ConfigureAwait(false);
+        Assert.AreEqual(savedOrder0.SavedOrderId, savedOrders[0].SavedOrderId);
         await DeleteExistingSavedOrders().ConfigureAwait(false);
     }
 
@@ -215,40 +273,43 @@ public class OrdersTests
     {
         await DeleteExistingSavedOrders().ConfigureAwait(false);
 
-        var close = _testQuote.closePrice;
+        var close = _testQuote.ClosePrice;
         var limitPrice = close * 0.5;
-        var order = new EquityOrder
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = limitPrice,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
         await _client.CreateSavedOrderAsync(order, _testAccountId).ConfigureAwait(false);
         var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
         Assert.AreEqual(1, savedOrders.Count);
-        var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].savedOrderId).ConfigureAwait(false);
+        var savedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, savedOrders[0].SavedOrderId).ConfigureAwait(false);
 
-        var replacementOrder = order.CloneDeep();
+        var replacementOrder = _client.CloneDeep(order);
         var replacementLimitPrice = close * 0.6;
-        replacementOrder.priceNumeric = replacementLimitPrice;
-        replacementOrder.orderLegCollection[0].quantity = 2;
-        await _client.ReplaceSavedOrderAsync(replacementOrder, _testAccountId, savedOrder0.savedOrderId);
+        replacementOrder.Price = replacementLimitPrice;
+        replacementOrder.OrderLegCollection[0].Quantity = 2;
+        await _client.ReplaceSavedOrderAsync(replacementOrder, _testAccountId, savedOrder0.SavedOrderId);
         var replacementOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
         Assert.AreEqual(1, replacementOrders.Count);
-        var replacementSavedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, replacementOrders[0].savedOrderId).ConfigureAwait(false);
-        Assert.AreEqual(2, replacementSavedOrder0.orderLegCollection[0].quantity);
-        await _client.DeleteSavedOrderAsync(_testAccountId, replacementSavedOrder0.savedOrderId).ConfigureAwait(false);
+        var replacementSavedOrder0 = await _client.GetSavedOrderAsync(_testAccountId, replacementOrders[0].SavedOrderId).ConfigureAwait(false);
+        Assert.AreEqual(2, replacementSavedOrder0.OrderLegCollection[0].Quantity);
+        await _client.DeleteSavedOrderAsync(_testAccountId, replacementSavedOrder0.SavedOrderId).ConfigureAwait(false);
     }
 
     private async Task DeleteExistingSavedOrders()
@@ -256,7 +317,7 @@ public class OrdersTests
         var savedOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
         foreach (var savedOrder in savedOrders)
         {
-            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.savedOrderId).ConfigureAwait(false);
+            await _client.DeleteSavedOrderAsync(_testAccountId, savedOrder.SavedOrderId).ConfigureAwait(false);
         }
         var savedOrders2 = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
         Assert.Zero(savedOrders2.Count);
@@ -266,43 +327,50 @@ public class OrdersTests
     public async Task OneTriggersAnotherOrderTest()
     {
         // Note that SavedOrders gives "error": "OrderStrategyType TRIGGER is not supported"
-        var close = _testQuote.closePrice;
+        var close = _testQuote.ClosePrice;
         var limitPrice = close * 0.5;
-        var order = new EquityOrder
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.TRIGGER,
-            priceNumeric = limitPrice,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.TRIGGER,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        var childOrder = new EquityOrder
+        var targetPrice = limitPrice + 5;
+        var childOrder = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = limitPrice + 5,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = targetPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        order.childOrderStrategies.Add(childOrder);
+        order.ChildOrderStrategies = new List<TDOrder> { childOrder };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         await _client.CancelOrderAsync(_testAccountId, orderId);
     }
@@ -311,66 +379,80 @@ public class OrdersTests
     public async Task OneTriggerOneCancelsAnotherOrderTest()
     {
         // Note that SavedOrders gives "error": "OrderStrategyType TRIGGER is not supported"
-        var close = _testQuote.closePrice;
+        var close = _testQuote.ClosePrice;
         var limitPrice = close * 0.5;
-        var order = new EquityOrder
+        var order = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.TRIGGER,
-            priceNumeric = limitPrice,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.TRIGGER,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        var target = new EquityOrder
+        var targetPrice = close * 2;
+        var target = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            priceNumeric = close * 2,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            Price = targetPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.SELL,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        var stop = new EquityOrder
+        var priceStop = limitPrice + 0.03;
+        var stop = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.STOP_LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = close * .5,
-            stopPriceNumeric = close * .5 + .03,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.STOP_LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            StopPrice = priceStop,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.SELL,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        order.childOrderStrategies.Add(target);
-        order.childOrderStrategies.Add(stop);
+        order.ChildOrderStrategies = new List<TDOrder> 
+            { 
+                target, 
+                stop
+            };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
-        var status = order2.status;
-        if (status != TDOrderModelsEnums.status.REJECTED)
+        var status = order2.Status;
+        if (status != TDOrderEnums.Status.REJECTED)
         {
             await _client.CancelOrderAsync(_testAccountId, orderId);
         }
@@ -380,49 +462,61 @@ public class OrdersTests
     public async Task OneCancelsAnotherOrderTest()
     {
         // Note that SavedOrders gives "error": "OrderStrategyType TRIGGER is not supported"
-        var close = _testQuote.closePrice;
+        var close = _testQuote.ClosePrice;
         var order = new OcoOrder();
-        var target = new EquityOrder
+        var targetPrice = close * 2;
+        var target = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            priceNumeric = close * 2,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            Price = targetPrice,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.SELL,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        var stop = new EquityOrder
+        var price = close * .5;
+        var priceStop = close * .5 + .03;
+        var stop = new TDOrder
         {
-            orderType = TDOrderModelsEnums.orderType.STOP_LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
-            priceNumeric = close * .5,
-            stopPriceNumeric = close * .5 + .03,
-            OrderLeg = new EquityOrderLeg
+            OrderType = TDOrderEnums.OrderType.STOP_LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = price,
+            StopPrice = priceStop,
+            OrderLegCollection = new List<OrderLeg>
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
-                quantity = 1,
-                instrument = new EquityOrderInstrument
+                new()
                 {
-                    symbol = _testQuote.symbol!
+                    Instruction = TDOrderEnums.Instruction.SELL,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
                 }
             }
         };
-        order.childOrderStrategies.Add(target);
-        order.childOrderStrategies.Add(stop);
+        order.ChildOrderStrategies = new List<TDOrder>
+        {
+            target,
+            stop
+        };
         var orderId = await _client.PlaceOcoOrderAsync(order, _testAccountId).ConfigureAwait(false);
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
-        var status = order2.status;
-        if (status != TDOrderModelsEnums.status.REJECTED)
+        var status = order2.Status;
+        if (status != TDOrderEnums.Status.REJECTED)
         {
             await _client.CancelOrderAsync(_testAccountId, orderId);
         }

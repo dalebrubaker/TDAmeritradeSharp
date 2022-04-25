@@ -1,8 +1,10 @@
-﻿namespace TDAmeritradeSharpClient;
+﻿using System.Text.Json;
+
+namespace TDAmeritradeSharpClient;
 
 public static class TDHelpers
 {
-    public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
+    public static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
     public static long UnixSecondsToMilliseconds(this double time)
     {
@@ -127,15 +129,15 @@ public static class TDHelpers
             }
             else
             {
-                result[index].close = candles[i].close;
-                result[index].volume += candles[i].volume;
-                if (result[index].low > candles[i].low)
+                result[index].Close = candles[i].Close;
+                result[index].Volume += candles[i].Volume;
+                if (result[index].Low > candles[i].Low)
                 {
-                    result[index].low = candles[i].low;
+                    result[index].Low = candles[i].Low;
                 }
-                if (result[index].high < candles[i].high)
+                if (result[index].High < candles[i].High)
                 {
-                    result[index].high = candles[i].high;
+                    result[index].High = candles[i].High;
                 }
             }
         }
@@ -186,5 +188,11 @@ public static class TDHelpers
             return result;
         }
         return dateTime;
+    }
+
+    public static string JsonPrettify(this string json)
+    {
+        using var jDoc = JsonDocument.Parse(json);
+        return JsonSerializer.Serialize(jDoc, new JsonSerializerOptions { WriteIndented = true });
     }
 }

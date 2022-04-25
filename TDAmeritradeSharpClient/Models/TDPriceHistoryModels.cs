@@ -1,16 +1,16 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
 
 [Serializable]
 public struct TDPriceCandle
 {
-    public double close { get; set; }
-    public double datetime { get; set; }
-    public double high { get; set; }
-    public double low { get; set; }
-    public double open { get; set; }
-    public double volume { get; set; }
+    public double Close { get; set; }
+    public double Datetime { get; set; }
+    public double High { get; set; }
+    public double Low { get; set; }
+    public double Open { get; set; }
+    public double Volume { get; set; }
 
     /// <summary>
     /// Timestamp of the START of the bar
@@ -18,8 +18,8 @@ public struct TDPriceCandle
     [JsonIgnore]
     public DateTime DateTime
     {
-        get => TDHelpers.FromUnixTimeMilliseconds(datetime);
-        set => datetime = value.ToUnixTimeSeconds();
+        get => TDHelpers.FromUnixTimeMilliseconds(Datetime);
+        set => Datetime = value.ToUnixTimeSeconds();
     }
 
     public override string ToString()
@@ -28,6 +28,7 @@ public struct TDPriceCandle
     }
 }
 
+// ReSharper disable InconsistentNaming
 [Serializable]
 ///https://developer.tdameritrade.com/content/price-history-samples
 public struct TDPriceHistoryRequest
@@ -42,20 +43,21 @@ public struct TDPriceHistoryRequest
     }
 
     [Serializable]
-    public enum FrequencyType
+    public enum FrequencyTypeEnum
     {
         minute,
         daily,
         weekly,
         monthly
     }
+    // ReSharper restore InconsistentNaming
 
-    public string symbol { get; set; }
+    public string Symbol { get; set; }
 
     /// <summary>
     ///     The type of period to show. Valid values are day, month, year, or ytd (year to date). Default is day.
     /// </summary>
-    public PeriodTypes? periodType { get; set; }
+    public PeriodTypes? PeriodType { get; set; }
 
     /// <summary>
     ///     The number of periods to show.
@@ -70,7 +72,7 @@ public struct TDPriceHistoryRequest
     ///     year: 1*, 2, 3, 5, 10, 15, 20
     ///     ytd: 1*
     /// </summary>
-    public int period { get; set; }
+    public int Period { get; set; }
 
     /// <summary>
     ///     The type of frequency with which a new candle is formed.
@@ -80,7 +82,7 @@ public struct TDPriceHistoryRequest
     ///     year: daily, weekly, monthly*
     ///     ytd: daily, weekly*
     /// </summary>
-    public FrequencyType? frequencyType { get; set; }
+    public FrequencyTypeEnum? FrequencyType { get; set; }
 
     /// <summary>
     ///     The number of the frequencyType to be included in each candle.
@@ -90,34 +92,34 @@ public struct TDPriceHistoryRequest
     ///     weekly: 1*
     ///     monthly: 1*
     /// </summary>
-    public int frequency { get; set; }
+    public int Frequency { get; set; }
 
     /// <summary>
     ///     End date as milliseconds since epoch. If startDate and endDate are provided, period should not be provided. Default is previous trading day.
     /// </summary>
-    public double? endDate { get; set; }
+    public double? EndDate { get; set; }
 
     /// <summary>
     ///     Start date as milliseconds since epoch. If startDate and endDate are provided, period should not be provided.
     /// </summary>
-    public double? startDate { get; set; }
+    public double? StartDate { get; set; }
 
     /// <summary>
     ///     true to return extended hours data, false for regular market hours only. Default is true
     /// </summary>
-    public bool? needExtendedHoursData { get; set; }
+    public bool? NeedExtendedHoursData { get; set; }
 
     [JsonIgnore]
-    public DateTime? EndDate
+    public DateTime? EndDateTime
     {
-        get => endDate.HasValue ? TDHelpers.FromUnixTimeSeconds(endDate.Value) : null;
-        set => endDate = value.HasValue ? value.Value.ToUnixTimeSeconds() : null;
+        get => EndDate.HasValue ? TDHelpers.FromUnixTimeSeconds(EndDate.Value) : null;
+        set => EndDate = value?.ToUnixTimeSeconds();
     }
 
     [JsonIgnore]
-    public DateTime? StartDate
+    public DateTime? StartDateTime
     {
-        get => startDate.HasValue ? TDHelpers.FromUnixTimeSeconds(startDate.Value) : null;
-        set => startDate = value.HasValue ? value.Value.ToUnixTimeSeconds() : null;
+        get => StartDate.HasValue ? TDHelpers.FromUnixTimeSeconds(StartDate.Value) : null;
+        set => StartDate = value?.ToUnixTimeSeconds();
     }
 }

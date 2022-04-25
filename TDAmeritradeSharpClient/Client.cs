@@ -5,20 +5,49 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Web;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace TDAmeritradeSharpClient;
 
 public class Client : IDisposable
 {
     public const string Success = "Authorization was successful";
+    private readonly JsonSerializerOptions _jsonOptionsWithoutInstrumentConverter;
     private HttpClient _httpClient;
 
     public Client()
     {
         _httpClient = new HttpClient();
+        JsonOptions = new JsonSerializerOptions
+        {
+            AllowTrailingCommas = true,
+            Converters =
+            {
+                new StringConverter(),
+                new TDOptionChainConverter(),
+                new TDInstrumentConverter()
+            },
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+        _jsonOptionsWithoutInstrumentConverter = new JsonSerializerOptions
+        {
+            AllowTrailingCommas = true,
+            Converters =
+            {
+                new StringConverter(),
+                new TDOptionChainConverter()
+            },
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
         var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
         if (!Directory.Exists(userSettingsDirectory))
         {
@@ -27,6 +56,8 @@ public class Client : IDisposable
         PathAuthValues = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
     }
+
+    public JsonSerializerOptions JsonOptions { get; }
 
     /// <summary>
     ///     The fully-qualified path to the json file in Users that holds the Authorization information
@@ -57,7 +88,102 @@ public class Client : IDisposable
         return string.IsNullOrEmpty(s) || s == "{}";
     }
 
-    #endregion
+    /// <summary>
+    ///     Use this to correctly serialize an instrument of any type
+    ///     TDA Instruments are polymorphic.
+    /// </summary>
+    /// <param name="instrument"></param>
+    /// <returns></returns>
+    public string SerializeInstrument(TDInstrument instrument)
+    {
+        var json = JsonSerializer.Serialize(instrument, instrument.GetType(), _jsonOptionsWithoutInstrumentConverter);
+        return json;
+    }
+
+    /// <summary>
+    ///     Use this to correctly deserialize to an instrument of the correct type.
+    ///     TDA Instruments are polymorphic.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    public TDInstrument? DeserializeToInstrument(string json)
+    {
+        var instrument = JsonSerializer.Deserialize<TDInstrument>(json, JsonOptions);
+        return instrument;
+    }
+
+    /// <summary>
+    ///     Return a deep clone of this order
+    /// </summary>
+    /// <returns></returns>
+    public TDOrder CloneDeep(TDOrder order)
+    {
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+        var clone = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
+        return clone!;
+    }
+
+    /// <summary>
+    ///     Get the json for order with fields removed that would cause and order in PlaceOrder
+    /// </summary>
+    /// <param name="order"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public string GetPlaceOrderJson(TDOrder order)
+    {
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+
+        // "error": "Following parameters are not allowed when placing an order: orderId,status,accountId,filledQuantity,remainingQuantity"
+        var root = JsonNode.Parse(json);
+        var rootObj = root as JsonObject;
+        if (rootObj == null)
+        {
+            throw new InvalidOperationException();
+        }
+        rootObj.Remove("orderId");
+        rootObj.Remove("status");
+        rootObj.Remove("accountId");
+        rootObj.Remove("filledQuantity");
+        rootObj.Remove("remainingQuantity");
+
+        //"error": "A requestedDestination cannot be specified. Equity direct routing is not enabled for this account."
+        rootObj.Remove("requestedDestination");
+
+        // "error": "Following parameters are not allowed when placing an order: positionEffect,instrument cusip"
+        rootObj.TryGetPropertyValue("orderLegCollection", out var orderLegCollectionNode);
+        var orderLegArray = orderLegCollectionNode?.AsArray();
+        foreach (var orderLegNode in orderLegArray!)
+        {
+            var orderLegObj = (JsonObject)orderLegNode!;
+            orderLegObj.Remove("positionEffect");
+            orderLegObj.TryGetPropertyValue("instrument", out var instrumentNode);
+            var instrumentObj = (JsonObject)instrumentNode!;
+            instrumentObj.Remove("cusip");
+        }
+
+        json = rootObj.ToJsonString();
+        // if (order.orderType == TDOrderEnums.OrderType.MARKET)
+        // {
+        //     // Remove the price field
+        //     var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+        //     obj?.Remove("price");
+        //     json = JsonSerializer.Serialize(obj);
+        // }
+        // if (order.orderType != TDOrderEnums.OrderType.STOP && order.orderType != TDOrderEnums.OrderType.STOP_LIMIT && order.orderType != TDOrderEnums.OrderType.TRAILING_STOP_LIMIT)
+        // {
+        //     // Remove the stopPrice field
+        //     var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+        //     obj?.Remove("stopPrice");
+        //     json = JsonSerializer.Serialize(obj);
+        // }
+        if (json == "null")
+        {
+            throw new InvalidOperationException();
+        }
+        return json;
+    }
+    
+    #endregion Helpers
 
     #region Auth
 
@@ -85,8 +211,8 @@ public class Client : IDisposable
         try
         {
             var json = await SendRequestAsync(req);
-            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
-            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse);
+            var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
+            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse ?? throw new InvalidOperationException());
             SaveAuthResult(AuthValues);
             LoadAuthResult();
             return Success;
@@ -104,8 +230,8 @@ public class Client : IDisposable
             return;
         }
         var json = File.ReadAllText(PathAuthValues);
-        AuthValues = JsonConvert.DeserializeObject<TDAuthValues>(json);
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthValues.AccessToken);
+        AuthValues = JsonSerializer.Deserialize<TDAuthValues>(json);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthValues?.AccessToken);
     }
 
     private void SaveAuthResult(TDAuthValues authValues)
@@ -114,7 +240,7 @@ public class Client : IDisposable
         {
             throw new Exception("Why?");
         }
-        var jsonSave = JsonConvert.SerializeObject(authValues);
+        var jsonSave = JsonSerializer.Serialize(authValues);
         File.WriteAllText(PathAuthValues, jsonSave);
     }
 
@@ -166,8 +292,8 @@ public class Client : IDisposable
         try
         {
             var json = await SendRequestAsync(req);
-            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
-            Debug.Assert(authResponse.refresh_token == null, "Refresh token is not returned.");
+            var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
+            Debug.Assert(authResponse!.refresh_token == null, "Refresh token is not returned.");
             Debug.Assert(authResponse.refresh_token_expires_in == 0);
             Debug.Assert(authResponse.access_token != null);
             Debug.Assert(authResponse.expires_in > 0);
@@ -206,8 +332,8 @@ public class Client : IDisposable
         try
         {
             var json = await SendRequestAsync(req);
-            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
-            Debug.Assert(authResponse.refresh_token != null);
+            var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
+            Debug.Assert(authResponse!.refresh_token != null);
             Debug.Assert(authResponse.refresh_token_expires_in > 0);
             AuthValues.RefreshToken = authResponse.refresh_token!;
             AuthValues.RefreshTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.refresh_token_expires_in);
@@ -237,11 +363,12 @@ public class Client : IDisposable
     public async Task<TDOptionChain?> GetOptionsChainAsync(TDOptionChainRequest request)
     {
         var json = await GetOptionsChainJsonAsync(request);
-        if (!IsNullOrEmpty(json))
+        if (IsNullOrEmpty(json))
         {
-            return JsonConvert.DeserializeObject<TDOptionChain>(json, new TDOptionChainConverter());
+            throw new InvalidOperationException();
         }
-        return null;
+        var result = JsonSerializer.Deserialize<TDOptionChain>(json, JsonOptions);
+        return result;
     }
 
     /// <summary>
@@ -263,44 +390,45 @@ public class Client : IDisposable
         {
             queryString.Add("apikey", AuthValues.ConsumerKey);
         }
-        queryString.Add("symbol", request.symbol);
-        if (request.contractType.HasValue)
+        queryString.Add("symbol", request.Symbol);
+        if (request.ContractType.HasValue)
         {
-            queryString.Add("contractType", request.contractType.ToString());
+            queryString.Add("contractType", request.ContractType.ToString());
         }
-        if (request.strikeCount.HasValue)
+        if (request.StrikeCount.HasValue)
         {
-            queryString.Add("strikeCount", request.strikeCount.ToString());
+            queryString.Add("strikeCount", request.StrikeCount.ToString());
         }
-        queryString.Add("includeQuotes", request.includeQuotes ? "FALSE" : "TRUE");
-        if (request.interval.HasValue)
+        queryString.Add("includeQuotes", request.IncludeQuotes ? "FALSE" : "TRUE");
+        if (request.Interval.HasValue)
         {
-            queryString.Add("interval", request.interval.ToString());
+            queryString.Add("interval", request.Interval.ToString());
         }
-        if (request.strike.HasValue)
+        if (request.Strike.HasValue)
         {
-            queryString.Add("strike", request.strike.Value.ToString());
+            queryString.Add("strike", request.Strike.Value.ToString());
         }
-        if (request.fromDate.HasValue)
+        if (request.FromDate.HasValue)
         {
-            queryString.Add("fromDate", request.fromDate.Value.ToString("yyyy-MM-dd"));
+            queryString.Add("fromDate", request.FromDate.Value.ToString("yyyy-MM-dd"));
         }
-        if (request.toDate.HasValue)
+        if (request.ToDate.HasValue)
         {
-            queryString.Add("toDate", request.toDate.Value.ToString("yyyy-MM-dd"));
+            var str = request.ToDate.Value.ToString("yyyy-MM-dd");
+            queryString.Add("toDate", str);
         }
-        if (!string.IsNullOrEmpty(request.expMonth))
+        if (!string.IsNullOrEmpty(request.ExpMonth))
         {
-            queryString.Add("expMonth", request.expMonth);
+            queryString.Add("expMonth", request.ExpMonth);
         }
-        queryString.Add("optionType", request.optionType.ToString());
+        queryString.Add("optionType", request.OptionType.ToString());
 
-        if (request.strategy == TDOptionChainStrategy.ANALYTICAL)
+        if (request.Strategy == TDOptionChainStrategy.ANALYTICAL)
         {
-            queryString.Add("volatility", request.volatility.ToString());
-            queryString.Add("underlyingPrice", request.underlyingPrice.ToString());
-            queryString.Add("interestRate", request.interestRate.ToString());
-            queryString.Add("daysToExpiration", request.daysToExpiration.ToString());
+            queryString.Add("volatility", request.Volatility.ToString());
+            queryString.Add("underlyingPrice", request.UnderlyingPrice.ToString());
+            queryString.Add("interestRate", request.InterestRate.ToString());
+            queryString.Add("daysToExpiration", request.DaysToExpiration.ToString());
         }
 
         var q = queryString.ToString();
@@ -321,13 +449,13 @@ public class Client : IDisposable
     public async Task<TDPriceCandle[]?> GetPriceHistoryAsync(TDPriceHistoryRequest model)
     {
         var json = await GetPriceHistoryJsonAsync(model);
-        if (!IsNullOrEmpty(json))
+        if (IsNullOrEmpty(json))
         {
-            var doc = JObject.Parse(json);
-            var inner = doc["candles"].ToObject<TDPriceCandle[]>();
-            return inner;
+            return null;
         }
-        return null;
+        var node = JsonNode.Parse(json);
+        var candles = node?["candles"].Deserialize<TDPriceCandle[]>(JsonOptions);
+        return candles;
     }
 
     /// <summary>
@@ -347,30 +475,30 @@ public class Client : IDisposable
             throw new Exception("ConsumerKey is null");
         }
         var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
-        var builder = new UriBuilder($"https://api.tdameritrade.com/v1/marketdata/{model.symbol}/pricehistory");
+        var builder = new UriBuilder($"https://api.tdameritrade.com/v1/marketdata/{model.Symbol}/pricehistory");
         var query = HttpUtility.ParseQueryString(builder.Query);
         if (!IsSignedIn)
         {
             query["apikey"] = key;
         }
-        if (model.frequencyType.HasValue)
+        if (model.FrequencyType.HasValue)
         {
-            query["frequencyType"] = model.frequencyType.ToString();
-            query["frequency"] = model.frequency.ToString();
+            query["frequencyType"] = model.FrequencyType.ToString();
+            query["frequency"] = model.Frequency.ToString();
         }
-        if (model.endDate.HasValue)
+        if (model.EndDate.HasValue)
         {
-            query["endDate"] = model.endDate.Value.ToString(CultureInfo.InvariantCulture);
-            query["startDate"] = model.startDate?.ToString();
+            query["endDate"] = model.EndDate.Value.ToString(CultureInfo.InvariantCulture);
+            query["startDate"] = model.StartDate?.ToString();
         }
-        if (model.periodType.HasValue)
+        if (model.PeriodType.HasValue)
         {
-            query["periodType"] = model.periodType.ToString();
-            query["period"] = model.period.ToString();
+            query["periodType"] = model.PeriodType.ToString();
+            query["period"] = model.Period.ToString();
         }
-        if (model.needExtendedHoursData.HasValue)
+        if (model.NeedExtendedHoursData.HasValue)
         {
-            query["needExtendedHoursData"] = model.needExtendedHoursData.ToString();
+            query["needExtendedHoursData"] = model.NeedExtendedHoursData.ToString();
         }
         builder.Query = query.ToString();
         var url = builder.ToString();
@@ -421,13 +549,18 @@ public class Client : IDisposable
     public async Task<T> GetQuoteAsync<T>(string symbol) where T : TDQuoteBase
     {
         var json = await GetQuoteJsonAsync(symbol);
-        if (!IsNullOrEmpty(json))
+        if (IsNullOrEmpty(json))
         {
-            var doc = JObject.Parse(json);
-            var inner = doc.First.First as JObject;
-            return inner?.ToObject<T>()!;
+            throw new InvalidOperationException();
         }
-        return null!;
+        var node = JsonNode.Parse(json);
+        if (node == null)
+        {
+            throw new InvalidOperationException();
+        }
+        var nodeQuote = node[symbol];
+        var result = nodeQuote?.Deserialize<T>(JsonOptions);
+        return result!;
     }
 
     /// <summary>
@@ -447,9 +580,10 @@ public class Client : IDisposable
             throw new Exception("ConsumerKey is null");
         }
         var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
+        var symbolEncoded = HttpUtility.UrlEncode(symbol); // handle futures like /ES
         var path = IsSignedIn
-            ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
-            : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
+            ? $"https://api.tdameritrade.com/v1/marketdata/quotes?symbol={symbolEncoded}"
+            : $"https://api.tdameritrade.com/v1/marketdata/quotes?apikey={key}&symbol={symbolEncoded}";
 
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         return json;
@@ -467,22 +601,18 @@ public class Client : IDisposable
     public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
         var json = await GetUserPrincipalsJsonAsync(fields);
-        if (!IsNullOrEmpty(json))
-        {
-            return JsonConvert.DeserializeObject<TDPrincipal>(json);
-        }
-        return null!;
+        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json) : null!) ?? throw new InvalidOperationException();
     }
 
     /// <summary>
-    /// Return account information for accountId, including the display name, or <c>null</c> if not found.
+    ///     Return account information for accountId, including the display name, or <c>null</c> if not found.
     /// </summary>
     /// <param name="accountId"></param>
     /// <returns></returns>
     public async Task<TDAccount?> GetAccountPrincipalInfoAsync(string accountId)
     {
         var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
-        var account = data.accounts.FirstOrDefault(x => x.accountId == accountId);
+        var account = (data.accounts ?? throw new InvalidOperationException()).FirstOrDefault(x => x.accountId == accountId);
         return account;
     }
 
@@ -509,21 +639,7 @@ public class Client : IDisposable
     /// <summary>
     ///     Retrieve market hours for specified single market
     /// </summary>
-    public async Task<TDMarketHour> GetHoursForASingleMarketAsync(MarketTypes type, DateTime day)
-    {
-        var json = await GetMarketHoursJsonAsync(type, day);
-        if (!IsNullOrEmpty(json))
-        {
-            var doc = JObject.Parse(json);
-            return doc.First.First.First.First.ToObject<TDMarketHour>();
-        }
-        return null!;
-    }
-
-    /// <summary>
-    ///     Retrieve market hours for specified single market
-    /// </summary>
-    public async Task<string> GetMarketHoursJsonAsync(MarketTypes type, DateTime day)
+    public async Task<TDMarketHours> GetHoursForASingleMarketAsync(MarketTypes marketType, DateTime day)
     {
         if (AuthValues == null)
         {
@@ -534,12 +650,55 @@ public class Client : IDisposable
             throw new Exception("ConsumerKey is null");
         }
         var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
-        var dayString = day.ToString("yyyy-MM-dd").Replace("/", "-");
+        var dayString = day.ToString("yyyy'-'MM'-'dd");
         var path = IsSignedIn
-            ? $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?date={dayString}"
-            : $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?apikey={key}&date={dayString}";
+            ? $"https://api.tdameritrade.com/v1/marketdata/{marketType}/hours?date={dayString}"
+            : $"https://api.tdameritrade.com/v1/marketdata/{marketType}/hours?apikey={key}&date={dayString}";
 
-        return await SendRequestAsync(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
+        if (IsNullOrEmpty(json))
+        {
+            return null!;
+        }
+        var result = GetMarketHours(marketType, json);
+        return result ?? throw new InvalidOperationException();
+    }
+
+    private TDMarketHours? GetMarketHours(MarketTypes marketType, string json)
+    {
+        var node = JsonNode.Parse(json);
+        if (node == null)
+        {
+            throw new InvalidOperationException();
+        }
+        switch (marketType)
+        {
+            case MarketTypes.BOND:
+                return node["bond"]?["BON"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+            case MarketTypes.EQUITY:
+                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+            case MarketTypes.ETF:
+                throw new NotSupportedException();
+            case MarketTypes.FOREX:
+                return node["forex"]?["forex"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+            case MarketTypes.FUTURE:
+                return node["future"]?["DFE"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+            case MarketTypes.FUTURE_OPTION:
+                throw new NotSupportedException();
+            case MarketTypes.INDEX:
+                throw new NotSupportedException();
+            case MarketTypes.INDICAT:
+                throw new NotSupportedException();
+            case MarketTypes.MUTUAL_FUND:
+                throw new NotSupportedException();
+            case MarketTypes.OPTION:
+                return node["option"]?["EQO"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+            case MarketTypes.UNKNOWN:
+                throw new NotSupportedException();
+            default:
+                throw new ArgumentOutOfRangeException(nameof(marketType), marketType, null);
+        }
+        throw new InvalidOperationException();
     }
 
     private async Task<string> SendRequestAsync(string path)
@@ -570,33 +729,34 @@ public class Client : IDisposable
 
     #region Accounts
 
-    public async Task<TDAccountModel> GetAccountAsync(string testAccount)
+    public async Task<TDAccountModel> GetAccountAsync(string accountId)
     {
-        var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
+        var path = $"https://api.tdameritrade.com/v1/accounts//{accountId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
-        return account;
+        var account = JsonSerializer.Deserialize<TDAccountModel>(json);
+        return account ?? throw new InvalidOperationException();
     }
 
     public async Task<IEnumerable<TDAccountModel>> GetAccountsAsync()
     {
         var path = "https://api.tdameritrade.com/v1/accounts";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        //var accountsTmp = JsonConvert.DeserializeObject(json);
-        var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
-        return accounts;
+        //var accountsTmp = JsonSerializer.Deserialize(json);
+        var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccountModel>>(json);
+        Debug.Assert(accounts != null, nameof(accounts) + " != null");
+        return accounts ?? throw new InvalidOperationException();
     }
 
     #endregion Accounts
 
     #region Orders
 
-    public async Task<TDOrderResponse> GetOrderAsync(string accountId, string orderId)
+    public async Task<TDOrderResponse> GetOrderAsync(string accountId, long orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
-        return result;
+        var result = JsonSerializer.Deserialize<TDOrderResponse>(json, JsonOptions);
+        return result ?? throw new InvalidOperationException();
     }
 
     /// <summary>
@@ -612,7 +772,7 @@ public class Client : IDisposable
     /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByPathAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
-        DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
+        DateTime? toEnteredTime = null, TDOrderEnums.Status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);
@@ -637,9 +797,9 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            //var result0 = JsonConvert.DeserializeObject(json);
-            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
-            return result;
+            //var result0 = JsonSerializer.Deserialize(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
+            return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
         {
@@ -662,7 +822,7 @@ public class Client : IDisposable
     ///     Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
-        DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
+        DateTime? toEnteredTime = null, TDOrderEnums.Status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);
@@ -691,9 +851,9 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            //var result0 = JsonConvert.DeserializeObject(json);
-            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
-            return result;
+            //var result0 = JsonSerializer.Deserialize(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
+            return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
         {
@@ -702,7 +862,7 @@ public class Client : IDisposable
         }
     }
 
-    public async Task CancelOrderAsync(string accountId, string orderId)
+    public async Task CancelOrderAsync(string accountId, long orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var res = await _httpClient.Throttle().DeleteAsync(path);
@@ -712,7 +872,7 @@ public class Client : IDisposable
                 break;
             default:
                 var existingOrder = await GetOrderAsync(accountId, orderId);
-                var status = existingOrder.status;
+                var status = existingOrder.Status;
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
@@ -724,10 +884,10 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> PlaceOrderAsync(OrderBase order, string accountId)
+    public async Task<long> PlaceOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = order.GetJson();
+        var json = GetPlaceOrderJson(order);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -736,24 +896,25 @@ public class Client : IDisposable
                 var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
                 var value = location.Value.First();
                 var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                var orderIdStr = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                long.TryParse(orderIdStr, out var orderId);
                 return orderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
-    
+
     /// <summary>
-    ///     Places an order and returns its orderId
+    ///     Places an oco order and returns its orderId
     /// </summary>
     /// <param name="order">The order to be placed.</param>
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> PlaceOcoOrderAsync(OcoOrder order, string accountId)
+    public async Task<long> PlaceOcoOrderAsync(OcoOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = order.GetJson();
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -762,7 +923,8 @@ public class Client : IDisposable
                 var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
                 var value = location.Value.First();
                 var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                var orderIdStr = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                long.TryParse(orderIdStr, out var orderId);
                 return orderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
@@ -777,9 +939,9 @@ public class Client : IDisposable
     /// <param name="orderId">The orderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> ReplaceOrderAsync(OrderBase replacementOrder, string accountId, string orderId)
+    public async Task<long> ReplaceOrderAsync(TDOrder replacementOrder, string accountId, long orderId)
     {
-        var json = replacementOrder.GetJson();
+        var json = GetPlaceOrderJson(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
@@ -789,7 +951,8 @@ public class Client : IDisposable
                 var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
                 var value = location.Value.First();
                 var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var replacementOrderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                var replacementOrderIdStr = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                long.TryParse(replacementOrderIdStr, out var replacementOrderId);
                 return replacementOrderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
@@ -803,10 +966,10 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task CreateSavedOrderAsync(OrderBase order, string accountId)
+    public async Task CreateSavedOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
-        var json = order.GetJson();
+        var json = GetPlaceOrderJson(order);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -817,25 +980,23 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
-    
-    public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, string savedOrderId)
+
+    public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, long savedOrderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
-        return result;
+        var result = JsonSerializer.Deserialize<TDOrderResponse>(json, JsonOptions);
+        return result ?? throw new InvalidOperationException();
     }
 
-    
     public async Task<IEnumerable<TDOrderResponse>> GetSavedOrdersByPathAsync(string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            var result0 = JsonConvert.DeserializeObject(json);
-            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
-            return result;
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
+            return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
         {
@@ -843,8 +1004,8 @@ public class Client : IDisposable
             throw;
         }
     }
-    
-    public async Task DeleteSavedOrderAsync(string accountId, string savedOrderId)
+
+    public async Task DeleteSavedOrderAsync(string accountId, long savedOrderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var res = await _httpClient.Throttle().DeleteAsync(path);
@@ -858,7 +1019,7 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
-    
+
     /// <summary>
     ///     Replace an existing order with replacementOrder
     /// </summary>
@@ -867,9 +1028,9 @@ public class Client : IDisposable
     /// <param name="savedOrderId">The savedOrderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task ReplaceSavedOrderAsync(OrderBase replacementOrder, string accountId, string savedOrderId)
+    public async Task ReplaceSavedOrderAsync(TDOrder replacementOrder, string accountId, long savedOrderId)
     {
-        var json = replacementOrder.GetJson();
+        var json = GetPlaceOrderJson(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
@@ -881,6 +1042,6 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
-    
+
     #endregion Orders
 }

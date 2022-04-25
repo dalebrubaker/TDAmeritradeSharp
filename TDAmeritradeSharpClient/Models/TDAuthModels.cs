@@ -1,5 +1,4 @@
-﻿// ReSharper disable InconsistentNaming
-// ReSharper disable MemberCanBePrivate.Global
+﻿// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 namespace TDAmeritradeSharpClient;
 
@@ -33,10 +32,12 @@ public class TDAuthValues
 [Serializable]
 public class TDAuthResponse
 {
+    // ReSharper disable InconsistentNaming
     public string? access_token { get; set; }
     public string? refresh_token { get; set; }
     public string? token_type { get; set; }
     public int expires_in { get; set; }
     public string? scope { get; set; }
     public int refresh_token_expires_in { get; set; }
+    // ReSharper restore InconsistentNaming
 }

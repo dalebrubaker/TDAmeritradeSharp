@@ -1,7 +1,6 @@
-﻿using Newtonsoft.Json;
-// ReSharper disable IdentifierTypo
+﻿// ReSharper disable IdentifierTypo
 
-// ReSharper disable InconsistentNaming
+using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
 
@@ -13,12 +12,12 @@ public interface ISignal
     /// <summary>
     ///     UNIX
     /// </summary>
-    public double timestamp { get; set; }
+    public double Timestamp { get; set; }
 
     /// <summary>
     ///     Ticker symbol in upper case.
     /// </summary>
-    public string symbol { get; set; }
+    public string Symbol { get; set; }
 
     public DateTime TimeStamp { get; }
 }
@@ -29,10 +28,12 @@ public struct TDHeartbeatSignal
     /// <summary>
     ///     UNIX
     /// </summary>
-    public double timestamp { get; set; }
+    public double Timestamp { get; set; }
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
+    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 }
+
+// ReSharper disable InconsistentNaming
 
 [Serializable]
 public enum TDBookOptions
@@ -44,6 +45,7 @@ public enum TDBookOptions
     FOREX_BOOK,
     FUTURES_OPTIONS_BOOK
 }
+// ReSharper restore InconsistentNaming
 
 [Serializable]
 public struct TDBookSignal : ISignal
@@ -51,29 +53,29 @@ public struct TDBookSignal : ISignal
     /// <summary>
     ///     UNIX
     /// </summary>
-    public double timestamp { get; set; }
+    public double Timestamp { get; set; }
 
     /// <summary>
     ///     0 Ticker symbol in upper case.
     /// </summary>
-    public string symbol { get; set; }
+    public string Symbol { get; set; }
 
     /// <summary>
     ///     Book source
     /// </summary>
-    public TDBookOptions id;
+    public TDBookOptions _id;
 
     /// <summary>
     ///     2 bids
     /// </summary>
-    public TDBookLevel[] bids;
+    public TDBookLevel[] _bids;
 
     /// <summary>
     ///     3 asks
     /// </summary>
-    public TDBookLevel[] asks;
+    public TDBookLevel[] _asks;
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
+    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 }
 
 [Serializable]
@@ -82,14 +84,14 @@ public struct TDBookLevel
     /// <summary>
     ///     0 this price level
     /// </summary>
-    [JsonProperty("0")]
-    public double price;
+    [JsonPropertyName("0")]
+    public double _price;
 
     /// <summary>
     ///     2 total volume at this level
     /// </summary>
-    [JsonProperty("1")]
-    public double quantity;
+    [JsonPropertyName("1")]
+    public double _quantity;
 }
 
 [Serializable]
@@ -98,101 +100,101 @@ public struct TDQuoteSignal : ISignal
     /// <summary>
     ///     UNIX
     /// </summary>
-    public double timestamp { get; set; }
+    public double Timestamp { get; set; }
 
     /// <summary>
     ///     0 Ticker symbol in upper case.
     /// </summary>
-    public string symbol { get; set; }
+    public string Symbol { get; set; }
 
     /// <summary>
     ///     1 Current Best Bid Price
     /// </summary>
-    public double bidprice;
+    public double _bidprice;
 
     /// <summary>
     ///     2 Current Best Ask Price
     /// </summary>
-    public double askprice;
+    public double _askprice;
 
     /// <summary>
     ///     4 Number of shares for bid
     /// </summary>
-    public double bidsize;
+    public double _bidsize;
 
     /// <summary>
     ///     5 Number of shares for ask
     /// </summary>
-    public double asksize;
+    public double _asksize;
 
     /// <summary>
     ///     3 Price at which the last trade was matched
     /// </summary>
-    public double lastprice;
+    public double _lastprice;
 
     /// <summary>
     ///     9 Number of shares traded with last trade
     /// </summary>
-    public double lastsize;
+    public double _lastsize;
 
     /// <summary>
     ///     8 Aggregated shares traded throughout the day, including pre/post market hours.
     /// </summary>
-    public long totalvolume;
+    public long _totalvolume;
 
     /// <summary>
     ///     28 Previous day’s opening price
     /// </summary>
-    public double openprice;
+    public double _openprice;
 
     /// <summary>
     ///     15 Previous day’s closing price
     /// </summary>
-    public double closeprice;
+    public double _closeprice;
 
     /// <summary>
     ///     13 Day’s low trade price
     /// </summary>
-    public double lowprice;
+    public double _lowprice;
 
     /// <summary>
     ///     12 Day’s high trade price
     /// </summary>
-    public double highprice;
+    public double _highprice;
 
     /// <summary>
     ///     10 Trade time of the last trade
     /// </summary>
-    public double tradetime;
+    public double _tradetime;
 
     /// <summary>
     ///     11 Quote time of the last trade
     /// </summary>
-    public double quotetime;
+    public double _quotetime;
 
     /// <summary>
     ///     7 Exchange with the best bid
     /// </summary>
-    public char bidid;
+    public char _bidid;
 
     /// <summary>
     ///     6 Exchange with the best ask
     /// </summary>
-    public char askid;
+    public char _askid;
 
     /// <summary>
     ///     14 Indicates Up or Downtick(NASDAQ NMS & Small Cap)
     /// </summary>
-    public char bidtick;
+    public char _bidtick;
 
     /// <summary>
     ///     24 Option Risk/Volatility Measurement
     /// </summary>
-    public double volatility;
+    public double _volatility;
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
-    public DateTime QuoteTime => TDHelpers.FromUnixTimeMilliseconds(quotetime);
-    public DateTime TradeTime => TDHelpers.FromUnixTimeMilliseconds(tradetime);
+    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
+    public DateTime QuoteTime => TDHelpers.FromUnixTimeMilliseconds(_quotetime);
+    public DateTime TradeTime => TDHelpers.FromUnixTimeMilliseconds(_tradetime);
 }
 
 [Serializable]
@@ -201,40 +203,40 @@ public struct TDTimeSaleSignal : ISignal
     /// <summary>
     ///     UNIX
     /// </summary>
-    public double timestamp { get; set; }
+    public double Timestamp { get; set; }
 
     /// <summary>
     ///     0 Ticker symbol in upper case.
     /// </summary>
-    public string symbol { get; set; }
+    public string Symbol { get; set; }
 
     /// <summary>
     ///     order
     /// </summary>
-    public long sequence;
+    public long _sequence;
 
     /// <summary>
     ///     1 Trade time of the last trade
     /// </summary>
-    public double tradetime;
+    public double _tradetime;
 
     /// <summary>
     ///     2 Price at which the last trade was matched
     /// </summary>
-    public double lastprice;
+    public double _lastprice;
 
     /// <summary>
     ///     3 Number of shares traded with last trade
     /// </summary>
-    public double lastsize;
+    public double _lastsize;
 
     /// <summary>
     ///     4 Number of Number of shares for bid
     /// </summary>
-    public long lastsequence;
+    public long _lastsequence;
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
-    public DateTime TradeTime => TDHelpers.FromUnixTimeMilliseconds(tradetime);
+    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
+    public DateTime TradeTime => TDHelpers.FromUnixTimeMilliseconds(_tradetime);
 }
 
 [Serializable]
@@ -243,60 +245,61 @@ public struct TDChartSignal : ISignal
     /// <summary>
     ///     UNIX
     /// </summary>
-    public double timestamp { get; set; }
+    public double Timestamp { get; set; }
 
     /// <summary>
     ///     0 Ticker symbol in upper case.
     /// </summary>
-    public string symbol { get; set; }
+    public string Symbol { get; set; }
 
     /// <summary>
     ///     1 Opening price for the minute
     /// </summary>
-    public double openprice;
+    public double _openprice;
 
     /// <summary>
     ///     2 Highest price for the minute
     /// </summary>
-    public double highprice;
+    public double _highprice;
 
     /// <summary>
     ///     3 Chart’s lowest price for the minute
     /// </summary>
-    public double lowprice;
+    public double _lowprice;
 
     /// <summary>
     ///     4 Closing price for the minute
     /// </summary>
-    public double closeprice;
+    public double _closeprice;
 
     /// <summary>
     ///     5 Total volume for the minute
     /// </summary>
-    public double volume;
+    public double _volume;
 
     /// <summary>
     ///     6 Identifies the candle minute
     /// </summary>
-    public long sequence;
+    public long _sequence;
 
     /// <summary>
     ///     7 Milliseconds since Epoch
     /// </summary>
-    public long charttime;
+    public long _charttime;
 
     /// <summary>
     ///     8 Not useful
     /// </summary>
-    public int chartday;
+    public int _chartday;
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
+    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 
-    public DateTime ChartTime => TDHelpers.FromUnixTimeMilliseconds(charttime);
+    public DateTime ChartTime => TDHelpers.FromUnixTimeMilliseconds(_charttime);
 
     public int ChartIndex => ChartTime.ToCandleIndex(1);
 }
 
+// ReSharper disable InconsistentNaming
 [Serializable]
 public enum TDChartSubs
 {
@@ -347,45 +350,46 @@ public enum TDQOSLevels
     /// </summary>
     SLOW
 }
+// ReSharper restore InconsistentNaming
 
 [Serializable]
 public class TDRealtimeRequest
 {
-    public string? service { get; set; }
-    public string? command { get; set; }
-    public int requestid { get; set; }
-    public string? account { get; set; }
-    public string? source { get; set; }
-    public object? parameters { get; set; }
+    public string? Service { get; set; }
+    public string? Command { get; set; }
+    public int Requestid { get; set; }
+    public string? Account { get; set; } // the AccountId
+    public string? Source { get; set; }
+    public object? Parameters { get; set; }
 }
 
 [Serializable]
 public class TDRealtimeRequestContainer
 {
-    public TDRealtimeRequest[]? requests { get; set; }
+    public TDRealtimeRequest[]? Requests { get; set; }
 }
 
 [Serializable]
 public class TDRealtimeResponseContainer
 {
-    public TDRealtimeResponse[]? response { get; set; }
+    public TDRealtimeResponse[]? Response { get; set; }
 }
 
 [Serializable]
 public class TDRealtimeResponse
 {
-    public string? service { get; set; }
-    public string? requestid { get; set; }
-    public string? command { get; set; }
-    public double timestamp { get; set; }
-    public TDRealtimeContent? content { get; set; }
+    public string? Service { get; set; }
+    public string? Requestid { get; set; }
+    public string? Command { get; set; }
+    public double Timestamp { get; set; }
+    public TDRealtimeContent? Content { get; set; }
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(timestamp);
+    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 }
 
 [Serializable]
 public class TDRealtimeContent
 {
-    public int code { get; set; }
-    public string? msg { get; set; }
+    public int Code { get; set; }
+    public string? Msg { get; set; }
 }

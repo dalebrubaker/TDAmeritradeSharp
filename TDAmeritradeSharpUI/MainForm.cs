@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace TDAmeritradeSharpUI;
 
@@ -36,7 +36,7 @@ public partial class MainForm : Form
         if (File.Exists(SettingsPath))
         {
             var json = File.ReadAllText(SettingsPath);
-            Settings = JsonConvert.DeserializeObject<MainFormSettings>(json) ?? new MainFormSettings();
+            Settings = JsonSerializer.Deserialize<MainFormSettings>(json) ?? new MainFormSettings();
             WindowPlacement.RestoreWindow(Handle, Settings.WindowPlacementJson);
         }
         mainFormSettingsBindingSource.DataSource = Settings;
@@ -45,7 +45,7 @@ public partial class MainForm : Form
     private void SaveConfig()
     {
         Settings.WindowPlacementJson = WindowPlacement.SaveWindow(Handle);
-        var json = JsonConvert.SerializeObject(Settings);
+        var json = JsonSerializer.Serialize(Settings);
         File.WriteAllText(SettingsPath, json);
     }
 }
