@@ -1,16 +1,12 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using System.Web;
 using Newtonsoft.Json;
-using Serilog;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI;
 
 public partial class AuthUserControl : UserControl
 {
-    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()!.DeclaringType);
-
     private string? _authCodeUrl;
     private Client _client = null!;
 
@@ -31,10 +27,7 @@ public partial class AuthUserControl : UserControl
         {
             return;
         }
-
-        s_logger.Verbose($"Loading {nameof(AuthUserControl)}");
         LoadConfig();
-
         _client = new Client();
     }
 
