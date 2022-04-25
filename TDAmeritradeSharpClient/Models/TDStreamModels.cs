@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
-// ReSharper disable IdentifierTypo
+﻿// ReSharper disable IdentifierTypo
 
 // ReSharper disable InconsistentNaming
+
+using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
 
@@ -82,13 +83,13 @@ public struct TDBookLevel
     /// <summary>
     ///     0 this price level
     /// </summary>
-    [JsonProperty("0")]
+    [JsonPropertyName("0")]
     public double price;
 
     /// <summary>
     ///     2 total volume at this level
     /// </summary>
-    [JsonProperty("1")]
+    [JsonPropertyName("1")]
     public double quantity;
 }
 

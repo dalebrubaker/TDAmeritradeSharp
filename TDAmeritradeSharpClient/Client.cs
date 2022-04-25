@@ -5,9 +5,8 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
 using System.Text;
+using System.Text.Json;
 using System.Web;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace TDAmeritradeSharpClient;
 
@@ -85,8 +84,8 @@ public class Client : IDisposable
         try
         {
             var json = await SendRequestAsync(req);
-            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
-            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse);
+            var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
+            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse ?? throw new InvalidOperationException());
             SaveAuthResult(AuthValues);
             LoadAuthResult();
             return Success;
@@ -104,8 +103,8 @@ public class Client : IDisposable
             return;
         }
         var json = File.ReadAllText(PathAuthValues);
-        AuthValues = JsonConvert.DeserializeObject<TDAuthValues>(json);
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthValues.AccessToken);
+        AuthValues = JsonSerializer.Deserialize<TDAuthValues>(json);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthValues?.AccessToken);
     }
 
     private void SaveAuthResult(TDAuthValues authValues)
@@ -114,7 +113,7 @@ public class Client : IDisposable
         {
             throw new Exception("Why?");
         }
-        var jsonSave = JsonConvert.SerializeObject(authValues);
+        var jsonSave = JsonSerializer.Serialize(authValues);
         File.WriteAllText(PathAuthValues, jsonSave);
     }
 
@@ -166,8 +165,8 @@ public class Client : IDisposable
         try
         {
             var json = await SendRequestAsync(req);
-            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
-            Debug.Assert(authResponse.refresh_token == null, "Refresh token is not returned.");
+            var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
+            Debug.Assert(authResponse!.refresh_token == null, "Refresh token is not returned.");
             Debug.Assert(authResponse.refresh_token_expires_in == 0);
             Debug.Assert(authResponse.access_token != null);
             Debug.Assert(authResponse.expires_in > 0);
@@ -206,8 +205,8 @@ public class Client : IDisposable
         try
         {
             var json = await SendRequestAsync(req);
-            var authResponse = JsonConvert.DeserializeObject<TDAuthResponse>(json);
-            Debug.Assert(authResponse.refresh_token != null);
+            var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
+            Debug.Assert(authResponse!.refresh_token != null);
             Debug.Assert(authResponse.refresh_token_expires_in > 0);
             AuthValues.RefreshToken = authResponse.refresh_token!;
             AuthValues.RefreshTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.refresh_token_expires_in);
@@ -237,11 +236,7 @@ public class Client : IDisposable
     public async Task<TDOptionChain?> GetOptionsChainAsync(TDOptionChainRequest request)
     {
         var json = await GetOptionsChainJsonAsync(request);
-        if (!IsNullOrEmpty(json))
-        {
-            return JsonConvert.DeserializeObject<TDOptionChain>(json, new TDOptionChainConverter());
-        }
-        return null;
+        return !IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDOptionChain>(json) : null;
     }
 
     /// <summary>
@@ -321,12 +316,12 @@ public class Client : IDisposable
     public async Task<TDPriceCandle[]?> GetPriceHistoryAsync(TDPriceHistoryRequest model)
     {
         var json = await GetPriceHistoryJsonAsync(model);
-        if (!IsNullOrEmpty(json))
-        {
-            var doc = JObject.Parse(json);
-            var inner = doc["candles"].ToObject<TDPriceCandle[]>();
-            return inner;
-        }
+        // if (!IsNullOrEmpty(json))
+        // {
+        //     var doc = JObject.Parse(json);
+        //     var inner = doc["candles"].ToObject<TDPriceCandle[]>();
+        //     return inner;
+        // }
         return null;
     }
 
@@ -423,9 +418,10 @@ public class Client : IDisposable
         var json = await GetQuoteJsonAsync(symbol);
         if (!IsNullOrEmpty(json))
         {
-            var doc = JObject.Parse(json);
-            var inner = doc.First.First as JObject;
-            return inner?.ToObject<T>()!;
+            // TODO
+            // var doc = JObject.Parse(json);
+            // var inner = doc.First.First as JObject;
+            // return inner?.ToObject<T>()!;
         }
         return null!;
     }
@@ -467,22 +463,18 @@ public class Client : IDisposable
     public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
         var json = await GetUserPrincipalsJsonAsync(fields);
-        if (!IsNullOrEmpty(json))
-        {
-            return JsonConvert.DeserializeObject<TDPrincipal>(json);
-        }
-        return null!;
+        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json) : null!) ?? throw new InvalidOperationException();
     }
 
     /// <summary>
-    /// Return account information for accountId, including the display name, or <c>null</c> if not found.
+    ///     Return account information for accountId, including the display name, or <c>null</c> if not found.
     /// </summary>
     /// <param name="accountId"></param>
     /// <returns></returns>
     public async Task<TDAccount?> GetAccountPrincipalInfoAsync(string accountId)
     {
         var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
-        var account = data.accounts.FirstOrDefault(x => x.accountId == accountId);
+        var account = (data.accounts ?? throw new InvalidOperationException()).FirstOrDefault(x => x.accountId == accountId);
         return account;
     }
 
@@ -512,11 +504,12 @@ public class Client : IDisposable
     public async Task<TDMarketHour> GetHoursForASingleMarketAsync(MarketTypes type, DateTime day)
     {
         var json = await GetMarketHoursJsonAsync(type, day);
-        if (!IsNullOrEmpty(json))
-        {
-            var doc = JObject.Parse(json);
-            return doc.First.First.First.First.ToObject<TDMarketHour>();
-        }
+        // TODO
+        // if (!IsNullOrEmpty(json))
+        // {
+        //     var doc = JObject.Parse(json);
+        //     return doc.First.First.First.First.ToObject<TDMarketHour>();
+        // }
         return null!;
     }
 
@@ -574,17 +567,18 @@ public class Client : IDisposable
     {
         var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var account = JsonConvert.DeserializeObject<TDAccountModel>(json);
-        return account;
+        var account = JsonSerializer.Deserialize<TDAccountModel>(json);
+        return account ?? throw new InvalidOperationException();
     }
 
     public async Task<IEnumerable<TDAccountModel>> GetAccountsAsync()
     {
         var path = "https://api.tdameritrade.com/v1/accounts";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        //var accountsTmp = JsonConvert.DeserializeObject(json);
-        var accounts = JsonConvert.DeserializeObject<IEnumerable<TDAccountModel>>(json);
-        return accounts;
+        //var accountsTmp = JsonSerializer.Deserialize(json);
+        var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccountModel>>(json);
+        Debug.Assert(accounts != null, nameof(accounts) + " != null");
+        return accounts ?? throw new InvalidOperationException();
     }
 
     #endregion Accounts
@@ -595,8 +589,8 @@ public class Client : IDisposable
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
-        return result;
+        var result = JsonSerializer.Deserialize<TDOrderResponse>(json);
+        return result ?? throw new InvalidOperationException();
     }
 
     /// <summary>
@@ -637,9 +631,9 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            //var result0 = JsonConvert.DeserializeObject(json);
-            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
-            return result;
+            //var result0 = JsonSerializer.Deserialize(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json);
+            return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
         {
@@ -691,9 +685,9 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            //var result0 = JsonConvert.DeserializeObject(json);
-            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
-            return result;
+            //var result0 = JsonSerializer.Deserialize(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json);
+            return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
         {
@@ -742,7 +736,7 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
-    
+
     /// <summary>
     ///     Places an order and returns its orderId
     /// </summary>
@@ -817,25 +811,23 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
-    
+
     public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, string savedOrderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonConvert.DeserializeObject<TDOrderResponse>(json);
-        return result;
+        var result = JsonSerializer.Deserialize<TDOrderResponse>(json);
+        return result ?? throw new InvalidOperationException();
     }
 
-    
     public async Task<IEnumerable<TDOrderResponse>> GetSavedOrdersByPathAsync(string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            var result0 = JsonConvert.DeserializeObject(json);
-            var result = JsonConvert.DeserializeObject<IEnumerable<TDOrderResponse>>(json);
-            return result;
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json);
+            return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
         {
@@ -843,7 +835,7 @@ public class Client : IDisposable
             throw;
         }
     }
-    
+
     public async Task DeleteSavedOrderAsync(string accountId, string savedOrderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
@@ -858,7 +850,7 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
-    
+
     /// <summary>
     ///     Replace an existing order with replacementOrder
     /// </summary>
@@ -881,6 +873,6 @@ public class Client : IDisposable
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
         }
     }
-    
+
     #endregion Orders
 }

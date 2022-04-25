@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿
+
 // ReSharper disable InconsistentNaming
 
 namespace TDAmeritradeSharpClient;
@@ -185,103 +185,103 @@ public class TDOptionChain
     public List<TDOptionMap>? putExpDateMap { get; set; }
 }
 
-public class TDOptionChainConverter : JsonConverter
-{
-    public override bool CanConvert(Type objectType)
-    {
-        return objectType == typeof(TDOptionChain);
-    }
-
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-    {
-        var doc = JObject.Load(reader);
-        var model = new TDOptionChain
-        {
-            symbol = doc["symbol"].Value<string>(),
-            status = doc["status"].Value<string>(),
-            underlying = doc["underlying"].ToObject<TDUnderlying>(),
-            strategy = doc["strategy"].Value<string>(),
-            interval = doc["interval"].Value<int>(),
-            isDelayed = doc["isDelayed"].Value<bool>(),
-            isIndex = doc["isIndex"].Value<bool>(),
-            daysToExpiration = doc["daysToExpiration"].Value<int>(),
-            interestRate = doc["interestRate"].Value<int>(),
-            underlyingPrice = doc["underlyingPrice"].Value<int>(),
-            volatility = doc["volatility"].Value<int>(),
-            callExpDateMap = GetMap(doc["callExpDateMap"].ToObject<JObject>()),
-            putExpDateMap = GetMap(doc["putExpDateMap"].ToObject<JObject>())
-        };
-        return model;
-    }
-
-    public List<TDOptionMap> GetMap(JObject doc)
-    {
-        var map = new List<TDOptionMap>();
-
-        foreach (var expiry in doc.Properties())
-        {
-            var exp = new TDOptionMap();
-            map.Add(exp);
-            exp.expires = DateTime.Parse(expiry.Name.Split(':')[0]);
-            exp.options = new List<TDOption>();
-
-            var set = expiry.Value.ToObject<JObject>();
-            foreach (var contract in set.Properties())
-            {
-                var strike = double.Parse(contract.Name);
-                var tuples = contract.Value.First.ToObject<JObject>();
-                var option = new TDOption();
-                exp.options.Add(option);
-
-                option.putCall = tuples["putCall"].Value<string>();
-                option.symbol = tuples["symbol"].Value<string>();
-                option.description = tuples["description"].Value<string>();
-                option.exchangeName = tuples["exchangeName"].Value<string>();
-                option.bidPrice = tuples["bid"].Value<double>();
-                option.askPrice = tuples["ask"].Value<double>();
-                option.lastPrice = tuples["last"].Value<double>();
-                option.markPrice = tuples["mark"].Value<double>();
-                option.bidSize = tuples["bidSize"].Value<int>();
-                option.askSize = tuples["askSize"].Value<int>();
-                option.lastSize = tuples["lastSize"].Value<int>();
-                option.highPrice = tuples["highPrice"].Value<double>();
-                option.lowPrice = tuples["lowPrice"].Value<double>();
-                option.openPrice = tuples["openPrice"].Value<double>();
-                option.closePrice = tuples["closePrice"].Value<double>();
-                option.totalVolume = tuples["totalVolume"].Value<int>();
-                option.quoteTimeInLong = tuples["quoteTimeInLong"].Value<long>();
-                option.tradeTimeInLong = tuples["tradeTimeInLong"].Value<long>();
-                option.netChange = tuples["netChange"].Value<double>();
-                option.volatility = tuples["volatility"].Value<double>();
-                option.delta = tuples["delta"].Value<double>();
-                option.gamma = tuples["gamma"].Value<double>();
-                option.theta = tuples["theta"].Value<double>();
-                option.vega = tuples["vega"].Value<double>();
-                option.rho = tuples["rho"].Value<double>();
-                option.timeValue = tuples["timeValue"].Value<double>();
-                option.openInterest = tuples["openInterest"].Value<int>();
-                option.isInTheMoney = tuples["inTheMoney"].Value<bool>();
-                option.theoreticalOptionValue = tuples["theoreticalOptionValue"].Value<double>();
-                option.theoreticalVolatility = tuples["theoreticalVolatility"].Value<double>();
-                option.strikePrice = tuples["strikePrice"].Value<double>();
-                option.expirationDate = tuples["expirationDate"].Value<double>();
-                option.daysToExpiration = tuples["daysToExpiration"].Value<int>();
-                option.multiplier = tuples["multiplier"].Value<double>();
-                option.settlementType = tuples["settlementType"].Value<string>();
-                option.deliverableNote = tuples["deliverableNote"].Value<string>();
-                option.percentChange = tuples["percentChange"].Value<double>();
-                option.markChange = tuples["markChange"].Value<double>();
-                option.markPercentChange = tuples["markPercentChange"].Value<double>();
-            }
-        }
-        return map;
-    }
-}
+// public class TDOptionChainConverter : JsonConverter
+// {
+//     public override bool CanConvert(Type objectType)
+//     {
+//         return objectType == typeof(TDOptionChain);
+//     }
+//
+//     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+//     {
+//         throw new NotImplementedException();
+//     }
+//
+//     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+//     {
+//         var doc = JObject.Load(reader);
+//         var model = new TDOptionChain
+//         {
+//             symbol = doc["symbol"].Value<string>(),
+//             status = doc["status"].Value<string>(),
+//             underlying = doc["underlying"].ToObject<TDUnderlying>(),
+//             strategy = doc["strategy"].Value<string>(),
+//             interval = doc["interval"].Value<int>(),
+//             isDelayed = doc["isDelayed"].Value<bool>(),
+//             isIndex = doc["isIndex"].Value<bool>(),
+//             daysToExpiration = doc["daysToExpiration"].Value<int>(),
+//             interestRate = doc["interestRate"].Value<int>(),
+//             underlyingPrice = doc["underlyingPrice"].Value<int>(),
+//             volatility = doc["volatility"].Value<int>(),
+//             callExpDateMap = GetMap(doc["callExpDateMap"].ToObject<JObject>()),
+//             putExpDateMap = GetMap(doc["putExpDateMap"].ToObject<JObject>())
+//         };
+//         return model;
+//     }
+//
+//     public List<TDOptionMap> GetMap(JObject doc)
+//     {
+//         var map = new List<TDOptionMap>();
+//
+//         foreach (var expiry in doc.Properties())
+//         {
+//             var exp = new TDOptionMap();
+//             map.Add(exp);
+//             exp.expires = DateTime.Parse(expiry.Name.Split(':')[0]);
+//             exp.options = new List<TDOption>();
+//
+//             var set = expiry.Value.ToObject<JObject>();
+//             foreach (var contract in set.Properties())
+//             {
+//                 var strike = double.Parse(contract.Name);
+//                 var tuples = contract.Value.First.ToObject<JObject>();
+//                 var option = new TDOption();
+//                 exp.options.Add(option);
+//
+//                 option.putCall = tuples["putCall"].Value<string>();
+//                 option.symbol = tuples["symbol"].Value<string>();
+//                 option.description = tuples["description"].Value<string>();
+//                 option.exchangeName = tuples["exchangeName"].Value<string>();
+//                 option.bidPrice = tuples["bid"].Value<double>();
+//                 option.askPrice = tuples["ask"].Value<double>();
+//                 option.lastPrice = tuples["last"].Value<double>();
+//                 option.markPrice = tuples["mark"].Value<double>();
+//                 option.bidSize = tuples["bidSize"].Value<int>();
+//                 option.askSize = tuples["askSize"].Value<int>();
+//                 option.lastSize = tuples["lastSize"].Value<int>();
+//                 option.highPrice = tuples["highPrice"].Value<double>();
+//                 option.lowPrice = tuples["lowPrice"].Value<double>();
+//                 option.openPrice = tuples["openPrice"].Value<double>();
+//                 option.closePrice = tuples["closePrice"].Value<double>();
+//                 option.totalVolume = tuples["totalVolume"].Value<int>();
+//                 option.quoteTimeInLong = tuples["quoteTimeInLong"].Value<long>();
+//                 option.tradeTimeInLong = tuples["tradeTimeInLong"].Value<long>();
+//                 option.netChange = tuples["netChange"].Value<double>();
+//                 option.volatility = tuples["volatility"].Value<double>();
+//                 option.delta = tuples["delta"].Value<double>();
+//                 option.gamma = tuples["gamma"].Value<double>();
+//                 option.theta = tuples["theta"].Value<double>();
+//                 option.vega = tuples["vega"].Value<double>();
+//                 option.rho = tuples["rho"].Value<double>();
+//                 option.timeValue = tuples["timeValue"].Value<double>();
+//                 option.openInterest = tuples["openInterest"].Value<int>();
+//                 option.isInTheMoney = tuples["inTheMoney"].Value<bool>();
+//                 option.theoreticalOptionValue = tuples["theoreticalOptionValue"].Value<double>();
+//                 option.theoreticalVolatility = tuples["theoreticalVolatility"].Value<double>();
+//                 option.strikePrice = tuples["strikePrice"].Value<double>();
+//                 option.expirationDate = tuples["expirationDate"].Value<double>();
+//                 option.daysToExpiration = tuples["daysToExpiration"].Value<int>();
+//                 option.multiplier = tuples["multiplier"].Value<double>();
+//                 option.settlementType = tuples["settlementType"].Value<string>();
+//                 option.deliverableNote = tuples["deliverableNote"].Value<string>();
+//                 option.percentChange = tuples["percentChange"].Value<double>();
+//                 option.markChange = tuples["markChange"].Value<double>();
+//                 option.markPercentChange = tuples["markPercentChange"].Value<double>();
+//             }
+//         }
+//         return map;
+//     }
+// }
 
 [Serializable]
 public class TDOptionMap

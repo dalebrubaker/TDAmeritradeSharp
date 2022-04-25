@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Web;
-using Newtonsoft.Json;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritradeSharpUI;
@@ -46,14 +46,14 @@ public partial class AuthUserControl : UserControl
         if (File.Exists(SettingsPath))
         {
             var json = File.ReadAllText(SettingsPath);
-            Settings = JsonConvert.DeserializeObject<AuthUserControlSettings>(json) ?? new AuthUserControlSettings();
+            Settings = JsonSerializer.Deserialize<AuthUserControlSettings>(json) ?? new AuthUserControlSettings();
         }
         authUserControlSettingsBindingSource.DataSource = Settings;
     }
 
     private void SaveConfig()
     {
-        var json = JsonConvert.SerializeObject(Settings);
+        var json = JsonSerializer.Serialize(Settings);
         File.WriteAllText(SettingsPath, json);
     }
 

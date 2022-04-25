@@ -2,8 +2,9 @@
 using System.Globalization;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Web;
-using Newtonsoft.Json;
 
 namespace TDAmeritradeSharpClient;
 
@@ -16,7 +17,7 @@ public class ClientStream : IDisposable
 {
     private readonly Client _client;
     private readonly TDStreamJsonProcessor _parser;
-    private readonly JsonSerializerSettings _settings = new() { NullValueHandling = NullValueHandling.Ignore };
+    private readonly JsonSerializerOptions _options = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault };
     private readonly SemaphoreSlim _slim = new(1);
     private TDAccount? _account;
     private bool _connected;
@@ -171,7 +172,7 @@ public class ClientStream : IDisposable
                 }
             }
         };
-        var data = JsonConvert.SerializeObject(request, _settings);
+        var data = JsonSerializer.Serialize(request, _options);
         return SendToServerAsync(data);    }
 
         /// <summary>
@@ -200,7 +201,7 @@ public class ClientStream : IDisposable
                     }
                     }
             };
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -231,7 +232,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -261,7 +262,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -293,7 +294,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -324,7 +325,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -354,7 +355,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -383,7 +384,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -413,7 +414,7 @@ public class ClientStream : IDisposable
                 }
             };
 
-            var data = JsonConvert.SerializeObject(request, _settings);
+            var data = JsonSerializer.Serialize(request, _options);
             return SendToServerAsync(data);
         }
 
@@ -534,7 +535,7 @@ public class ClientStream : IDisposable
                     }
                 }
             };
-            var data = JsonConvert.SerializeObject(request);
+            var data = JsonSerializer.Serialize(request);
             return SendToServerAsync(data);
         }
 
@@ -555,7 +556,7 @@ public class ClientStream : IDisposable
                     }
                 }
             };
-            var data = JsonConvert.SerializeObject(request);
+            var data = JsonSerializer.Serialize(request);
             return SendToServerAsync(data);
         }
 
