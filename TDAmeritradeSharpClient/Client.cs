@@ -6,6 +6,8 @@ using System.Net.Http.Headers;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Web;
 
 namespace TDAmeritradeSharpClient;
@@ -17,6 +19,8 @@ public class Client : IDisposable
 
     public Client()
     {
+        var options = new JsonSerializerOptions();
+
         _httpClient = new HttpClient();
         var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
         if (!Directory.Exists(userSettingsDirectory))
@@ -26,6 +30,13 @@ public class Client : IDisposable
         PathAuthValues = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
     }
+
+    public static JsonSerializerOptions JsonOptions { get; } = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
+    };
 
     /// <summary>
     ///     The fully-qualified path to the json file in Users that holds the Authorization information
@@ -501,22 +512,7 @@ public class Client : IDisposable
     /// <summary>
     ///     Retrieve market hours for specified single market
     /// </summary>
-    public async Task<TDMarketHour> GetHoursForASingleMarketAsync(MarketTypes type, DateTime day)
-    {
-        var json = await GetMarketHoursJsonAsync(type, day);
-        // TODO
-        // if (!IsNullOrEmpty(json))
-        // {
-        //     var doc = JObject.Parse(json);
-        //     return doc.First.First.First.First.ToObject<TDMarketHour>();
-        // }
-        return null!;
-    }
-
-    /// <summary>
-    ///     Retrieve market hours for specified single market
-    /// </summary>
-    public async Task<string> GetMarketHoursJsonAsync(MarketTypes type, DateTime day)
+    public async Task<TDMarketHours> GetHoursForASingleMarketAsync(MarketTypes marketType, DateTime day)
     {
         if (AuthValues == null)
         {
@@ -527,12 +523,59 @@ public class Client : IDisposable
             throw new Exception("ConsumerKey is null");
         }
         var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
-        var dayString = day.ToString("yyyy-MM-dd").Replace("/", "-");
+        var dayString = day.ToString("yyyy'-'MM'-'dd");
         var path = IsSignedIn
-            ? $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?date={dayString}"
-            : $"https://api.tdameritrade.com/v1/marketdata/{type}/hours?apikey={key}&date={dayString}";
+            ? $"https://api.tdameritrade.com/v1/marketdata/{marketType}/hours?date={dayString}"
+            : $"https://api.tdameritrade.com/v1/marketdata/{marketType}/hours?apikey={key}&date={dayString}";
 
-        return await SendRequestAsync(path).ConfigureAwait(false);
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
+        if (IsNullOrEmpty(json))
+        {
+            return null!;
+        }
+        var result = GetMarketHours(marketType, json);
+        return result ?? throw new InvalidOperationException();
+    }
+
+    private static TDMarketHours? GetMarketHours(MarketTypes marketType, string json)
+    {
+        var node = JsonNode.Parse(json);
+        if (node == null)
+        {
+            throw new InvalidOperationException();
+        }
+        var jsonHours = "";
+        switch (marketType)
+        {
+            case MarketTypes.BOND:
+                break;
+            case MarketTypes.EQUITY:
+                jsonHours = node["equity"]?["EQ"]?.ToJsonString();
+                break;
+            case MarketTypes.ETF:
+                break;
+            case MarketTypes.FOREX:
+                break;
+            case MarketTypes.FUTURE:
+                break;
+            case MarketTypes.FUTURE_OPTION:
+                break;
+            case MarketTypes.INDEX:
+                break;
+            case MarketTypes.INDICAT:
+                break;
+            case MarketTypes.MUTUAL_FUND:
+                break;
+            case MarketTypes.OPTION:
+                jsonHours = node["option"]?["EQO"]?.ToJsonString();
+                break;
+            case MarketTypes.UNKNOWN:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(marketType), marketType, null);
+        }
+        var result = JsonSerializer.Deserialize<TDMarketHours>(jsonHours ?? throw new InvalidOperationException(), JsonOptions);
+        return result;
     }
 
     private async Task<string> SendRequestAsync(string path)

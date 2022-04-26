@@ -59,10 +59,12 @@ public class Tests
     }
 
     [Test]
-    public async Task TestMarketHours()
+    [TestCase(MarketTypes.EQUITY)]
+    [TestCase(MarketTypes.OPTION)]
+    public async Task TestMarketHours(MarketTypes marketType)
     {
-        var hours = await _client.GetHoursForASingleMarketAsync(MarketTypes.EQUITY, DateTime.Now);
-        Assert.IsTrue(hours.marketType == "EQUITY");
+        var hours = await _client.GetHoursForASingleMarketAsync(marketType, DateTime.Now);
+        Assert.IsTrue(hours.MarketType == marketType);
     }
 
     [Test]
