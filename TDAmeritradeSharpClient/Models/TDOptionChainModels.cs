@@ -178,7 +178,7 @@ public class TDOptionChain
     public string? symbol { get; set; }
     public string? status { get; set; }
     public TDUnderlying? underlying { get; set; }
-    public string? strategy { get; set; } // TODO Should be enum?
+    public string? strategy { get; set; }
     public double interval { get; set; }
     public bool isDelayed { get; set; }
     public bool isIndex { get; set; }
@@ -250,7 +250,7 @@ public class TDOptionChainConverter : JsonConverter<TDOptionChain>
 
     public override void Write(Utf8JsonWriter writer, TDOptionChain value, JsonSerializerOptions options)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 }
 
@@ -272,7 +272,7 @@ public class TDOptionsAtStrike
 [Serializable]
 public class TDOption
 {
-    public string? putCall { get; set; } // TODO should be enum?
+    public string? putCall { get; set; } 
     public string? symbol { get; set; }
     public string? description { get; set; }
     public string? exchangeName { get; set; }
@@ -304,7 +304,7 @@ public class TDOption
     public double theoreticalVolatility { get; set; }
     public double expirationDate { get; set; }
     public double daysToExpiration { get; set; }
-    public string? expirationType { get; set; } // TODO enum?
+    public string? expirationType { get; set; }
     public double lastTradingDay { get; set; }
 
     public double multiplier { get; set; }
