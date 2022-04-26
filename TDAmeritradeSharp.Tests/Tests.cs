@@ -129,7 +129,7 @@ public class Tests
     public async Task TestTDQuoteClient_Future()
     {
         var data = await _client.GetQuote_FutureAsync("/ES");
-        Assert.IsTrue(data.symbol == "ES");
+        Assert.IsTrue(data.symbol == "/ES");
     }
 
     [Test]

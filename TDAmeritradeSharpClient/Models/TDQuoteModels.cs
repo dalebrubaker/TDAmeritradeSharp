@@ -8,23 +8,28 @@ public abstract class TDQuoteBase
     public string? description { get; set; }
     public string? exchangeName { get; set; }
     public string? securityStatus { get; set; }
+
+    public override string ToString()
+    {
+        return symbol!;
+    }
 }
 
 [Serializable]
 public class MarketQuoteBase : TDQuoteBase
 {
     public double bidPrice { get; set; }
-    public int bidSize { get; set; }
+    public double bidSize { get; set; }
     public double askPrice { get; set; }
-    public int askSize { get; set; }
+    public double askSize { get; set; }
     public double lastPrice { get; set; }
-    public int lastSize { get; set; }
+    public double lastSize { get; set; }
     public double openPrice { get; set; }
     public double highPrice { get; set; }
     public double lowPrice { get; set; }
     public double closePrice { get; set; }
     public double netChange { get; set; }
-    public long totalVolume { get; set; }
+    public double totalVolume { get; set; }
     public long quoteTimeInLong { get; set; }
     public long tradeTimeInLong { get; set; }
     public double mark { get; set; }
@@ -48,7 +53,7 @@ public class TDEquityQuote : MarketQuoteBase
     public double divYield { get; set; }
     public string? divDate { get; set; }
     public double regularMarketLastPrice { get; set; }
-    public int regularMarketLastSize { get; set; }
+    public double regularMarketLastSize { get; set; }
     public double regularMarketNetChange { get; set; }
     public long regularMarketTradeTimeInLong { get; set; }
 }
@@ -58,7 +63,7 @@ public class TDFundQuote : TDQuoteBase
 {
     public double closePrice { get; set; }
     public double netChange { get; set; }
-    public int totalVolume { get; set; }
+    public double totalVolume { get; set; }
     public long tradeTimeInLong { get; set; }
     public string? exchange { get; set; }
     public int digits { get; set; }
@@ -87,19 +92,19 @@ public class FutureQuote : TDQuoteBase
     public double openPriceInDouble { get; set; }
     public double changeInDouble { get; set; }
     public double futurePercentChange { get; set; }
-    public int openInterest { get; set; }
-    public int mark { get; set; }
-    public int tick { get; set; }
-    public int tickAmount { get; set; }
+    public double openInterest { get; set; }
+    public double mark { get; set; }
+    public double tick { get; set; }
+    public double tickAmount { get; set; }
     public string? product { get; set; }
     public string? futurePriceFormat { get; set; }
     public string? futureTradingHours { get; set; }
     public bool futureIsTradable { get; set; }
-    public int futureMultiplier { get; set; }
+    public double futureMultiplier { get; set; }
     public bool futureIsActive { get; set; }
     public double futureSettlementPrice { get; set; }
     public string? futureActiveSymbol { get; set; }
-    public string? futureExpirationDate { get; set; }
+    public double futureExpirationDate { get; set; }
 }
 
 [Serializable]
@@ -113,9 +118,9 @@ public class FutureOptionsQuote : TDQuoteBase
     public double closePriceInDouble { get; set; }
     public double openPriceInDouble { get; set; }
     public double netChangeInDouble { get; set; }
-    public int openInterest { get; set; }
-    public int volatility { get; set; }
-    public int moneyIntrinsicValueInDouble { get; set; }
+    public double openInterest { get; set; }
+    public double volatility { get; set; }
+    public double moneyIntrinsicValueInDouble { get; set; }
     public double multiplierInDouble { get; set; }
     public int digits { get; set; }
     public double strikePriceInDouble { get; set; }
@@ -127,14 +132,14 @@ public class FutureOptionsQuote : TDQuoteBase
     public double thetaInDouble { get; set; }
     public double vegaInDouble { get; set; }
     public double rhoInDouble { get; set; }
-    public int mark { get; set; }
-    public int tick { get; set; }
-    public int tickAmount { get; set; }
+    public double mark { get; set; }
+    public double tick { get; set; }
+    public double tickAmount { get; set; }
     public bool futureIsTradable { get; set; }
     public string? futureTradingHours { get; set; }
     public double futurePercentChange { get; set; }
     public bool futureIsActive { get; set; }
-    public int futureExpirationDate { get; set; }
+    public double futureExpirationDate { get; set; }
     public string? expirationType { get; set; }
     public string? exerciseType { get; set; }
     public bool inTheMoney { get; set; }
@@ -152,7 +157,7 @@ public class TDIndexQuote : TDQuoteBase
     public double lowPrice { get; set; }
     public double closePrice { get; set; }
     public double netChange { get; set; }
-    public long totalVolume { get; set; }
+    public double totalVolume { get; set; }
     public long tradeTimeInLong { get; set; }
     public string? exchange { get; set; }
     public int digits { get; set; }
@@ -172,17 +177,17 @@ public class TDForexQuote : TDQuoteBase
     public string? exchange { get; set; }
     public double openPriceInDouble { get; set; }
     public double changeInDouble { get; set; }
-    public int percentChange { get; set; }
+    public double percentChange { get; set; }
     public int digits { get; set; }
-    public int tick { get; set; }
-    public int tickAmount { get; set; }
+    public double tick { get; set; }
+    public double tickAmount { get; set; }
     public string? product { get; set; }
     public string? tradingHours { get; set; }
     public bool isTradable { get; set; }
     public string? marketMaker { get; set; }
     public double _52WkHighInDouble { get; set; }
     public double _52WkLowInDouble { get; set; }
-    public int mark { get; set; }
+    public double mark { get; set; }
 }
 
 [Serializable]

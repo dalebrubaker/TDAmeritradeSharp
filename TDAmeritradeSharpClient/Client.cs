@@ -427,14 +427,18 @@ public class Client : IDisposable
     public async Task<T> GetQuoteAsync<T>(string symbol) where T : TDQuoteBase
     {
         var json = await GetQuoteJsonAsync(symbol);
-        if (!IsNullOrEmpty(json))
+        if (IsNullOrEmpty(json))
         {
-            // TODO
-            // var doc = JObject.Parse(json);
-            // var inner = doc.First.First as JObject;
-            // return inner?.ToObject<T>()!;
+            throw new InvalidOperationException();
         }
-        return null!;
+        var node = JsonNode.Parse(json);
+        if (node == null)
+        {
+            throw new InvalidOperationException();
+        }
+        var nodeQuote = node[symbol];
+        var result = nodeQuote?.Deserialize<T>(JsonOptions);
+        return result!;
     }
 
     /// <summary>
@@ -454,9 +458,10 @@ public class Client : IDisposable
             throw new Exception("ConsumerKey is null");
         }
         var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
+        var symbolEncoded = HttpUtility.UrlEncode(symbol); // handle futures like /ES
         var path = IsSignedIn
-            ? $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes"
-            : $"https://api.tdameritrade.com/v1/marketdata/{symbol}/quotes?apikey={key}";
+            ? $"https://api.tdameritrade.com/v1/marketdata/quotes?symbol={symbolEncoded}"
+            : $"https://api.tdameritrade.com/v1/marketdata/quotes?apikey={key}&symbol={symbolEncoded}";
 
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         return json;

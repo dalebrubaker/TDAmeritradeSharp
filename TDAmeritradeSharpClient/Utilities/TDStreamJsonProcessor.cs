@@ -71,12 +71,13 @@ public class TDStreamJsonProcessor
                 return;
             }
             var contentsArray = contents.AsArray();
-            foreach (JsonObject content in contentsArray) //.Children<JObject>())
+            foreach (var jsonNode in contentsArray) //.Children<JObject>())
             {
-                if (content == null)
+                if (jsonNode == null)
                 {
                     continue;
                 }
+                var content = (JsonObject)jsonNode;
                 switch (service)
                 {
                     case "QUOTE":
