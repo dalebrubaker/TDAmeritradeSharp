@@ -15,13 +15,18 @@ namespace TDAmeritradeSharpClient;
 public class Client : IDisposable
 {
     public const string Success = "Authorization was successful";
+    public JsonSerializerOptions JsonOptions { get; }
     private HttpClient _httpClient;
 
     public Client()
     {
-        var options = new JsonSerializerOptions();
-
         _httpClient = new HttpClient();
+        JsonOptions = new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+        JsonOptions.Converters.Add(new TDOptionChainConverter());
         var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
         if (!Directory.Exists(userSettingsDirectory))
         {
@@ -30,13 +35,6 @@ public class Client : IDisposable
         PathAuthValues = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
     }
-
-    public static JsonSerializerOptions JsonOptions { get; } = new()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
 
     /// <summary>
     ///     The fully-qualified path to the json file in Users that holds the Authorization information
@@ -548,7 +546,7 @@ public class Client : IDisposable
         return result ?? throw new InvalidOperationException();
     }
 
-    private static TDMarketHours? GetMarketHours(MarketTypes marketType, string json)
+    private TDMarketHours? GetMarketHours(MarketTypes marketType, string json)
     {
         var node = JsonNode.Parse(json);
         if (node == null)
@@ -560,7 +558,7 @@ public class Client : IDisposable
             case MarketTypes.BOND:
                 break;
             case MarketTypes.EQUITY:
-                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>((JsonOptions)) ?? throw new InvalidOperationException();
             case MarketTypes.ETF:
                 break;
             case MarketTypes.FOREX:

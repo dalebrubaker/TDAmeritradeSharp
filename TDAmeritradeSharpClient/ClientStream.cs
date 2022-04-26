@@ -32,7 +32,7 @@ public class ClientStream : IDisposable
         _parser.OnBookSignal += o => { OnBookSignal(o); };
     }
 
-    private static JsonSerializerOptions JsonOptions => Client.JsonOptions;
+    private JsonSerializerOptions JsonOptions => _client.JsonOptions;
 
     /// <summary>
     ///     Is stream connected

@@ -171,7 +171,6 @@ public class TDOptionChainRequest
     public TDOptionChainOptionTypes optionType { get; set; }
 }
 
-[JsonConverter(typeof(TDOptionChainConverter))]
 [Serializable]
 public class TDOptionChain
 {
