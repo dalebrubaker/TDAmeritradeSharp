@@ -633,7 +633,7 @@ public class Client : IDisposable
 
     #region Orders
 
-    public async Task<TDOrderResponse> GetOrderAsync(string accountId, string orderId)
+    public async Task<TDOrderResponse> GetOrderAsync(string accountId, long orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
@@ -744,7 +744,7 @@ public class Client : IDisposable
         }
     }
 
-    public async Task CancelOrderAsync(string accountId, string orderId)
+    public async Task CancelOrderAsync(string accountId, long orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var res = await _httpClient.Throttle().DeleteAsync(path);
@@ -766,7 +766,7 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> PlaceOrderAsync(OrderBase order, string accountId)
+    public async Task<long> PlaceOrderAsync(IOrderBase order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
         var json = order.GetJson();
@@ -778,7 +778,8 @@ public class Client : IDisposable
                 var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
                 var value = location.Value.First();
                 var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                var orderIdStr = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                long.TryParse(orderIdStr, out var orderId);
                 return orderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
@@ -792,7 +793,7 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> PlaceOcoOrderAsync(OcoOrder order, string accountId)
+    public async Task<long> PlaceOcoOrderAsync(OcoOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
         var json = order.GetJson();
@@ -804,7 +805,8 @@ public class Client : IDisposable
                 var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
                 var value = location.Value.First();
                 var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var orderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                var orderIdStr = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                long.TryParse(orderIdStr, out var orderId);
                 return orderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
@@ -819,7 +821,7 @@ public class Client : IDisposable
     /// <param name="orderId">The orderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task<string> ReplaceOrderAsync(OrderBase replacementOrder, string accountId, string orderId)
+    public async Task<long> ReplaceOrderAsync(IOrderBase replacementOrder, string accountId, long orderId)
     {
         var json = replacementOrder.GetJson();
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -831,7 +833,8 @@ public class Client : IDisposable
                 var location = httpResponseMessage.Headers.First(x => x.Key == "Location");
                 var value = location.Value.First();
                 var lastSlashIndex = value.LastIndexOf("/", StringComparison.Ordinal);
-                var replacementOrderId = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                var replacementOrderIdStr = value.Substring(lastSlashIndex + 1, value.Length - lastSlashIndex - 1);
+                long.TryParse(replacementOrderIdStr, out var replacementOrderId);
                 return replacementOrderId;
             default:
                 throw new Exception($"Bad request: {httpResponseMessage.StatusCode} {httpResponseMessage.ReasonPhrase}");
@@ -845,7 +848,7 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task CreateSavedOrderAsync(OrderBase order, string accountId)
+    public async Task CreateSavedOrderAsync(IOrderBase order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
         var json = order.GetJson();
@@ -860,7 +863,7 @@ public class Client : IDisposable
         }
     }
 
-    public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, string savedOrderId)
+    public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, long savedOrderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
@@ -884,7 +887,7 @@ public class Client : IDisposable
         }
     }
 
-    public async Task DeleteSavedOrderAsync(string accountId, string savedOrderId)
+    public async Task DeleteSavedOrderAsync(string accountId, long savedOrderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var res = await _httpClient.Throttle().DeleteAsync(path);
@@ -907,7 +910,7 @@ public class Client : IDisposable
     /// <param name="savedOrderId">The savedOrderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task ReplaceSavedOrderAsync(OrderBase replacementOrder, string accountId, string savedOrderId)
+    public async Task ReplaceSavedOrderAsync(IOrderBase replacementOrder, string accountId, long savedOrderId)
     {
         var json = replacementOrder.GetJson();
         var content = new StringContent(json, Encoding.UTF8, "application/json");

@@ -40,51 +40,64 @@ public class OrderLeg
     }
 }
 
-public class OrderInstrumentBase
+public class EquityOrderInstrument
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.EQUITY;
+
     public string symbol { get; set; } = null!;
     public string cusip { get; set; } = null!;
     public string description { get; set; } = null!;
 }
 
-public class EquityOrderInstrument : OrderInstrumentBase
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.EQUITY;
-}
-
-public class FixedIncomeOrderInstrument : OrderInstrumentBase
+public class FixedIncomeOrderInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.FIXED_INCOME;
+
+    public string symbol { get; set; } = null!;
+    public string cusip { get; set; } = null!;
+    public string description { get; set; } = null!;
 
     public string maturityDate { get; set; } = null!;
     public double variableRate { get; set; }
     public double factor { get; set; }
 }
 
-public class MutualFundOrderInstrument : OrderInstrumentBase
+public class MutualFundOrderInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.MUTUAL_FUND;
+
+    public string symbol { get; set; } = null!;
+    public string cusip { get; set; } = null!;
+    public string description { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.typeMutualFund type { get; set; }
 }
 
-public class CashEquivalentOrderInstrument : OrderInstrumentBase
+public class CashEquivalentOrderInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.CASH_EQUIVALENT;
+
+    public string symbol { get; set; } = null!;
+    public string cusip { get; set; } = null!;
+    public string description { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.typeCashEquivalent type { get; set; }
 }
 
-public class OptionOrderInstrument : OrderInstrumentBase
+public class OptionOrderInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.OPTION;
+
+    public string symbol { get; set; } = null!;
+    public string cusip { get; set; } = null!;
+    public string description { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.typeOption type { get; set; }
@@ -131,8 +144,89 @@ public class ExecutionLeg
     public string time { get; set; } = null!;
 }
 
-public class TDOrder : OrderBase
+public class TDOrder
 {
+      private string? _price;
+    private string? _stopPrice;
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.orderType orderType { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.session session { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.duration duration { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.orderStrategyType orderStrategyType { get; set; }
+
+    public List<OrderLegBase> orderLegCollection { get; set; } = new();
+
+    public List<IOrderBase> childOrderStrategies { get; set; } = new();
+
+    public string? price
+    {
+        get
+        {
+            // TDA enforces 2 or 4 digits this during ReplaceOrder
+            double.TryParse(_price, out var value);
+            if (value == 0)
+            {
+                return null;
+            }
+            var formatStr = value < 1 ? "f4" : "f2";
+            _price = value.ToString(formatStr, CultureInfo.InvariantCulture);
+            return _price;
+        }
+        set => _price = value;
+    }
+
+    public string? stopPrice
+    {
+        get
+        {
+            // TDA enforces 2 or 4 digits this during ReplaceOrder
+            double.TryParse(_stopPrice, out var value);
+            if (value == 0)
+            {
+                return null;
+            }
+            var formatStr = value < 1 ? "f4" : "f2";
+            _stopPrice = value.ToString(formatStr, CultureInfo.InvariantCulture);
+            return _stopPrice;
+        }
+        set => _stopPrice = value;
+    }
+
+    /// <summary>
+    ///     Returns json without type names, suitable for sending to TD Ameritrade
+    /// </summary>
+    /// <returns></returns>
+    public string GetJson()
+    {
+        var json = JsonSerializer.Serialize(this);
+        if (orderType == TDOrderEnums.orderType.MARKET)
+        {
+            // Remove the price field
+            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+            obj?.Remove("price");
+            json = JsonSerializer.Serialize(obj);
+        }
+        return json;
+    }
+
+    /// <summary>
+    ///     Return a deep clone of this order
+    /// </summary>
+    /// <returns></returns>
+    public TDOrder CloneDeep()
+    {
+        var json = JsonSerializer.Serialize(this);
+        var clone = JsonSerializer.Deserialize<TDOrder>(json);
+        return clone!;
+    }
+    
     public CancelTime cancelTime { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -173,7 +267,7 @@ public class TDOrder : OrderBase
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.specialInstruction specialInstruction { get; set; }
 
-    public string orderId { get; set; } = null!;
+    public long orderId { get; set; }
     public bool cancelable { get; set; }
     public bool editable { get; set; }
 
@@ -188,12 +282,45 @@ public class TDOrder : OrderBase
     public string statusDescription { get; set; } = null!;
 }
 
-public class OrderBase
+public interface IOrderBase
 {
-    private double _priceNumeric;
-    private double _stopPriceNumeric;
-    private string? _stopPrice;
+    /// <summary>
+    ///     Returns json without type names, suitable for sending to TD Ameritrade
+    /// </summary>
+    /// <returns></returns>
+    string GetJson();
+}
+
+
+public class OcoOrder
+{
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.orderStrategyType orderStrategyType => TDOrderEnums.orderStrategyType.OCO;
+
+    public List<IOrderBase> childOrderStrategies { get; set; } = new();
+
+    /// <summary>
+    ///     Returns json without type names, suitable for sending to TD Ameritrade
+    /// </summary>
+    /// <returns></returns>
+    public string GetJson()
+    {
+        var json = JsonSerializer.Serialize(this);
+        return json;
+    }
+}
+
+public class EquityOrder : IOrderBase
+{
     private string? _price;
+
+    private string? _stopPrice;
+
+    public EquityOrder()
+    {
+        var orderLeg = new EquityOrderLeg();
+        orderLegCollection.Add(orderLeg);
+    }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.orderType orderType { get; set; }
@@ -207,9 +334,9 @@ public class OrderBase
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.orderStrategyType orderStrategyType { get; set; }
 
-    public List<OrderLegBase> orderLegCollection { get; set; } = new();
+    public List<EquityOrderLeg> orderLegCollection { get; set; } = new();
 
-    public List<OrderBase> childOrderStrategies { get; set; } = new();
+    public List<IOrderBase> childOrderStrategies { get; set; } = new();
 
     public string? price
     {
@@ -217,6 +344,10 @@ public class OrderBase
         {
             // TDA enforces 2 or 4 digits this during ReplaceOrder
             double.TryParse(_price, out var value);
+            if (value == 0)
+            {
+                return null;
+            }
             var formatStr = value < 1 ? "f4" : "f2";
             _price = value.ToString(formatStr, CultureInfo.InvariantCulture);
             return _price;
@@ -230,11 +361,22 @@ public class OrderBase
         {
             // TDA enforces 2 or 4 digits this during ReplaceOrder
             double.TryParse(_stopPrice, out var value);
+            if (value == 0)
+            {
+                return null;
+            }
             var formatStr = value < 1 ? "f4" : "f2";
             _stopPrice = value.ToString(formatStr, CultureInfo.InvariantCulture);
             return _stopPrice;
         }
         set => _stopPrice = value;
+    }
+
+    [JsonIgnore]
+    public EquityOrderLeg OrderLeg
+    {
+        get => orderLegCollection[0];
+        set => orderLegCollection[0] = value;
     }
 
     /// <summary>
@@ -258,45 +400,11 @@ public class OrderBase
     ///     Return a deep clone of this order
     /// </summary>
     /// <returns></returns>
-    public OrderBase CloneDeep()
+    public EquityOrder CloneDeep()
     {
         var json = JsonSerializer.Serialize(this);
-        var clone = JsonSerializer.Deserialize<OrderBase>(json);
+        var clone = JsonSerializer.Deserialize<EquityOrder>(json);
         return clone!;
-    }
-}
-
-public class OcoOrder
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.orderStrategyType orderStrategyType => TDOrderEnums.orderStrategyType.OCO;
-
-    public List<OrderBase> childOrderStrategies { get; set; } = new();
-
-    /// <summary>
-    ///     Returns json without type names, suitable for sending to TD Ameritrade
-    /// </summary>
-    /// <returns></returns>
-    public string GetJson()
-    {
-        var json = JsonSerializer.Serialize(this);
-        return json;
-    }
-}
-
-public class EquityOrder : OrderBase
-{
-    public EquityOrder()
-    {
-        var orderLeg = new EquityOrderLeg();
-        orderLegCollection.Add(orderLeg);
-    }
-
-    [JsonIgnore]
-    public OrderLegBase OrderLeg
-    {
-        get => orderLegCollection[0];
-        set => orderLegCollection[0] = value;
     }
 }
 
@@ -305,17 +413,24 @@ public class OrderLegBase
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.instruction instruction { get; set; }
 
-    public OrderInstrumentBase instrument { get; set; } = null!;
+    public Instrument instrument { get; set; } = null!;
 
     public double quantity { get; set; }
 }
 
-public class EquityOrderLeg : OrderLegBase
+public class EquityOrderLeg
 {
     public EquityOrderLeg()
     {
         instrument = new EquityOrderInstrument();
     }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.instruction instruction { get; set; }
+
+    public EquityOrderInstrument instrument { get; set; } = null!;
+
+    public double quantity { get; set; }
 }
 
 public class Instrument
@@ -385,7 +500,7 @@ public class TDOrderResponse
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.specialInstruction specialInstruction { get; set; }
 
-    public string orderId { get; set; } = null!;
+    public long orderId { get; set; }
     public bool cancelable { get; set; }
     public bool editable { get; set; }
 
@@ -394,7 +509,7 @@ public class TDOrderResponse
 
     public string enteredTime { get; set; } = null!;
     public string closeTime { get; set; } = null!;
-    public string accountId { get; set; } = null!;
+    public double accountId { get; set; }
     public List<OrderActivity> orderActivityCollection { get; set; } = null!;
     public List<TDOrder> replacingOrderCollection { get; set; } = null!;
     public List<TDOrder> childOrderStrategies { get; set; } = null!;
@@ -402,7 +517,7 @@ public class TDOrderResponse
 
     public string tag { get; set; } = null!;
 
-    public string savedOrderId { get; set; } = null!;
+    public long savedOrderId { get; set; }
     public string savedTime { get; set; } = null!;
 
     public override string ToString()

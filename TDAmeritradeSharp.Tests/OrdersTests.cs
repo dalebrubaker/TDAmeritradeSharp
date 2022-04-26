@@ -179,7 +179,7 @@ public class OrdersTests
     [Test]
     public async Task TestGetOrder()
     {
-        const string OrderId = "8134476058";
+        const long OrderId = 8134476058;
         var order = await _client.GetOrderAsync(_testAccountId, OrderId).ConfigureAwait(false);
         Assert.AreEqual(OrderId, order.orderId);
     }
