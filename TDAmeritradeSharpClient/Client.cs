@@ -247,7 +247,12 @@ public class Client : IDisposable
     public async Task<TDOptionChain?> GetOptionsChainAsync(TDOptionChainRequest request)
     {
         var json = await GetOptionsChainJsonAsync(request);
-        return !IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDOptionChain>(json) : null;
+        if (IsNullOrEmpty(json))
+        {
+            throw new InvalidOperationException();
+        }
+        var result = JsonSerializer.Deserialize<TDOptionChain>(json, JsonOptions);
+        return result;
     }
 
     /// <summary>
@@ -293,7 +298,8 @@ public class Client : IDisposable
         }
         if (request.toDate.HasValue)
         {
-            queryString.Add("toDate", request.toDate.Value.ToString("yyyy-MM-dd"));
+            var str = request.toDate.Value.ToString("yyyy-MM-dd");
+            queryString.Add("toDate", str);
         }
         if (!string.IsNullOrEmpty(request.expMonth))
         {
@@ -576,7 +582,8 @@ public class Client : IDisposable
             default:
                 throw new ArgumentOutOfRangeException(nameof(marketType), marketType, null);
         }
-        throw new InvalidOperationException();    }
+        throw new InvalidOperationException();
+    }
 
     private async Task<string> SendRequestAsync(string path)
     {

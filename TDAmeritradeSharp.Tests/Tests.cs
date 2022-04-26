@@ -53,9 +53,13 @@ public class Tests
     {
         var chain = await _client.GetOptionsChainAsync(new TDOptionChainRequest
         {
-            symbol = "QQQ"
+            symbol = "QQQ",
+            fromDate = new DateTime(DateTime.Now.AddDays(-7).Ticks),
+            toDate = new DateTime(DateTime.Now.AddDays(7).Ticks),
+            strikeCount = 1
         });
-        Assert.IsTrue(chain.callExpDateMap.Count > 0);
+        Assert.IsTrue(chain!.callExpDateMap!.optionsAtStrike.Count > 0);
+        Assert.IsTrue(chain!.callExpDateMap!.optionsAtStrike[0].options!.Count > 0);
     }
 
     [Test]
