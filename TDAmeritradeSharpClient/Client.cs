@@ -327,13 +327,13 @@ public class Client : IDisposable
     public async Task<TDPriceCandle[]?> GetPriceHistoryAsync(TDPriceHistoryRequest model)
     {
         var json = await GetPriceHistoryJsonAsync(model);
-        // if (!IsNullOrEmpty(json))
-        // {
-        //     var doc = JObject.Parse(json);
-        //     var inner = doc["candles"].ToObject<TDPriceCandle[]>();
-        //     return inner;
-        // }
-        return null;
+        if (IsNullOrEmpty(json))
+        {
+            return null;
+        }
+        var node = JsonNode.Parse(json);
+        var candles = node?["candles"].Deserialize<TDPriceCandle[]>(JsonOptions);
+        return candles;
     }
 
     /// <summary>
@@ -544,14 +544,12 @@ public class Client : IDisposable
         {
             throw new InvalidOperationException();
         }
-        var jsonHours = "";
         switch (marketType)
         {
             case MarketTypes.BOND:
                 break;
             case MarketTypes.EQUITY:
-                jsonHours = node["equity"]?["EQ"]?.ToJsonString();
-                break;
+                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.ETF:
                 break;
             case MarketTypes.FOREX:
@@ -567,16 +565,13 @@ public class Client : IDisposable
             case MarketTypes.MUTUAL_FUND:
                 break;
             case MarketTypes.OPTION:
-                jsonHours = node["option"]?["EQO"]?.ToJsonString();
-                break;
+                return node["option"]?["EQO"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.UNKNOWN:
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(marketType), marketType, null);
         }
-        var result = JsonSerializer.Deserialize<TDMarketHours>(jsonHours ?? throw new InvalidOperationException(), JsonOptions);
-        return result;
-    }
+        throw new InvalidOperationException();    }
 
     private async Task<string> SendRequestAsync(string path)
     {

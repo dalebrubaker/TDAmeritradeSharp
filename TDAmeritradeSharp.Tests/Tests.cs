@@ -212,7 +212,7 @@ public class Tests
     public async Task TestRealtimeStreamFuture()
     {
         using var socket = new ClientStream(_client);
-        var symbol = "/NQ";
+        const string Symbol = "/NQ";
 
         socket.OnHeartbeatSignal += o => { };
         socket.OnQuoteSignal += o => { };
@@ -221,9 +221,9 @@ public class Tests
         socket.OnBookSignal += o => { };
 
         await socket.Connect();
-        await socket.SubscribeQuoteAsync(symbol);
-        await socket.SubscribeChartAsync(symbol, TDChartSubs.CHART_FUTURES);
-        await socket.SubscribeTimeSaleAsync(symbol, TDTimeSaleServices.TIMESALE_FUTURES);
+        await socket.SubscribeQuoteAsync(Symbol);
+        await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_FUTURES);
+        await socket.SubscribeTimeSaleAsync(Symbol, TDTimeSaleServices.TIMESALE_FUTURES);
         await Task.Delay(2000);
         Assert.IsTrue(socket.IsConnected);
         await socket.Disconnect();
