@@ -27,6 +27,7 @@ public class Client : IDisposable
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
         JsonOptions.Converters.Add(new TDOptionChainConverter());
+        JsonOptions.Converters.Add(new TDOrderResponse.StringConverter()); // to avoid error converting Number to String
         var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
         if (!Directory.Exists(userSettingsDirectory))
         {
@@ -611,9 +612,9 @@ public class Client : IDisposable
 
     #region Accounts
 
-    public async Task<TDAccountModel> GetAccountAsync(string testAccount)
+    public async Task<TDAccountModel> GetAccountAsync(string accountId)
     {
-        var path = $"https://api.tdameritrade.com/v1/accounts//{testAccount}";
+        var path = $"https://api.tdameritrade.com/v1/accounts//{accountId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         var account = JsonSerializer.Deserialize<TDAccountModel>(json);
         return account ?? throw new InvalidOperationException();

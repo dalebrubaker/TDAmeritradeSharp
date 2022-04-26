@@ -355,7 +355,7 @@ public class TDRealtimeRequest
     public string? service { get; set; }
     public string? command { get; set; }
     public int requestid { get; set; }
-    public string? account { get; set; }
+    public string? account { get; set; } // the AccountId
     public string? source { get; set; }
     public object? parameters { get; set; }
 }

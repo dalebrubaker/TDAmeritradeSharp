@@ -1,6 +1,5 @@
 ﻿// ReSharper disable IdentifierTypo
 // ReSharper disable ClassNeverInstantiated.Global
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -146,8 +145,8 @@ public class ExecutionLeg
 
 public class TDOrder
 {
-      private string? _price;
-    private string? _stopPrice;
+    private double _price;
+    private double? _stopPrice;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.orderType orderType { get; set; }
@@ -163,70 +162,39 @@ public class TDOrder
 
     public List<OrderLegBase> orderLegCollection { get; set; } = new();
 
-    public List<IOrderBase> childOrderStrategies { get; set; } = new();
+    /// <summary>
+    /// Must be object, not IOrderBase, to get serialization in System.Text.Json
+    /// </summary>
+    public List<object> childOrderStrategies { get; set; } = new();
 
-    public string? price
+    public double price
     {
         get
         {
             // TDA enforces 2 or 4 digits this during ReplaceOrder
-            double.TryParse(_price, out var value);
-            if (value == 0)
-            {
-                return null;
-            }
-            var formatStr = value < 1 ? "f4" : "f2";
-            _price = value.ToString(formatStr, CultureInfo.InvariantCulture);
-            return _price;
+            var digits = _price < 1 ? 4 : 2;
+            var rounded = Math.Round(_price, digits);
+            return rounded;
         }
         set => _price = value;
     }
 
-    public string? stopPrice
+    public double? stopPrice
     {
         get
         {
-            // TDA enforces 2 or 4 digits this during ReplaceOrder
-            double.TryParse(_stopPrice, out var value);
-            if (value == 0)
+            if (_stopPrice == null)
             {
                 return null;
             }
-            var formatStr = value < 1 ? "f4" : "f2";
-            _stopPrice = value.ToString(formatStr, CultureInfo.InvariantCulture);
-            return _stopPrice;
+            // TDA enforces 2 or 4 digits this during ReplaceOrder
+            var digits = _stopPrice < 1 ? 4 : 2;
+            var rounded = Math.Round((double)_stopPrice, digits);
+            return rounded;
         }
         set => _stopPrice = value;
     }
 
-    /// <summary>
-    ///     Returns json without type names, suitable for sending to TD Ameritrade
-    /// </summary>
-    /// <returns></returns>
-    public string GetJson()
-    {
-        var json = JsonSerializer.Serialize(this);
-        if (orderType == TDOrderEnums.orderType.MARKET)
-        {
-            // Remove the price field
-            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
-            obj?.Remove("price");
-            json = JsonSerializer.Serialize(obj);
-        }
-        return json;
-    }
-
-    /// <summary>
-    ///     Return a deep clone of this order
-    /// </summary>
-    /// <returns></returns>
-    public TDOrder CloneDeep()
-    {
-        var json = JsonSerializer.Serialize(this);
-        var clone = JsonSerializer.Deserialize<TDOrder>(json);
-        return clone!;
-    }
-    
     public CancelTime cancelTime { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -276,10 +244,45 @@ public class TDOrder
 
     public string enteredTime { get; set; } = null!;
     public string closeTime { get; set; } = null!;
-    public string accountId { get; set; } = null!;
+    public long accountId { get; set; }
     public List<OrderActivity> orderActivityCollection { get; set; } = null!;
     public List<TDOrder> replacingOrderCollection { get; set; } = null!;
     public string statusDescription { get; set; } = null!;
+
+    /// <summary>
+    ///     Returns json without type names, suitable for sending to TD Ameritrade
+    /// </summary>
+    /// <returns></returns>
+    public string GetJson()
+    {
+        var json = JsonSerializer.Serialize(this);
+        if (orderType == TDOrderEnums.orderType.MARKET)
+        {
+            // Remove the price field
+            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+            obj?.Remove("price");
+            json = JsonSerializer.Serialize(obj);
+        }
+        if (orderType != TDOrderEnums.orderType.STOP && orderType != TDOrderEnums.orderType.STOP_LIMIT && orderType != TDOrderEnums.orderType.TRAILING_STOP_LIMIT)
+        {
+            // Remove the stopPrice field
+            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+            obj?.Remove("stopPrice");
+            json = JsonSerializer.Serialize(obj);
+        }
+        return json;
+    }
+
+    /// <summary>
+    ///     Return a deep clone of this order
+    /// </summary>
+    /// <returns></returns>
+    public TDOrder CloneDeep()
+    {
+        var json = JsonSerializer.Serialize(this);
+        var clone = JsonSerializer.Deserialize<TDOrder>(json);
+        return clone!;
+    }
 }
 
 public interface IOrderBase
@@ -291,13 +294,15 @@ public interface IOrderBase
     string GetJson();
 }
 
-
 public class OcoOrder
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.orderStrategyType orderStrategyType => TDOrderEnums.orderStrategyType.OCO;
 
-    public List<IOrderBase> childOrderStrategies { get; set; } = new();
+    /// <summary>
+    /// Must be object, not IOrderBase, to get serialization in System.Text.Json
+    /// </summary>
+    public List<object> childOrderStrategies { get; set; } = new();
 
     /// <summary>
     ///     Returns json without type names, suitable for sending to TD Ameritrade
@@ -312,9 +317,9 @@ public class OcoOrder
 
 public class EquityOrder : IOrderBase
 {
-    private string? _price;
+    private double _price;
 
-    private string? _stopPrice;
+    private double? _stopPrice;
 
     public EquityOrder()
     {
@@ -336,38 +341,35 @@ public class EquityOrder : IOrderBase
 
     public List<EquityOrderLeg> orderLegCollection { get; set; } = new();
 
-    public List<IOrderBase> childOrderStrategies { get; set; } = new();
+    /// <summary>
+    /// Must be object, not IOrderBase, to get serialization in System.Text.Json
+    /// </summary>
+    public List<object> childOrderStrategies { get; set; } = new();
 
-    public string? price
+    public double price
     {
         get
         {
             // TDA enforces 2 or 4 digits this during ReplaceOrder
-            double.TryParse(_price, out var value);
-            if (value == 0)
-            {
-                return null;
-            }
-            var formatStr = value < 1 ? "f4" : "f2";
-            _price = value.ToString(formatStr, CultureInfo.InvariantCulture);
-            return _price;
+            var digits = _price < 1 ? 4 : 2;
+            var rounded = Math.Round(_price, digits);
+            return rounded;
         }
         set => _price = value;
     }
 
-    public string? stopPrice
+    public double? stopPrice
     {
         get
         {
-            // TDA enforces 2 or 4 digits this during ReplaceOrder
-            double.TryParse(_stopPrice, out var value);
-            if (value == 0)
+            if (_stopPrice == null)
             {
                 return null;
             }
-            var formatStr = value < 1 ? "f4" : "f2";
-            _stopPrice = value.ToString(formatStr, CultureInfo.InvariantCulture);
-            return _stopPrice;
+            // TDA enforces 2 or 4 digits this during ReplaceOrder
+            var digits = _stopPrice < 1 ? 4 : 2;
+            var rounded = Math.Round((double)_stopPrice, digits);
+            return rounded;
         }
         set => _stopPrice = value;
     }
@@ -389,8 +391,15 @@ public class EquityOrder : IOrderBase
         if (orderType == TDOrderEnums.orderType.MARKET)
         {
             // Remove the price field
-            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+            var obj = JsonSerializer.Deserialize<JsonObject>(json);
             obj?.Remove("price");
+            json = JsonSerializer.Serialize(obj);
+        }
+        if (orderType != TDOrderEnums.orderType.STOP && orderType != TDOrderEnums.orderType.STOP_LIMIT && orderType != TDOrderEnums.orderType.TRAILING_STOP_LIMIT)
+        {
+            // Remove the stopPrice field
+            var obj = JsonSerializer.Deserialize<JsonObject>(json);
+            obj?.Remove("stopPrice");
             json = JsonSerializer.Serialize(obj);
         }
         return json;
@@ -528,5 +537,37 @@ public class TDOrderResponse
             result += $" {price}";
         }
         return result;
+    }
+
+    public class StringConverter : JsonConverter<string>
+    {
+        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            try
+            {
+                switch (reader.TokenType)
+                {
+                    case JsonTokenType.Number:
+                        {
+                            var stringValue = reader.GetInt32();
+                            return stringValue.ToString();
+                        }
+                    case JsonTokenType.String:
+                        return reader.GetString() ?? throw new InvalidOperationException();
+                    default:
+                        throw new JsonException();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value);
+        }
     }
 }

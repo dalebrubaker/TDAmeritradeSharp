@@ -63,7 +63,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture),
+            price = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -121,7 +121,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture),
+            price = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -147,7 +147,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture),
+            price = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -163,7 +163,7 @@ public class OrdersTests
 
         var replacementOrder = order.CloneDeep(); // attempt to avoid a fill
         limitPrice = close * 0.6;
-        replacementOrder.price = limitPrice.ToString(CultureInfo.InvariantCulture); 
+        replacementOrder.price = limitPrice; 
         replacementOrder.orderLegCollection[0].quantity = 2;
         var replacementOrderId = await _client.ReplaceOrderAsync(replacementOrder, _testAccountId, orderId);
         await _client.CancelOrderAsync(_testAccountId, replacementOrderId);
@@ -195,7 +195,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture), 
+            price = limitPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -227,7 +227,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture), 
+            price = limitPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -245,7 +245,7 @@ public class OrdersTests
 
         var replacementOrder = order.CloneDeep();
         var replacementLimitPrice = close * 0.6;
-        replacementOrder.price = replacementLimitPrice.ToString(CultureInfo.InvariantCulture);
+        replacementOrder.price = replacementLimitPrice;
         replacementOrder.orderLegCollection[0].quantity = 2;
         await _client.ReplaceSavedOrderAsync(replacementOrder, _testAccountId, savedOrder0.savedOrderId);
         var replacementOrders = (await _client.GetSavedOrdersByPathAsync(_testAccountId)).ToList();
@@ -278,7 +278,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.TRIGGER,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture), 
+            price = limitPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -296,7 +296,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = targetPrice.ToString(CultureInfo.InvariantCulture), 
+            price = targetPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -324,7 +324,7 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.TRIGGER,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture), 
+            price = limitPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.BUY,
@@ -341,7 +341,7 @@ public class OrdersTests
             orderType = TDOrderEnums.orderType.LIMIT,
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
-            price = targetPrice.ToString(CultureInfo.InvariantCulture), 
+            price = targetPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.SELL,
@@ -359,8 +359,8 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = limitPrice.ToString(CultureInfo.InvariantCulture), 
-            stopPrice = priceStop.ToString(CultureInfo.InvariantCulture), 
+            price = limitPrice, 
+            stopPrice = priceStop, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.SELL,
@@ -395,7 +395,7 @@ public class OrdersTests
             orderType = TDOrderEnums.orderType.LIMIT,
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
-            price = targetPrice.ToString(CultureInfo.InvariantCulture), 
+            price = targetPrice, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.SELL,
@@ -414,8 +414,8 @@ public class OrdersTests
             session = TDOrderEnums.session.NORMAL,
             duration = TDOrderEnums.duration.DAY,
             orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
-            price = price.ToString(CultureInfo.InvariantCulture), 
-            stopPrice = priceStop.ToString(CultureInfo.InvariantCulture), 
+            price = price, 
+            stopPrice = priceStop, 
             OrderLeg = new EquityOrderLeg
             {
                 instruction = TDOrderEnums.instruction.SELL,

@@ -138,6 +138,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task SubscribeChartAsync(string symbols, TDChartSubs service)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -147,7 +151,7 @@ public class ClientStream : IDisposable
                     service = service.ToString(),
                     command = "SUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -169,6 +173,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task UnsubscribeChartAsync(string symbols, TDChartSubs service)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -178,7 +186,7 @@ public class ClientStream : IDisposable
                     service = service.ToString(),
                     command = "UNSUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -198,6 +206,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task SubscribeQuoteAsync(string symbols)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -207,7 +219,7 @@ public class ClientStream : IDisposable
                     service = "QUOTE",
                     command = "SUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -229,6 +241,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task UnsubscribeQuoteAsync(string symbols)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -238,7 +254,7 @@ public class ClientStream : IDisposable
                     service = "QUOTE",
                     command = "UNSUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -260,6 +276,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task SubscribeTimeSaleAsync(string symbols, TDTimeSaleServices service)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -269,7 +289,7 @@ public class ClientStream : IDisposable
                     service = service.ToString(),
                     command = "SUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -292,6 +312,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task UnsubscribeTimeSaleAsync(string symbols, TDTimeSaleServices service)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -301,7 +325,7 @@ public class ClientStream : IDisposable
                     service = service.ToString(),
                     command = "UNSUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -321,6 +345,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task SubscribeBookAsync(string symbols, TDBookOptions option)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -330,7 +358,7 @@ public class ClientStream : IDisposable
                     service = option.ToString(),
                     command = "SUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -351,6 +379,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task UnsubscribeBookAsync(string symbols, TDBookOptions option)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -360,7 +392,7 @@ public class ClientStream : IDisposable
                     service = option.ToString(),
                     command = "UNSUBS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -381,6 +413,10 @@ public class ClientStream : IDisposable
     /// <returns></returns>
     public Task RequestQOSAsync(TDQOSLevels quality)
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -390,7 +426,7 @@ public class ClientStream : IDisposable
                     service = "ADMIN",
                     command = "QOS",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new
                     {
@@ -525,6 +561,10 @@ public class ClientStream : IDisposable
 
     private Task LogOutAsync()
     {
+        if (_account == null)
+        {
+            throw new InvalidOperationException();
+        }
         var request = new TDRealtimeRequestContainer
         {
             requests = new[]
@@ -534,7 +574,7 @@ public class ClientStream : IDisposable
                     service = "ADMIN",
                     command = "LOGOUT",
                     requestid = Interlocked.Increment(ref _counter),
-                    account = _account?.accountId,
+                    account = _account.accountId,
                     source = _prince?.streamerInfo?.appId,
                     parameters = new { }
                 }
