@@ -17,7 +17,6 @@ public class ClientStream : IDisposable
     private readonly TDStreamJsonProcessor _parser;
     private readonly SemaphoreSlim _slim = new(1);
     private TDAccount? _account;
-    private bool _connected;
     private int _counter;
     private TDPrincipal? _prince;
     private ClientWebSocket? _socket;
@@ -38,23 +37,12 @@ public class ClientStream : IDisposable
     /// <summary>
     ///     Is stream connected
     /// </summary>
-    public bool IsConnected
-    {
-        get => _connected;
-        private set
-        {
-            if (_connected == value)
-            {
-                return;
-            }
-            _connected = value;
-            OnConnect(value);
-        }
-    }
+    public bool IsConnected => _socket == null || _socket.State == WebSocketState.Open;
 
     public void Dispose()
     {
-        CleanupAsync();
+        var t = DisconnectAsync();
+        t.Wait(1000);
     }
 
     /// <summary>Client sent errors</summary>
@@ -111,13 +99,12 @@ public class ClientStream : IDisposable
             {
                 await LoginAsync();
                 ReceiveAsync();
-                IsConnected = true;
             }
         }
         catch (Exception ex)
         {
             OnException(ex);
-            CleanupAsync();
+            Dispose();
         }
     }
 
@@ -125,7 +112,7 @@ public class ClientStream : IDisposable
     ///     Disconnects from the live stream service and logs out
     /// </summary>
     /// <returns></returns>
-    public async Task Disconnect()
+    public async Task DisconnectAsync()
     {
         if (_socket != null)
         {
@@ -141,7 +128,6 @@ public class ClientStream : IDisposable
             }
             _socket = null;
         }
-        IsConnected = false;
     }
 
     /// <summary>
@@ -437,7 +423,7 @@ public class ClientStream : IDisposable
         catch (Exception ex)
         {
             OnException(ex);
-            CleanupAsync();
+            Dispose();
         }
         finally
         {
@@ -480,7 +466,7 @@ public class ClientStream : IDisposable
         catch (Exception ex)
         {
             OnException(ex);
-            CleanupAsync();
+            Dispose();
         }
     }
 
@@ -570,23 +556,5 @@ public class ClientStream : IDisposable
             OnException(ex);
             //Do not cleanup, this is a user code issue
         }
-    }
-
-    private async void CleanupAsync()
-    {
-        if (_socket != null)
-        {
-            if (_socket.State == WebSocketState.Open)
-            {
-                await LogOutAsync();
-                if (_socket != null)
-                {
-                    await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "NormalClosure", CancellationToken.None);
-                }
-            }
-            _socket?.Dispose();
-            _socket = null;
-        }
-        IsConnected = false;
     }
 }

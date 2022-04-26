@@ -207,9 +207,8 @@ public class Tests
         await socket.SubscribeTimeSaleAsync(symbol, TDTimeSaleServices.TIMESALE_EQUITY);
         await socket.SubscribeBookAsync(symbol, TDBookOptions.LISTED_BOOK);
         await socket.SubscribeBookAsync(symbol, TDBookOptions.NASDAQ_BOOK);
-        await Task.Delay(1000);
         Assert.IsTrue(socket.IsConnected);
-        await socket.Disconnect();
+        await socket.DisconnectAsync();
     }
 
     [Test]
@@ -228,9 +227,8 @@ public class Tests
         await socket.SubscribeQuoteAsync(Symbol);
         await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_FUTURES);
         await socket.SubscribeTimeSaleAsync(Symbol, TDTimeSaleServices.TIMESALE_FUTURES);
-        await Task.Delay(2000);
         Assert.IsTrue(socket.IsConnected);
-        await socket.Disconnect();
+        await socket.DisconnectAsync();
     }
 
     [Test]
