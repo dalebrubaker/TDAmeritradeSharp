@@ -192,6 +192,8 @@ public class OrderBase
 {
     private double _priceNumeric;
     private double _stopPriceNumeric;
+    private string? _stopPrice;
+    private string? _price;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.orderType orderType { get; set; }
@@ -209,32 +211,30 @@ public class OrderBase
 
     public List<OrderBase> childOrderStrategies { get; set; } = new();
 
-    public string? price { get; set; }
-
-    [JsonIgnore]
-    public double priceNumeric
+    public string? price
     {
-        get => _priceNumeric;
-        set
+        get
         {
             // TDA enforces 2 or 4 digits this during ReplaceOrder
-            _priceNumeric = Math.Round(value, value < 1 ? 4 : 2);
-            price = _priceNumeric.ToString(CultureInfo.InvariantCulture);
+            double.TryParse(_price, out var value);
+            var formatStr = value < 1 ? "f4" : "f2";
+            _price = value.ToString(formatStr, CultureInfo.InvariantCulture);
+            return _price;
         }
+        set => _price = value;
     }
 
-    public string? stopPrice { get; set; }
-
-    [JsonIgnore]
-    public double stopPriceNumeric
+    public string? stopPrice
     {
-        get => _stopPriceNumeric;
-        set
+        get
         {
             // TDA enforces 2 or 4 digits this during ReplaceOrder
-            _stopPriceNumeric = Math.Round(value, value < 1 ? 4 : 2);
-            stopPrice = _stopPriceNumeric.ToString(CultureInfo.InvariantCulture);
+            double.TryParse(_stopPrice, out var value);
+            var formatStr = value < 1 ? "f4" : "f2";
+            _stopPrice = value.ToString(formatStr, CultureInfo.InvariantCulture);
+            return _stopPrice;
         }
+        set => _stopPrice = value;
     }
 
     /// <summary>
@@ -247,8 +247,8 @@ public class OrderBase
         if (orderType == TDOrderEnums.orderType.MARKET)
         {
             // Remove the price field
-            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonNode;
-            // TODO obj?.Remove("price");
+            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+            obj?.Remove("price");
             json = JsonSerializer.Serialize(obj);
         }
         return json;
@@ -260,18 +260,8 @@ public class OrderBase
     /// <returns></returns>
     public OrderBase CloneDeep()
     {
-        // https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-6-0
-        // Must write a custom converter like https://docs.microsoft.com/en-us/dotnet/standard/serialization/system-text-json-converters-how-to?pivots=dotnet-6-0#support-polymorphic-deserialization
-        // TODO
-
-        // Must use settings in order to deserialize with proper derived classes
-        var settings = new JsonSerializerOptions
-        {
-            // TypeNameHandling = TypeNameHandling.All,
-            // ObjectCreationHandling = ObjectCreationHandling.Replace
-        };
-        var json = JsonSerializer.Serialize(this, settings);
-        var clone = JsonSerializer.Deserialize<OrderBase>(json, settings);
+        var json = JsonSerializer.Serialize(this);
+        var clone = JsonSerializer.Deserialize<OrderBase>(json);
         return clone!;
     }
 }
