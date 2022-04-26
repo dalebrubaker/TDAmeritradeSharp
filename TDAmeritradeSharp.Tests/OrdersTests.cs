@@ -58,14 +58,14 @@ public class OrdersTests
         var limitPrice = close * 0.5; // attempt to avoid a fill
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -78,10 +78,10 @@ public class OrdersTests
         var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
         Assert.AreEqual(orderId, orderPlaced.orderId);
         var allOrders = await _client.GetOrdersByPathAsync(_testAccountId, 2, DateTime.Today,
-            status: TDOrderModelsEnums.status.CANCELED);
+            status: TDOrderEnums.status.CANCELED);
         Assert.GreaterOrEqual(allOrders.Count(), 0);
         var allOrdersQuery = await _client.GetOrdersByQueryAsync(maxResults: 2, fromEnteredTime: DateTime.Today,
-            status: TDOrderModelsEnums.status.CANCELED);
+            status: TDOrderEnums.status.CANCELED);
         Assert.GreaterOrEqual(allOrdersQuery.Count(), 0);
         await _client.CancelOrderAsync(_testAccountId, orderId);
     }
@@ -92,13 +92,13 @@ public class OrdersTests
     {
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.MARKET,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.MARKET,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -115,14 +115,14 @@ public class OrdersTests
         var close = _testQuote.closePrice;
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = close * 0.5, // attempt to avoid a fill,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -140,14 +140,14 @@ public class OrdersTests
         var close = _testQuote.closePrice;
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = close * 0.5, // attempt to avoid a fill,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -187,14 +187,14 @@ public class OrdersTests
         var limitPrice = close * 0.5;
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -219,14 +219,14 @@ public class OrdersTests
         var limitPrice = close * 0.5;
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -270,14 +270,14 @@ public class OrdersTests
         var limitPrice = close * 0.5;
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.TRIGGER,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.TRIGGER,
             priceNumeric = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -287,14 +287,14 @@ public class OrdersTests
         };
         var childOrder = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = limitPrice + 5,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -315,14 +315,14 @@ public class OrdersTests
         var limitPrice = close * 0.5;
         var order = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.TRIGGER,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.TRIGGER,
             priceNumeric = limitPrice,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.BUY,
+                instruction = TDOrderEnums.instruction.BUY,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -332,13 +332,13 @@ public class OrdersTests
         };
         var target = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
             priceNumeric = close * 2,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
+                instruction = TDOrderEnums.instruction.SELL,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -348,15 +348,15 @@ public class OrdersTests
         };
         var stop = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.STOP_LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.STOP_LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = close * .5,
             stopPriceNumeric = close * .5 + .03,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
+                instruction = TDOrderEnums.instruction.SELL,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -370,7 +370,7 @@ public class OrdersTests
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
         var status = order2.status;
-        if (status != TDOrderModelsEnums.status.REJECTED)
+        if (status != TDOrderEnums.status.REJECTED)
         {
             await _client.CancelOrderAsync(_testAccountId, orderId);
         }
@@ -384,13 +384,13 @@ public class OrdersTests
         var order = new OcoOrder();
         var target = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
+            orderType = TDOrderEnums.orderType.LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
             priceNumeric = close * 2,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
+                instruction = TDOrderEnums.instruction.SELL,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -400,15 +400,15 @@ public class OrdersTests
         };
         var stop = new EquityOrder
         {
-            orderType = TDOrderModelsEnums.orderType.STOP_LIMIT,
-            session = TDOrderModelsEnums.session.NORMAL,
-            duration = TDOrderModelsEnums.duration.DAY,
-            orderStrategyType = TDOrderModelsEnums.orderStrategyType.SINGLE,
+            orderType = TDOrderEnums.orderType.STOP_LIMIT,
+            session = TDOrderEnums.session.NORMAL,
+            duration = TDOrderEnums.duration.DAY,
+            orderStrategyType = TDOrderEnums.orderStrategyType.SINGLE,
             priceNumeric = close * .5,
             stopPriceNumeric = close * .5 + .03,
             OrderLeg = new EquityOrderLeg
             {
-                instruction = TDOrderModelsEnums.instruction.SELL,
+                instruction = TDOrderEnums.instruction.SELL,
                 quantity = 1,
                 instrument = new EquityOrderInstrument
                 {
@@ -422,7 +422,7 @@ public class OrdersTests
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
         var status = order2.status;
-        if (status != TDOrderModelsEnums.status.REJECTED)
+        if (status != TDOrderEnums.status.REJECTED)
         {
             await _client.CancelOrderAsync(_testAccountId, orderId);
         }

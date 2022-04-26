@@ -1,7 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
 namespace TDAmeritradeSharpClient;
 
-public class TDOrderModelsEnums
+public class TDOrderEnums
 {
     [Serializable]
     public enum activityType

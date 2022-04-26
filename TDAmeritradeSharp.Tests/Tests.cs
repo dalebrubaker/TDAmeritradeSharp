@@ -195,18 +195,18 @@ public class Tests
     public async Task TestRealtimeStream()
     {
         using var socket = new ClientStream(_client);
-        var symbol = "SPY";
+        const string Symbol = "SPY";
         socket.OnHeartbeatSignal += o => { };
         socket.OnQuoteSignal += o => { };
         socket.OnTimeSaleSignal += o => { };
         socket.OnChartSignal += o => { };
         socket.OnBookSignal += o => { };
         await socket.Connect();
-        await socket.SubscribeQuoteAsync(symbol);
-        await socket.SubscribeChartAsync(symbol, TDChartSubs.CHART_EQUITY);
-        await socket.SubscribeTimeSaleAsync(symbol, TDTimeSaleServices.TIMESALE_EQUITY);
-        await socket.SubscribeBookAsync(symbol, TDBookOptions.LISTED_BOOK);
-        await socket.SubscribeBookAsync(symbol, TDBookOptions.NASDAQ_BOOK);
+        await socket.SubscribeQuoteAsync(Symbol);
+        await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_EQUITY);
+        await socket.SubscribeTimeSaleAsync(Symbol, TDTimeSaleServices.TIMESALE_EQUITY);
+        await socket.SubscribeBookAsync(Symbol, TDBookOptions.LISTED_BOOK);
+        await socket.SubscribeBookAsync(Symbol, TDBookOptions.NASDAQ_BOOK);
         Assert.IsTrue(socket.IsConnected);
         await socket.DisconnectAsync();
     }

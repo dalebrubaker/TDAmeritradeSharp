@@ -656,7 +656,7 @@ public class Client : IDisposable
     /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByPathAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
-        DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
+        DateTime? toEnteredTime = null, TDOrderEnums.status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);
@@ -706,7 +706,7 @@ public class Client : IDisposable
     ///     Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
-        DateTime? toEnteredTime = null, TDOrderModelsEnums.status? status = null)
+        DateTime? toEnteredTime = null, TDOrderEnums.status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);
