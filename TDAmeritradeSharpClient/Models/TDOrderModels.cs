@@ -39,88 +39,6 @@ public class OrderLeg
     }
 }
 
-public class EquityOrderInstrument
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.EQUITY;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-}
-
-public class FixedIncomeOrderInstrument
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.FIXED_INCOME;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    public string maturityDate { get; set; } = null!;
-    public double variableRate { get; set; }
-    public double factor { get; set; }
-}
-
-public class MutualFundOrderInstrument
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.MUTUAL_FUND;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.typeMutualFund type { get; set; }
-}
-
-public class CashEquivalentOrderInstrument
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.CASH_EQUIVALENT;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.typeCashEquivalent type { get; set; }
-}
-
-public class OptionOrderInstrument
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.OPTION;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.typeOption type { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.putCall putCall { get; set; }
-
-    public string underlyingSymbol { get; set; } = null!;
-    public double optionMultiplier { get; set; }
-    public List<OptionDeliverables> optionDeliverables { get; set; } = null!;
-}
-
-public class OptionDeliverables
-{
-    public string symbol { get; set; } = null!;
-    public double deliverableUnits { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.currencyType currencyType { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType { get; set; }
-}
-
 public class OrderActivity
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -163,7 +81,7 @@ public class TDOrder
     public List<OrderLegBase> orderLegCollection { get; set; } = new();
 
     /// <summary>
-    /// Must be object, not IOrderBase, to get serialization in System.Text.Json
+    ///     Must be object, not IOrderBase, to get serialization in System.Text.Json
     /// </summary>
     public List<object> childOrderStrategies { get; set; } = new();
 
@@ -299,9 +217,6 @@ public class OcoOrder
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.orderStrategyType orderStrategyType => TDOrderEnums.orderStrategyType.OCO;
 
-    /// <summary>
-    /// Must be object, not IOrderBase, to get serialization in System.Text.Json
-    /// </summary>
     public List<object> childOrderStrategies { get; set; } = new();
 
     /// <summary>
@@ -342,7 +257,7 @@ public class EquityOrder : IOrderBase
     public List<EquityOrderLeg> orderLegCollection { get; set; } = new();
 
     /// <summary>
-    /// Must be object, not IOrderBase, to get serialization in System.Text.Json
+    ///     Must be object, not IOrderBase, to get serialization in System.Text.Json
     /// </summary>
     public List<object> childOrderStrategies { get; set; } = new();
 
@@ -442,15 +357,6 @@ public class EquityOrderLeg
     public double quantity { get; set; }
 }
 
-public class Instrument
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType { get; set; }
-
-    public string cusip { get; set; } = null!;
-    public string symbol { get; set; } = null!;
-}
-
 public class TDOrderResponse
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -537,37 +443,5 @@ public class TDOrderResponse
             result += $" {price}";
         }
         return result;
-    }
-
-    public class StringConverter : JsonConverter<string>
-    {
-        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            try
-            {
-                switch (reader.TokenType)
-                {
-                    case JsonTokenType.Number:
-                        {
-                            var stringValue = reader.GetInt32();
-                            return stringValue.ToString();
-                        }
-                    case JsonTokenType.String:
-                        return reader.GetString() ?? throw new InvalidOperationException();
-                    default:
-                        throw new JsonException();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                throw;
-            }
-        }
-
-        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value);
-        }
     }
 }
