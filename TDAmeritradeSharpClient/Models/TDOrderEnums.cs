@@ -4,14 +4,14 @@ namespace TDAmeritradeSharpClient;
 public class TDOrderEnums
 {
     [Serializable]
-    public enum activityType
+    public enum ActivityType
     {
         EXECUTION,
         ORDER_ACTION
     }
 
     [Serializable]
-    public enum complexOrderStrategyType
+    public enum ComplexOrderStrategyType
     {
         NONE,
         COVERED,
@@ -36,7 +36,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum duration
+    public enum Duration
     {
         DAY,
         GOOD_TILL_CANCEL,
@@ -44,7 +44,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum orderType
+    public enum OrderType
     {
         MARKET,
         LIMIT,
@@ -60,7 +60,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum requestedDestination
+    public enum RequestedDestination
     {
         INET,
         ECN_ARCA,
@@ -77,7 +77,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum session
+    public enum Session
     {
         NORMAL,
         AM,
@@ -86,7 +86,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum stopPriceLinkBasis
+    public enum StopPriceLinkBasis
     {
         MANUAL,
         BASE,
@@ -100,7 +100,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum stopPriceLinkType
+    public enum StopPriceLinkType
     {
         VALUE,
         PERCENT,
@@ -108,7 +108,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum positionEffect
+    public enum PositionEffect
     {
         OPENING,
         CLOSING,
@@ -116,7 +116,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum priceLinkType
+    public enum PriceLinkType
     {
         VALUE,
         PERCENT,
@@ -124,7 +124,7 @@ public class TDOrderEnums
     }
 
     [Serializable]
-    public enum stopType
+    public enum StopType
     {
         STANDARD,
         BID,
@@ -134,7 +134,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum priceLinkBasis
+    public enum PriceLinkBasis
     {
         MANUAL,
         BASE,
@@ -148,7 +148,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum taxLotMethod
+    public enum TaxLotMethod
     {
         FIFO,
         LIFO,
@@ -159,7 +159,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum orderLegType
+    public enum OrderLegType
     {
         EQUITY,
         OPTION,
@@ -171,7 +171,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum assetType
+    public enum AssetType
     {
         EQUITY,
         OPTION,
@@ -183,7 +183,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum instruction
+    public enum Instruction
     {
         BUY,
         SELL,
@@ -197,7 +197,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum quantityType
+    public enum QuantityType
     {
         ALL_SHARES,
         DOLLARS,
@@ -205,7 +205,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum specialInstruction
+    public enum SpecialInstruction
     {
         ALL_OR_NONE,
         DO_NOT_REDUCE,
@@ -213,7 +213,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum orderStrategyType
+    public enum OrderStrategyType
     {
         SINGLE,
         OCO,
@@ -221,7 +221,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum status
+    public enum Status
     {
         AWAITING_PARENT_ORDER,
         AWAITING_CONDITION,
@@ -241,7 +241,7 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum typeMutualFund
+    public enum TypeMutualFund
     {
         NOT_APPLICABLE,
         OPEN_END_NON_TAXABLE,
@@ -251,14 +251,14 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum typeCashEquivalent
+    public enum TypeCashEquivalent
     {
         SAVINGS,
         MONEY_MARKET_FUND,
     }
     
     [Serializable]
-    public enum typeOption
+    public enum TypeOption
     {
         VANILLA,
         BINARY,
@@ -266,14 +266,14 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum putCall
+    public enum PutCall
     {
-        PUT,
-        CALL,
+        PUT = 0,
+        CALL = 1,
     }
     
     [Serializable]
-    public enum currencyType
+    public enum CurrencyType
     {
         USD,
         CAD,
@@ -282,16 +282,15 @@ public class TDOrderEnums
     }
     
     [Serializable]
-    public enum executionType
+    public enum ExecutionType
     {
         EXECUTION,
         ORDER_ACTION,
     }
     
     [Serializable]
-    public enum activityTypeExecution
+    public enum ActivityTypeExecution
     {
         FILL,
     }
-
 }

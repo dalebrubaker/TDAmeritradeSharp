@@ -17,17 +17,40 @@ public class Client : IDisposable
     public const string Success = "Authorization was successful";
     public JsonSerializerOptions JsonOptions { get; }
     private HttpClient _httpClient;
+    private readonly JsonSerializerOptions _jsonOptionsWithoutInstrumentConverter;
 
     public Client()
     {
         _httpClient = new HttpClient();
         JsonOptions = new JsonSerializerOptions
         {
+            AllowTrailingCommas = true,
+            Converters =
+            {
+                new StringConverter(),
+                new TDOptionChainConverter(),
+                new TDInstrumentConverter()
+            },
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            //NumberHandling = JsonNumberHandling.AllowReadingFromString
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
         };
-        JsonOptions.Converters.Add(new TDOptionChainConverter());
-        JsonOptions.Converters.Add(new TDOrderResponse.StringConverter()); // to avoid error converting Number to String
+        _jsonOptionsWithoutInstrumentConverter = new JsonSerializerOptions
+        {
+            AllowTrailingCommas = true,
+            Converters =
+            {
+                new StringConverter(),
+                new TDOptionChainConverter(),
+            },
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            //NumberHandling = JsonNumberHandling.AllowReadingFromString
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
         var userSettingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), nameof(TDAmeritradeSharpClient));
         if (!Directory.Exists(userSettingsDirectory))
         {
@@ -66,6 +89,36 @@ public class Client : IDisposable
         return string.IsNullOrEmpty(s) || s == "{}";
     }
 
+    /// <summary>
+    /// Use this to correctly serialize an instrument of any type
+    /// TDA Instruments are polymorphic.
+    /// </summary>
+    /// <param name="instrument"></param>
+    /// <returns></returns>
+    public string SerializeInstrument(TDInstrument instrument)
+    {
+        var json = JsonSerializer.Serialize(instrument, instrument.GetType(), _jsonOptionsWithoutInstrumentConverter);
+        
+        
+        var json2 = JsonSerializer.Serialize(instrument, instrument.GetType());
+        var instrument2 = JsonSerializer.Deserialize<InstrumentOption>(json);
+        
+        
+        return json;
+    }
+
+    /// <summary>
+    /// Use this to correctly deserialize to an instrument of the correct type.
+    /// TDA Instruments are polymorphic.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    public TDInstrument? DeserializeToInstrument(string json)
+    {
+        var instrument = JsonSerializer.Deserialize<TDInstrument>(json, JsonOptions);
+        return instrument;
+    }
+    
     #endregion
 
     #region Auth
@@ -655,7 +708,7 @@ public class Client : IDisposable
     /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByPathAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
-        DateTime? toEnteredTime = null, TDOrderEnums.status? status = null)
+        DateTime? toEnteredTime = null, TDOrderEnums.Status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);
@@ -705,7 +758,7 @@ public class Client : IDisposable
     ///     Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
     /// <returns>The list of orders matching this query.</returns>
     public async Task<IEnumerable<TDOrderResponse>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
-        DateTime? toEnteredTime = null, TDOrderEnums.status? status = null)
+        DateTime? toEnteredTime = null, TDOrderEnums.Status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
         var queryString = HttpUtility.ParseQueryString(string.Empty);

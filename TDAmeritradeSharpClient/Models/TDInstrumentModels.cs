@@ -2,95 +2,92 @@
 
 namespace TDAmeritradeSharpClient;
 
-public class Instrument
+
+/// <summary>
+/// TDInstrument is polymorphic as defined by TDA, so System.Json.Text requires that we use a TDInstrumentConverter
+/// </summary>
+public abstract class TDInstrument
 {
+    /// <summary>
+    /// This is used by the <see cref="TDInstrumentConverter"/> to determine which subclass to return
+    /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType { get; set; }
+    public abstract TDOrderEnums.AssetType AssetType { get; }
 
-    public string? cusip { get; set; } = null!;
-    public string symbol { get; set; } = "";
+    public string? Cusip { get; set; } = "";
+    public string Symbol { get; set; } = "";
 
-    public string? description { get; set; } = null;
+    public string? Description { get; set; } = null;
 }
 
-public class EquityOrderInstrument
+public class InstrumentEquity : TDInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.EQUITY;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.EQUITY;
 }
 
-public class FixedIncomeOrderInstrument
+public class InstrumentIndex : TDInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.FIXED_INCOME;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    public string maturityDate { get; set; } = null!;
-    public double variableRate { get; set; }
-    public double factor { get; set; }
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.INDEX;
 }
 
-public class MutualFundOrderInstrument
+
+public class InstrumentCurrency : TDInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.MUTUAL_FUND;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.typeMutualFund type { get; set; }
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.CURRENCY;
 }
 
-public class CashEquivalentOrderInstrument
+public class InstrumentFixedIncome : TDInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.CASH_EQUIVALENT;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.typeCashEquivalent type { get; set; }
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.FIXED_INCOME;
+    public string MaturityDate { get; set; } = "";
+    public double VariableRate { get; set; }
+    public double Factor { get; set; }
 }
 
-public class OptionOrderInstrument
+public class InstrumentMutualFund : TDInstrument
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType => TDOrderEnums.assetType.OPTION;
-
-    public string symbol { get; set; } = null!;
-    public string cusip { get; set; } = null!;
-    public string description { get; set; } = null!;
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.MUTUAL_FUND;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.typeOption type { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.putCall putCall { get; set; }
-
-    public string underlyingSymbol { get; set; } = null!;
-    public double optionMultiplier { get; set; }
-    public List<OptionDeliverables> optionDeliverables { get; set; } = null!;
+    public TDOrderEnums.TypeMutualFund Type { get; set; }
 }
 
-public class OptionDeliverables
+public class InstrumentCashEquivalent : TDInstrument
 {
-    public string symbol { get; set; } = null!;
-    public double deliverableUnits { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.CASH_EQUIVALENT;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.TypeCashEquivalent Type { get; set; }
+}
+
+public class InstrumentOption : TDInstrument
+{
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public override TDOrderEnums.AssetType AssetType { get; } = TDOrderEnums.AssetType.OPTION;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.TypeOption Type { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.currencyType currencyType { get; set; }
+    public TDOrderEnums.PutCall PutCall { get; set; }
+
+    public string UnderlyingSymbol { get; set; } = "";
+    public double OptionMultiplier { get; set; }
+    public List<OptionDeliverable>? OptionDeliverables { get; set; }
+}
+
+public class OptionDeliverable
+{
+    public string Symbol { get; set; } = "";
+    public double DeliverableUnits { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.assetType assetType { get; set; }
+    public TDOrderEnums.CurrencyType CurrencyType { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.AssetType AssetType { get; set; }
 }
