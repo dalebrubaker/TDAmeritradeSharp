@@ -1,7 +1,6 @@
 ﻿// ReSharper disable IdentifierTypo
 // ReSharper disable ClassNeverInstantiated.Global
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
@@ -25,13 +24,13 @@ public class OrderLeg
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.OrderLegType orderLegType { get; set; }
 
-    public double legId { get; set; }
+    public double? legId { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PositionEffect positionEffect { get; set; }
+    public TDOrderEnums.PositionEffect? positionEffect { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.QuantityType quantityType { get; set; }
+    public TDOrderEnums.QuantityType? quantityType { get; set; }
 
     public override string ToString()
     {
@@ -80,7 +79,7 @@ public class TDOrder
 
     public List<OrderLeg> orderLegCollection { get; set; } = new();
 
-    public List<TDOrder> childOrderStrategies { get; set; } = new();
+    public List<TDOrder>? childOrderStrategies { get; set; }
 
     public double price
     {
@@ -113,88 +112,67 @@ public class TDOrder
     public CancelTime cancelTime { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.ComplexOrderStrategyType complexOrderStrategyType { get; set; }
+    public TDOrderEnums.ComplexOrderStrategyType? complexOrderStrategyType { get; set; }
 
-    public double quantity { get; set; }
-    public double filledQuantity { get; set; }
-    public double remainingQuantity { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.RequestedDestination requestedDestination { get; set; }
-
-    public string destinationLinkName { get; set; } = null!;
-    public string releaseTime { get; set; } = null!;
+    public double? quantity { get; set; }
+    public double? filledQuantity { get; set; }
+    public double? remainingQuantity { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopPriceLinkBasis stopPriceLinkBasis { get; set; }
+    public TDOrderEnums.RequestedDestination? requestedDestination { get; set; }
+
+    public string? destinationLinkName { get; set; }
+    public string? releaseTime { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopPriceLinkType stopPriceLinkType { get; set; }
-
-    public double stopPriceOffset { get; set; }
+    public TDOrderEnums.StopPriceLinkBasis? stopPriceLinkBasis { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopType stopType { get; set; }
+    public TDOrderEnums.StopPriceLinkType? stopPriceLinkType { get; set; }
+
+    public double? stopPriceOffset { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PriceLinkBasis priceLinkBasis { get; set; }
+    public TDOrderEnums.StopType? stopType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PriceLinkType priceLinkType { get; set; }
+    public TDOrderEnums.PriceLinkBasis? priceLinkBasis { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.TaxLotMethod taxLotMethod { get; set; }
-
-    public double activationPrice { get; set; }
+    public TDOrderEnums.PriceLinkType? priceLinkType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.SpecialInstruction specialInstruction { get; set; }
+    public TDOrderEnums.TaxLotMethod? taxLotMethod { get; set; }
 
-    public long orderId { get; set; }
-    public bool cancelable { get; set; }
-    public bool editable { get; set; }
+    public double? activationPrice { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Status status { get; set; }
+    public TDOrderEnums.SpecialInstruction? specialInstruction { get; set; }
+
+    public long? orderId { get; set; }
+    public bool? cancelable { get; set; }
+    public bool? editable { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.Status? status { get; set; }
 
     public string enteredTime { get; set; } = null!;
     public string closeTime { get; set; } = null!;
-    public long accountId { get; set; }
+    public string? accountId { get; set; }
     public List<OrderActivity> orderActivityCollection { get; set; } = null!;
     public List<TDOrder> replacingOrderCollection { get; set; } = null!;
-    public string statusDescription { get; set; } = null!;
-
-    /// <summary>
-    ///     Returns json without type names, suitable for sending to TD Ameritrade
-    /// </summary>
-    /// <returns></returns>
-    public string GetJson()
-    {
-        var json = JsonSerializer.Serialize(this);
-        if (orderType == TDOrderEnums.OrderType.MARKET)
-        {
-            // Remove the price field
-            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
-            obj?.Remove("price");
-            json = JsonSerializer.Serialize(obj);
-        }
-        if (orderType != TDOrderEnums.OrderType.STOP && orderType != TDOrderEnums.OrderType.STOP_LIMIT && orderType != TDOrderEnums.OrderType.TRAILING_STOP_LIMIT)
-        {
-            // Remove the stopPrice field
-            var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
-            obj?.Remove("stopPrice");
-            json = JsonSerializer.Serialize(obj);
-        }
-        return json;
-    }
+    public string? statusDescription { get; set; }
 }
 
+/// <summary>
+/// Use this when you only want child orders
+/// </summary>
 public class OcoOrder
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.OrderStrategyType orderStrategyType => TDOrderEnums.OrderStrategyType.OCO;
 
-    public List<object> childOrderStrategies { get; set; } = new();
+    public List<TDOrder> childOrderStrategies { get; set; } = new();
 
     /// <summary>
     ///     Returns json without type names, suitable for sending to TD Ameritrade
@@ -206,8 +184,6 @@ public class OcoOrder
         return json;
     }
 }
-
-
 
 public class TDOrderResponse
 {

@@ -15,9 +15,8 @@ namespace TDAmeritradeSharpClient;
 public class Client : IDisposable
 {
     public const string Success = "Authorization was successful";
-    public JsonSerializerOptions JsonOptions { get; }
-    private HttpClient _httpClient;
     private readonly JsonSerializerOptions _jsonOptionsWithoutInstrumentConverter;
+    private HttpClient _httpClient;
 
     public Client()
     {
@@ -31,9 +30,8 @@ public class Client : IDisposable
                 new TDOptionChainConverter(),
                 new TDInstrumentConverter()
             },
-            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-            //NumberHandling = JsonNumberHandling.AllowReadingFromString
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         };
@@ -43,11 +41,10 @@ public class Client : IDisposable
             Converters =
             {
                 new StringConverter(),
-                new TDOptionChainConverter(),
+                new TDOptionChainConverter()
             },
-            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-            //NumberHandling = JsonNumberHandling.AllowReadingFromString
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         };
@@ -59,6 +56,8 @@ public class Client : IDisposable
         PathAuthValues = Path.Combine(userSettingsDirectory, $"{nameof(TDAmeritradeSharpClient)}.json");
         LoadAuthResult();
     }
+
+    public JsonSerializerOptions JsonOptions { get; }
 
     /// <summary>
     ///     The fully-qualified path to the json file in Users that holds the Authorization information
@@ -90,26 +89,20 @@ public class Client : IDisposable
     }
 
     /// <summary>
-    /// Use this to correctly serialize an instrument of any type
-    /// TDA Instruments are polymorphic.
+    ///     Use this to correctly serialize an instrument of any type
+    ///     TDA Instruments are polymorphic.
     /// </summary>
     /// <param name="instrument"></param>
     /// <returns></returns>
     public string SerializeInstrument(TDInstrument instrument)
     {
         var json = JsonSerializer.Serialize(instrument, instrument.GetType(), _jsonOptionsWithoutInstrumentConverter);
-        
-        
-        var json2 = JsonSerializer.Serialize(instrument, instrument.GetType());
-        var instrument2 = JsonSerializer.Deserialize<InstrumentOption>(json);
-        
-        
         return json;
     }
 
     /// <summary>
-    /// Use this to correctly deserialize to an instrument of the correct type.
-    /// TDA Instruments are polymorphic.
+    ///     Use this to correctly deserialize to an instrument of the correct type.
+    ///     TDA Instruments are polymorphic.
     /// </summary>
     /// <param name="json"></param>
     /// <returns></returns>
@@ -118,7 +111,7 @@ public class Client : IDisposable
         var instrument = JsonSerializer.Deserialize<TDInstrument>(json, JsonOptions);
         return instrument;
     }
-    
+
     /// <summary>
     ///     Return a deep clone of this order
     /// </summary>
@@ -128,6 +121,66 @@ public class Client : IDisposable
         var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
         var clone = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
         return clone!;
+    }
+
+    /// <summary>
+    ///     Get the json for order with fields removed that would cause and order in PlaceOrder
+    /// </summary>
+    /// <param name="order"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public string GetPlaceOrderJson(TDOrder order)
+    {
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+
+        // "error": "Following parameters are not allowed when placing an order: orderId,status,accountId,filledQuantity,remainingQuantity"
+        var root = JsonNode.Parse(json);
+        var rootObj = root as JsonObject;
+        if (rootObj == null)
+        {
+            throw new InvalidOperationException();
+        }
+        rootObj.Remove("orderId");
+        rootObj.Remove("status");
+        rootObj.Remove("accountId");
+        rootObj.Remove("filledQuantity");
+        rootObj.Remove("remainingQuantity");
+
+        //"error": "A requestedDestination cannot be specified. Equity direct routing is not enabled for this account."
+        rootObj.Remove("requestedDestination");
+
+        // "error": "Following parameters are not allowed when placing an order: positionEffect,instrument cusip"
+        rootObj.TryGetPropertyValue("orderLegCollection", out var orderLegCollectionNode);
+        var orderLegArray = orderLegCollectionNode?.AsArray();
+        foreach (var orderLegNode in orderLegArray!)
+        {
+            var orderLegObj = (JsonObject)orderLegNode!;
+            orderLegObj.Remove("positionEffect");
+            orderLegObj.TryGetPropertyValue("instrument", out var instrumentNode);
+            var instrumentObj = (JsonObject)instrumentNode!;
+            instrumentObj.Remove("cusip");
+        }
+
+        json = rootObj.ToJsonString();
+        // if (order.orderType == TDOrderEnums.OrderType.MARKET)
+        // {
+        //     // Remove the price field
+        //     var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+        //     obj?.Remove("price");
+        //     json = JsonSerializer.Serialize(obj);
+        // }
+        // if (order.orderType != TDOrderEnums.OrderType.STOP && order.orderType != TDOrderEnums.OrderType.STOP_LIMIT && order.orderType != TDOrderEnums.OrderType.TRAILING_STOP_LIMIT)
+        // {
+        //     // Remove the stopPrice field
+        //     var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
+        //     obj?.Remove("stopPrice");
+        //     json = JsonSerializer.Serialize(obj);
+        // }
+        if (json == "null")
+        {
+            throw new InvalidOperationException();
+        }
+        return json;
     }
     
     #endregion Helpers
@@ -623,7 +676,7 @@ public class Client : IDisposable
             case MarketTypes.BOND:
                 break;
             case MarketTypes.EQUITY:
-                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>((JsonOptions)) ?? throw new InvalidOperationException();
+                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.ETF:
                 break;
             case MarketTypes.FOREX:
@@ -702,7 +755,7 @@ public class Client : IDisposable
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonSerializer.Deserialize<TDOrderResponse>(json);
+        var result = JsonSerializer.Deserialize<TDOrderResponse>(json, JsonOptions);
         return result ?? throw new InvalidOperationException();
     }
 
@@ -745,7 +798,7 @@ public class Client : IDisposable
         try
         {
             //var result0 = JsonSerializer.Deserialize(json);
-            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
             return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
@@ -799,7 +852,7 @@ public class Client : IDisposable
         try
         {
             //var result0 = JsonSerializer.Deserialize(json);
-            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
             return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
@@ -834,7 +887,7 @@ public class Client : IDisposable
     public async Task<long> PlaceOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = order.GetJson();
+        var json = GetPlaceOrderJson(order);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -852,7 +905,7 @@ public class Client : IDisposable
     }
 
     /// <summary>
-    ///     Places an order and returns its orderId
+    ///     Places an oco order and returns its orderId
     /// </summary>
     /// <param name="order">The order to be placed.</param>
     /// <param name="accountId">The accountId</param>
@@ -861,7 +914,7 @@ public class Client : IDisposable
     public async Task<long> PlaceOcoOrderAsync(OcoOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = order.GetJson();
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -888,7 +941,7 @@ public class Client : IDisposable
     /// <exception cref="Exception"></exception>
     public async Task<long> ReplaceOrderAsync(TDOrder replacementOrder, string accountId, long orderId)
     {
-        var json = replacementOrder.GetJson();
+        var json = GetPlaceOrderJson(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
@@ -916,7 +969,7 @@ public class Client : IDisposable
     public async Task CreateSavedOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
-        var json = order.GetJson();
+        var json = GetPlaceOrderJson(order);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -932,7 +985,7 @@ public class Client : IDisposable
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonSerializer.Deserialize<TDOrderResponse>(json);
+        var result = JsonSerializer.Deserialize<TDOrderResponse>(json, JsonOptions);
         return result ?? throw new InvalidOperationException();
     }
 
@@ -942,7 +995,7 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
             return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
@@ -977,7 +1030,7 @@ public class Client : IDisposable
     /// <exception cref="Exception"></exception>
     public async Task ReplaceSavedOrderAsync(TDOrder replacementOrder, string accountId, long savedOrderId)
     {
-        var json = replacementOrder.GetJson();
+        var json = GetPlaceOrderJson(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);

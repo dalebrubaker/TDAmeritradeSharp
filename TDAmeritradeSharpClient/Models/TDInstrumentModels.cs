@@ -14,7 +14,7 @@ public abstract class TDInstrument
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public abstract TDOrderEnums.AssetType AssetType { get; }
 
-    public string? Cusip { get; set; } = "";
+    public string? Cusip { get; set; }
     public string Symbol { get; set; } = "";
 
     public string? Description { get; set; } = null;

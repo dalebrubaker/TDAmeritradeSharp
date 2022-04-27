@@ -181,7 +181,7 @@ public class OrdersTests
             }
         };
         var clone = _client.CloneDeep(order);
-        Assert.AreEqual(order.GetJson(), clone.GetJson());
+        Assert.AreEqual(_client.GetPlaceOrderJson(order), _client.GetPlaceOrderJson(clone));
     }
 
     [Test]
@@ -370,7 +370,7 @@ public class OrdersTests
                 }
             }
         };
-        order.childOrderStrategies.Add(childOrder);
+        order.childOrderStrategies = new List<TDOrder> { childOrder };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         await _client.CancelOrderAsync(_testAccountId, orderId);
     }
@@ -443,8 +443,11 @@ public class OrdersTests
                 }
             }
         };
-        order.childOrderStrategies.Add(target);
-        order.childOrderStrategies.Add(stop);
+        order.childOrderStrategies = new List<TDOrder> 
+            { 
+                target, 
+                stop
+            };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
@@ -504,8 +507,11 @@ public class OrdersTests
                 }
             }
         };
-        order.childOrderStrategies.Add(target);
-        order.childOrderStrategies.Add(stop);
+        order.childOrderStrategies = new List<TDOrder>
+        {
+            target,
+            stop
+        };
         var orderId = await _client.PlaceOcoOrderAsync(order, _testAccountId).ConfigureAwait(false);
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
