@@ -110,7 +110,7 @@ public class TDStreamJsonProcessor
 
     private void ParseHeartbeat(long timestamp)
     {
-        var model = new TDHeartbeatSignal { timestamp = timestamp };
+        var model = new TDHeartbeatSignal { Timestamp = timestamp };
         OnHeartbeatSignal(model);
     }
 
@@ -118,8 +118,8 @@ public class TDStreamJsonProcessor
     {
         var model = new TDBookSignal
         {
-            timestamp = timestamp,
-            id = (TDBookOptions)Enum.Parse(typeof(TDBookOptions), service)
+            Timestamp = timestamp,
+            _id = (TDBookOptions)Enum.Parse(typeof(TDBookOptions), service)
         };
         foreach (var item in content)
         {
@@ -130,18 +130,18 @@ public class TDStreamJsonProcessor
             switch (item.Key)
             {
                 case "key":
-                    model.symbol = item.Value.GetValue<string>();
+                    model.Symbol = item.Value.GetValue<string>();
                     break;
                 //case "1":
                 //    model.booktime = item.Value.Value<long>();
                 //    break;
                 case "2":
                     var arrayBids = item.Value.AsArray();
-                    model.bids = arrayBids.Deserialize<TDBookLevel[]>()!;
+                    model._bids = arrayBids.Deserialize<TDBookLevel[]>()!;
                     break;
                 case "3":
                     var arrayAsks = item.Value.AsArray();
-                    model.asks = arrayAsks.Deserialize<TDBookLevel[]>()!;
+                    model._asks = arrayAsks.Deserialize<TDBookLevel[]>()!;
                     break;
             }
         }
@@ -152,7 +152,7 @@ public class TDStreamJsonProcessor
     {
         var model = new TDChartSignal
         {
-            timestamp = timestamp
+            Timestamp = timestamp
         };
         foreach (var item in content)
         {
@@ -163,28 +163,28 @@ public class TDStreamJsonProcessor
             switch (item.Key)
             {
                 case "key":
-                    model.symbol = item.Value.GetValue<string>();
+                    model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "seq":
-                    model.sequence = item.Value.GetValue<long>();
+                    model._sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model.charttime = item.Value.GetValue<long>();
+                    model._charttime = item.Value.GetValue<long>();
                     break;
                 case "2":
-                    model.openprice = item.Value.GetValue<double>();
+                    model._openprice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model.highprice = item.Value.GetValue<double>();
+                    model._highprice = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model.lowprice = item.Value.GetValue<double>();
+                    model._lowprice = item.Value.GetValue<double>();
                     break;
                 case "5":
-                    model.closeprice = item.Value.GetValue<double>();
+                    model._closeprice = item.Value.GetValue<double>();
                     break;
                 case "6":
-                    model.volume = item.Value.GetValue<double>();
+                    model._volume = item.Value.GetValue<double>();
                     break;
             }
         }
@@ -195,7 +195,7 @@ public class TDStreamJsonProcessor
     {
         var model = new TDChartSignal
         {
-            timestamp = timestamp
+            Timestamp = timestamp
         };
         foreach (var item in content)
         {
@@ -206,34 +206,34 @@ public class TDStreamJsonProcessor
             switch (item.Key)
             {
                 case "key":
-                    model.symbol = item.Value.GetValue<string>();
+                    model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "seq":
-                    model.sequence = item.Value.GetValue<long>();
+                    model._sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model.openprice = item.Value.GetValue<double>();
+                    model._openprice = item.Value.GetValue<double>();
                     break;
                 case "2":
-                    model.highprice = item.Value.GetValue<double>();
+                    model._highprice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model.lowprice = item.Value.GetValue<double>();
+                    model._lowprice = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model.closeprice = item.Value.GetValue<double>();
+                    model._closeprice = item.Value.GetValue<double>();
                     break;
                 case "5":
-                    model.volume = item.Value.GetValue<double>();
+                    model._volume = item.Value.GetValue<double>();
                     break;
                 case "6":
-                    model.sequence = item.Value.GetValue<long>();
+                    model._sequence = item.Value.GetValue<long>();
                     break;
                 case "7":
-                    model.charttime = item.Value.GetValue<long>();
+                    model._charttime = item.Value.GetValue<long>();
                     break;
                 case "8":
-                    model.chartday = item.Value.GetValue<int>();
+                    model._chartday = item.Value.GetValue<int>();
                     break;
             }
         }
@@ -244,7 +244,7 @@ public class TDStreamJsonProcessor
     {
         var model = new TDTimeSaleSignal
         {
-            timestamp = tmstamp
+            Timestamp = tmstamp
         };
         foreach (var item in content)
         {
@@ -255,22 +255,22 @@ public class TDStreamJsonProcessor
             switch (item.Key)
             {
                 case "key":
-                    model.symbol = item.Value.GetValue<string>();
+                    model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "seq":
-                    model.sequence = item.Value.GetValue<long>();
+                    model._sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model.tradetime = item.Value.GetValue<long>();
+                    model._tradetime = item.Value.GetValue<long>();
                     break;
                 case "2":
-                    model.lastprice = item.Value.GetValue<double>();
+                    model._lastprice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model.lastsize = item.Value.GetValue<double>();
+                    model._lastsize = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model.lastsequence = item.Value.GetValue<long>();
+                    model._lastsequence = item.Value.GetValue<long>();
                     break;
             }
         }
@@ -281,7 +281,7 @@ public class TDStreamJsonProcessor
     {
         var model = new TDQuoteSignal
         {
-            timestamp = timestamp
+            Timestamp = timestamp
         };
         foreach (var item in content)
         {
@@ -292,58 +292,58 @@ public class TDStreamJsonProcessor
             switch (item.Key)
             {
                 case "key":
-                    model.symbol = item.Value.GetValue<string>();
+                    model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "1":
-                    model.bidprice = item.Value.GetValue<double>();
+                    model._bidprice = item.Value.GetValue<double>();
                     break;
                 case "2":
-                    model.askprice = item.Value.GetValue<double>();
+                    model._askprice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model.lastprice = item.Value.GetValue<double>();
+                    model._lastprice = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model.bidsize = item.Value.GetValue<double>();
+                    model._bidsize = item.Value.GetValue<double>();
                     break;
                 case "5":
-                    model.asksize = item.Value.GetValue<double>();
+                    model._asksize = item.Value.GetValue<double>();
                     break;
                 case "6":
-                    model.askid = item.Value.GetValue<char>();
+                    model._askid = item.Value.GetValue<char>();
                     break;
                 case "7":
-                    model.bidid = item.Value.GetValue<char>();
+                    model._bidid = item.Value.GetValue<char>();
                     break;
                 case "8":
-                    model.totalvolume = item.Value.GetValue<long>();
+                    model._totalvolume = item.Value.GetValue<long>();
                     break;
                 case "9":
-                    model.lastsize = item.Value.GetValue<double>();
+                    model._lastsize = item.Value.GetValue<double>();
                     break;
                 case "10":
-                    model.tradetime = item.Value.GetValue<long>();
+                    model._tradetime = item.Value.GetValue<long>();
                     break;
                 case "11":
-                    model.quotetime = item.Value.GetValue<long>();
+                    model._quotetime = item.Value.GetValue<long>();
                     break;
                 case "12":
-                    model.highprice = item.Value.GetValue<double>();
+                    model._highprice = item.Value.GetValue<double>();
                     break;
                 case "13":
-                    model.lowprice = item.Value.GetValue<double>();
+                    model._lowprice = item.Value.GetValue<double>();
                     break;
                 case "14":
-                    model.bidtick = item.Value.GetValue<char>();
+                    model._bidtick = item.Value.GetValue<char>();
                     break;
                 case "15":
-                    model.closeprice = item.Value.GetValue<double>();
+                    model._closeprice = item.Value.GetValue<double>();
                     break;
                 case "24":
-                    model.volatility = item.Value.GetValue<double>();
+                    model._volatility = item.Value.GetValue<double>();
                     break;
                 case "28":
-                    model.openprice = item.Value.GetValue<double>();
+                    model._openprice = item.Value.GetValue<double>();
                     break;
             }
         }

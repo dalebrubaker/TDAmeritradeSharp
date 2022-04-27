@@ -1,148 +1,147 @@
-﻿// ReSharper disable InconsistentNaming
-namespace TDAmeritradeSharpClient;
+﻿namespace TDAmeritradeSharpClient;
 
 [Serializable]
 public abstract class TDQuoteBase
 {
-    public string? symbol { get; set; }
-    public string? description { get; set; }
-    public string? exchangeName { get; set; }
-    public string? securityStatus { get; set; }
+    public string? Symbol { get; set; }
+    public string? Description { get; set; }
+    public string? ExchangeName { get; set; }
+    public string? SecurityStatus { get; set; }
 
     public override string ToString()
     {
-        return symbol!;
+        return Symbol!;
     }
 }
 
 [Serializable]
 public class MarketQuoteBase : TDQuoteBase
 {
-    public double bidPrice { get; set; }
-    public double bidSize { get; set; }
-    public double askPrice { get; set; }
-    public double askSize { get; set; }
-    public double lastPrice { get; set; }
-    public double lastSize { get; set; }
-    public double openPrice { get; set; }
-    public double highPrice { get; set; }
-    public double lowPrice { get; set; }
-    public double closePrice { get; set; }
-    public double netChange { get; set; }
-    public double totalVolume { get; set; }
-    public long quoteTimeInLong { get; set; }
-    public long tradeTimeInLong { get; set; }
-    public double mark { get; set; }
-    public string? exchange { get; set; }
-    public double volatility { get; set; }
+    public double BidPrice { get; set; }
+    public double BidSize { get; set; }
+    public double AskPrice { get; set; }
+    public double AskSize { get; set; }
+    public double LastPrice { get; set; }
+    public double LastSize { get; set; }
+    public double OpenPrice { get; set; }
+    public double HighPrice { get; set; }
+    public double LowPrice { get; set; }
+    public double ClosePrice { get; set; }
+    public double NetChange { get; set; }
+    public double TotalVolume { get; set; }
+    public long QuoteTimeInLong { get; set; }
+    public long TradeTimeInLong { get; set; }
+    public double Mark { get; set; }
+    public string? Exchange { get; set; }
+    public double Volatility { get; set; }
 }
 
 [Serializable]
 public class TDEquityQuote : MarketQuoteBase
 {
-    public string? bidId { get; set; }
-    public string? askId { get; set; }
-    public string? lastId { get; set; }
-    public bool marginable { get; set; }
-    public bool shortable { get; set; }
-    public int digits { get; set; }
+    public string? BidId { get; set; }
+    public string? AskId { get; set; }
+    public string? LastId { get; set; }
+    public bool Marginable { get; set; }
+    public bool Shortable { get; set; }
+    public int Digits { get; set; }
     public double _52WkHigh { get; set; }
     public double _52WkLow { get; set; }
-    public double peRatio { get; set; }
-    public double divAmount { get; set; }
-    public double divYield { get; set; }
-    public string? divDate { get; set; }
-    public double regularMarketLastPrice { get; set; }
-    public double regularMarketLastSize { get; set; }
-    public double regularMarketNetChange { get; set; }
-    public long regularMarketTradeTimeInLong { get; set; }
+    public double PeRatio { get; set; }
+    public double DivAmount { get; set; }
+    public double DivYield { get; set; }
+    public string? DivDate { get; set; }
+    public double RegularMarketLastPrice { get; set; }
+    public double RegularMarketLastSize { get; set; }
+    public double RegularMarketNetChange { get; set; }
+    public long RegularMarketTradeTimeInLong { get; set; }
 }
 
 [Serializable]
 public class TDFundQuote : TDQuoteBase
 {
-    public double closePrice { get; set; }
-    public double netChange { get; set; }
-    public double totalVolume { get; set; }
-    public long tradeTimeInLong { get; set; }
-    public string? exchange { get; set; }
-    public int digits { get; set; }
+    public double ClosePrice { get; set; }
+    public double NetChange { get; set; }
+    public double TotalVolume { get; set; }
+    public long TradeTimeInLong { get; set; }
+    public string? Exchange { get; set; }
+    public int Digits { get; set; }
     public double _52WkHigh { get; set; }
     public double _52WkLow { get; set; }
-    public double nAV { get; set; }
-    public double peRatio { get; set; }
-    public double divAmount { get; set; }
-    public double divYield { get; set; }
-    public string? divDate { get; set; }
+    public double NAv { get; set; }
+    public double PeRatio { get; set; }
+    public double DivAmount { get; set; }
+    public double DivYield { get; set; }
+    public string? DivDate { get; set; }
 }
 
 [Serializable]
 public class FutureQuote : TDQuoteBase
 {
-    public double bidPriceInDouble { get; set; }
-    public double askPriceInDouble { get; set; }
-    public double lastPriceInDouble { get; set; }
-    public string? bidId { get; set; }
-    public string? askId { get; set; }
-    public double highPriceInDouble { get; set; }
-    public double lowPriceInDouble { get; set; }
-    public double closePriceInDouble { get; set; }
-    public string? exchange { get; set; }
-    public string? lastId { get; set; }
-    public double openPriceInDouble { get; set; }
-    public double changeInDouble { get; set; }
-    public double futurePercentChange { get; set; }
-    public double openInterest { get; set; }
-    public double mark { get; set; }
-    public double tick { get; set; }
-    public double tickAmount { get; set; }
-    public string? product { get; set; }
-    public string? futurePriceFormat { get; set; }
-    public string? futureTradingHours { get; set; }
-    public bool futureIsTradable { get; set; }
-    public double futureMultiplier { get; set; }
-    public bool futureIsActive { get; set; }
-    public double futureSettlementPrice { get; set; }
-    public string? futureActiveSymbol { get; set; }
-    public double futureExpirationDate { get; set; }
+    public double BidPriceInDouble { get; set; }
+    public double AskPriceInDouble { get; set; }
+    public double LastPriceInDouble { get; set; }
+    public string? BidId { get; set; }
+    public string? AskId { get; set; }
+    public double HighPriceInDouble { get; set; }
+    public double LowPriceInDouble { get; set; }
+    public double ClosePriceInDouble { get; set; }
+    public string? Exchange { get; set; }
+    public string? LastId { get; set; }
+    public double OpenPriceInDouble { get; set; }
+    public double ChangeInDouble { get; set; }
+    public double FuturePercentChange { get; set; }
+    public double OpenInterest { get; set; }
+    public double Mark { get; set; }
+    public double Tick { get; set; }
+    public double TickAmount { get; set; }
+    public string? Product { get; set; }
+    public string? FuturePriceFormat { get; set; }
+    public string? FutureTradingHours { get; set; }
+    public bool FutureIsTradable { get; set; }
+    public double FutureMultiplier { get; set; }
+    public bool FutureIsActive { get; set; }
+    public double FutureSettlementPrice { get; set; }
+    public string? FutureActiveSymbol { get; set; }
+    public double FutureExpirationDate { get; set; }
 }
 
 [Serializable]
 public class FutureOptionsQuote : TDQuoteBase
 {
-    public double bidPriceInDouble { get; set; }
-    public double askPriceInDouble { get; set; }
-    public double lastPriceInDouble { get; set; }
-    public double highPriceInDouble { get; set; }
-    public double lowPriceInDouble { get; set; }
-    public double closePriceInDouble { get; set; }
-    public double openPriceInDouble { get; set; }
-    public double netChangeInDouble { get; set; }
-    public double openInterest { get; set; }
-    public double volatility { get; set; }
-    public double moneyIntrinsicValueInDouble { get; set; }
-    public double multiplierInDouble { get; set; }
-    public int digits { get; set; }
-    public double strikePriceInDouble { get; set; }
-    public string? contractType { get; set; }
-    public string? underlying { get; set; }
-    public double timeValueInDouble { get; set; }
-    public double deltaInDouble { get; set; }
-    public double gammaInDouble { get; set; }
-    public double thetaInDouble { get; set; }
-    public double vegaInDouble { get; set; }
-    public double rhoInDouble { get; set; }
-    public double mark { get; set; }
-    public double tick { get; set; }
-    public double tickAmount { get; set; }
-    public bool futureIsTradable { get; set; }
-    public string? futureTradingHours { get; set; }
-    public double futurePercentChange { get; set; }
-    public bool futureIsActive { get; set; }
-    public double futureExpirationDate { get; set; }
-    public string? expirationType { get; set; }
-    public string? exerciseType { get; set; }
-    public bool inTheMoney { get; set; }
+    public double BidPriceInDouble { get; set; }
+    public double AskPriceInDouble { get; set; }
+    public double LastPriceInDouble { get; set; }
+    public double HighPriceInDouble { get; set; }
+    public double LowPriceInDouble { get; set; }
+    public double ClosePriceInDouble { get; set; }
+    public double OpenPriceInDouble { get; set; }
+    public double NetChangeInDouble { get; set; }
+    public double OpenInterest { get; set; }
+    public double Volatility { get; set; }
+    public double MoneyIntrinsicValueInDouble { get; set; }
+    public double MultiplierInDouble { get; set; }
+    public int Digits { get; set; }
+    public double StrikePriceInDouble { get; set; }
+    public string? ContractType { get; set; }
+    public string? Underlying { get; set; }
+    public double TimeValueInDouble { get; set; }
+    public double DeltaInDouble { get; set; }
+    public double GammaInDouble { get; set; }
+    public double ThetaInDouble { get; set; }
+    public double VegaInDouble { get; set; }
+    public double RhoInDouble { get; set; }
+    public double Mark { get; set; }
+    public double Tick { get; set; }
+    public double TickAmount { get; set; }
+    public bool FutureIsTradable { get; set; }
+    public string? FutureTradingHours { get; set; }
+    public double FuturePercentChange { get; set; }
+    public bool FutureIsActive { get; set; }
+    public double FutureExpirationDate { get; set; }
+    public string? ExpirationType { get; set; }
+    public string? ExerciseType { get; set; }
+    public bool InTheMoney { get; set; }
 }
 
 /// <summary>
@@ -151,16 +150,16 @@ public class FutureOptionsQuote : TDQuoteBase
 [Serializable]
 public class TDIndexQuote : TDQuoteBase
 {
-    public double lastPrice { get; set; }
-    public double openPrice { get; set; }
-    public double highPrice { get; set; }
-    public double lowPrice { get; set; }
-    public double closePrice { get; set; }
-    public double netChange { get; set; }
-    public double totalVolume { get; set; }
-    public long tradeTimeInLong { get; set; }
-    public string? exchange { get; set; }
-    public int digits { get; set; }
+    public double LastPrice { get; set; }
+    public double OpenPrice { get; set; }
+    public double HighPrice { get; set; }
+    public double LowPrice { get; set; }
+    public double ClosePrice { get; set; }
+    public double NetChange { get; set; }
+    public double TotalVolume { get; set; }
+    public long TradeTimeInLong { get; set; }
+    public string? Exchange { get; set; }
+    public int Digits { get; set; }
     public double _52WkHigh { get; set; }
     public double _52WkLow { get; set; }
 }
@@ -168,46 +167,46 @@ public class TDIndexQuote : TDQuoteBase
 [Serializable]
 public class TDForexQuote : TDQuoteBase
 {
-    public double bidPriceInDouble { get; set; }
-    public double askPriceInDouble { get; set; }
-    public double lastPriceInDouble { get; set; }
-    public double highPriceInDouble { get; set; }
-    public double lowPriceInDouble { get; set; }
-    public double closePriceInDouble { get; set; }
-    public string? exchange { get; set; }
-    public double openPriceInDouble { get; set; }
-    public double changeInDouble { get; set; }
-    public double percentChange { get; set; }
-    public int digits { get; set; }
-    public double tick { get; set; }
-    public double tickAmount { get; set; }
-    public string? product { get; set; }
-    public string? tradingHours { get; set; }
-    public bool isTradable { get; set; }
-    public string? marketMaker { get; set; }
+    public double BidPriceInDouble { get; set; }
+    public double AskPriceInDouble { get; set; }
+    public double LastPriceInDouble { get; set; }
+    public double HighPriceInDouble { get; set; }
+    public double LowPriceInDouble { get; set; }
+    public double ClosePriceInDouble { get; set; }
+    public string? Exchange { get; set; }
+    public double OpenPriceInDouble { get; set; }
+    public double ChangeInDouble { get; set; }
+    public double PercentChange { get; set; }
+    public int Digits { get; set; }
+    public double Tick { get; set; }
+    public double TickAmount { get; set; }
+    public string? Product { get; set; }
+    public string? TradingHours { get; set; }
+    public bool IsTradable { get; set; }
+    public string? MarketMaker { get; set; }
     public double _52WkHighInDouble { get; set; }
     public double _52WkLowInDouble { get; set; }
-    public double mark { get; set; }
+    public double Mark { get; set; }
 }
 
 [Serializable]
 public class TDOptionQuote : MarketQuoteBase
 {
-    public int openInterest { get; set; }
-    public double moneyIntrinsicValue { get; set; }
-    public double multiplier { get; set; }
-    public double strikePrice { get; set; }
-    public string? contractType { get; set; }
-    public string? underlying { get; set; }
-    public double timeValue { get; set; }
-    public string? deliverables { get; set; }
-    public double delta { get; set; }
-    public double gamma { get; set; }
-    public double theta { get; set; }
-    public double vega { get; set; }
-    public double rho { get; set; }
-    public double theoreticalOptionValue { get; set; }
-    public double underlyingPrice { get; set; }
-    public string? uvExpirationType { get; set; }
-    public string? settlementType { get; set; }
+    public int OpenInterest { get; set; }
+    public double MoneyIntrinsicValue { get; set; }
+    public double Multiplier { get; set; }
+    public double StrikePrice { get; set; }
+    public string? ContractType { get; set; }
+    public string? Underlying { get; set; }
+    public double TimeValue { get; set; }
+    public string? Deliverables { get; set; }
+    public double Delta { get; set; }
+    public double Gamma { get; set; }
+    public double Theta { get; set; }
+    public double Vega { get; set; }
+    public double Rho { get; set; }
+    public double TheoreticalOptionValue { get; set; }
+    public double UnderlyingPrice { get; set; }
+    public string? UvExpirationType { get; set; }
+    public string? SettlementType { get; set; }
 }

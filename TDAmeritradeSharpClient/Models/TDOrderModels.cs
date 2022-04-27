@@ -5,59 +5,58 @@ using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
 
-// ReSharper disable InconsistentNaming
 public class CancelTime
 {
-    public string date { get; set; } = null!;
-    public bool shortFormat { get; set; }
+    public string Date { get; set; } = null!;
+    public bool ShortFormat { get; set; }
 }
 
 public class OrderLeg
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Instruction instruction { get; set; }
+    public TDOrderEnums.Instruction Instruction { get; set; }
 
-    public TDInstrument instrument { get; set; } = null!;
+    public TDInstrument Instrument { get; set; } = null!;
 
-    public double quantity { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderLegType orderLegType { get; set; }
-
-    public double? legId { get; set; }
+    public double Quantity { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PositionEffect? positionEffect { get; set; }
+    public TDOrderEnums.OrderLegType OrderLegType { get; set; }
+
+    public double? LegId { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.QuantityType? quantityType { get; set; }
+    public TDOrderEnums.PositionEffect? PositionEffect { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.QuantityType? QuantityType { get; set; }
 
     public override string ToString()
     {
-        return $"{instrument.Symbol} {instruction} {quantity}";
+        return $"{Instrument.Symbol} {Instruction} {Quantity}";
     }
 }
 
 public class OrderActivity
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.ActivityType activityType { get; set; }
+    public TDOrderEnums.ActivityType ActivityType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.ActivityTypeExecution executionType { get; set; }
+    public TDOrderEnums.ActivityTypeExecution ExecutionType { get; set; }
 
-    public double quantity { get; set; }
-    public double orderRemainingQuantity { get; set; }
-    public List<ExecutionLeg> executionLegs { get; set; } = null!;
+    public double Quantity { get; set; }
+    public double OrderRemainingQuantity { get; set; }
+    public List<ExecutionLeg> ExecutionLegs { get; set; } = null!;
 }
 
 public class ExecutionLeg
 {
-    public double legId { get; set; }
-    public double quantity { get; set; }
-    public double mismarkedQuantity { get; set; }
-    public double price { get; set; }
-    public string time { get; set; } = null!;
+    public double LegId { get; set; }
+    public double Quantity { get; set; }
+    public double MismarkedQuantity { get; set; }
+    public double Price { get; set; }
+    public string Time { get; set; } = null!;
 }
 
 public class TDOrder
@@ -66,22 +65,22 @@ public class TDOrder
     private double? _stopPrice;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderType orderType { get; set; }
+    public TDOrderEnums.OrderType OrderType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Session session { get; set; }
+    public TDOrderEnums.Session Session { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Duration duration { get; set; }
+    public TDOrderEnums.Duration Duration { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderStrategyType orderStrategyType { get; set; }
+    public TDOrderEnums.OrderStrategyType OrderStrategyType { get; set; }
 
-    public List<OrderLeg> orderLegCollection { get; set; } = new();
+    public List<OrderLeg> OrderLegCollection { get; set; } = new();
 
-    public List<TDOrder>? childOrderStrategies { get; set; }
+    public List<TDOrder>? ChildOrderStrategies { get; set; }
 
-    public double price
+    public double Price
     {
         get
         {
@@ -93,7 +92,7 @@ public class TDOrder
         set => _price = value;
     }
 
-    public double? stopPrice
+    public double? StopPrice
     {
         get
         {
@@ -109,59 +108,59 @@ public class TDOrder
         set => _stopPrice = value;
     }
 
-    public CancelTime cancelTime { get; set; } = null!;
+    public CancelTime CancelTime { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.ComplexOrderStrategyType? complexOrderStrategyType { get; set; }
+    public TDOrderEnums.ComplexOrderStrategyType? ComplexOrderStrategyType { get; set; }
 
-    public double? quantity { get; set; }
-    public double? filledQuantity { get; set; }
-    public double? remainingQuantity { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.RequestedDestination? requestedDestination { get; set; }
-
-    public string? destinationLinkName { get; set; }
-    public string? releaseTime { get; set; }
+    public double? Quantity { get; set; }
+    public double? FilledQuantity { get; set; }
+    public double? RemainingQuantity { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopPriceLinkBasis? stopPriceLinkBasis { get; set; }
+    public TDOrderEnums.RequestedDestination? RequestedDestination { get; set; }
+
+    public string? DestinationLinkName { get; set; }
+    public string? ReleaseTime { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopPriceLinkType? stopPriceLinkType { get; set; }
-
-    public double? stopPriceOffset { get; set; }
+    public TDOrderEnums.StopPriceLinkBasis? StopPriceLinkBasis { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopType? stopType { get; set; }
+    public TDOrderEnums.StopPriceLinkType? StopPriceLinkType { get; set; }
+
+    public double? StopPriceOffset { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PriceLinkBasis? priceLinkBasis { get; set; }
+    public TDOrderEnums.StopType? StopType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PriceLinkType? priceLinkType { get; set; }
+    public TDOrderEnums.PriceLinkBasis? PriceLinkBasis { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.TaxLotMethod? taxLotMethod { get; set; }
-
-    public double? activationPrice { get; set; }
+    public TDOrderEnums.PriceLinkType? PriceLinkType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.SpecialInstruction? specialInstruction { get; set; }
+    public TDOrderEnums.TaxLotMethod? TaxLotMethod { get; set; }
 
-    public long? orderId { get; set; }
-    public bool? cancelable { get; set; }
-    public bool? editable { get; set; }
+    public double? ActivationPrice { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Status? status { get; set; }
+    public TDOrderEnums.SpecialInstruction? SpecialInstruction { get; set; }
 
-    public string enteredTime { get; set; } = null!;
-    public string closeTime { get; set; } = null!;
-    public string? accountId { get; set; }
-    public List<OrderActivity> orderActivityCollection { get; set; } = null!;
-    public List<TDOrder> replacingOrderCollection { get; set; } = null!;
-    public string? statusDescription { get; set; }
+    public long? OrderId { get; set; }
+    public bool? Cancelable { get; set; }
+    public bool? Editable { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.Status? Status { get; set; }
+
+    public string EnteredTime { get; set; } = null!;
+    public string CloseTime { get; set; } = null!;
+    public string? AccountId { get; set; }
+    public List<OrderActivity> OrderActivityCollection { get; set; } = null!;
+    public List<TDOrder> ReplacingOrderCollection { get; set; } = null!;
+    public string? StatusDescription { get; set; }
 }
 
 /// <summary>
@@ -170,9 +169,9 @@ public class TDOrder
 public class OcoOrder
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderStrategyType orderStrategyType => TDOrderEnums.OrderStrategyType.OCO;
+    public TDOrderEnums.OrderStrategyType OrderStrategyType => TDOrderEnums.OrderStrategyType.OCO;
 
-    public List<TDOrder> childOrderStrategies { get; set; } = new();
+    public List<TDOrder> ChildOrderStrategies { get; set; } = new();
 
     /// <summary>
     ///     Returns json without type names, suitable for sending to TD Ameritrade
@@ -188,87 +187,87 @@ public class OcoOrder
 public class TDOrderResponse
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderType orderType { get; set; }
+    public TDOrderEnums.OrderType OrderType { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Session session { get; set; }
+    public TDOrderEnums.Session Session { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Duration duration { get; set; }
+    public TDOrderEnums.Duration Duration { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderStrategyType orderStrategyType { get; set; }
+    public TDOrderEnums.OrderStrategyType OrderStrategyType { get; set; }
 
-    public List<OrderLeg> orderLegCollection { get; set; } = new();
+    public List<OrderLeg> OrderLegCollection { get; set; } = new();
 
-    public double price { get; set; }
-    public CancelTime cancelTime { get; set; } = null!;
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.ComplexOrderStrategyType complexOrderStrategyType { get; set; }
-
-    public double quantity { get; set; }
-    public double filledQuantity { get; set; }
-    public double remainingQuantity { get; set; }
+    public double Price { get; set; }
+    public CancelTime CancelTime { get; set; } = null!;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.RequestedDestination requestedDestination { get; set; }
+    public TDOrderEnums.ComplexOrderStrategyType ComplexOrderStrategyType { get; set; }
 
-    public string destinationLinkName { get; set; } = null!;
-    public string releaseTime { get; set; } = null!;
-    public double stopPrice { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopPriceLinkBasis stopPriceLinkBasis { get; set; }
+    public double Quantity { get; set; }
+    public double FilledQuantity { get; set; }
+    public double RemainingQuantity { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopPriceLinkType stopPriceLinkType { get; set; }
+    public TDOrderEnums.RequestedDestination RequestedDestination { get; set; }
 
-    public double stopPriceOffset { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.StopType stopType { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PriceLinkBasis priceLinkBasis { get; set; }
+    public string DestinationLinkName { get; set; } = null!;
+    public string ReleaseTime { get; set; } = null!;
+    public double StopPrice { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.PriceLinkType priceLinkType { get; set; }
+    public TDOrderEnums.StopPriceLinkBasis StopPriceLinkBasis { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.TaxLotMethod taxLotMethod { get; set; }
+    public TDOrderEnums.StopPriceLinkType StopPriceLinkType { get; set; }
 
-    public double activationPrice { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.SpecialInstruction specialInstruction { get; set; }
-
-    public long orderId { get; set; }
-    public bool cancelable { get; set; }
-    public bool editable { get; set; }
+    public double StopPriceOffset { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Status status { get; set; }
+    public TDOrderEnums.StopType StopType { get; set; }
 
-    public string enteredTime { get; set; } = null!;
-    public string closeTime { get; set; } = null!;
-    public double accountId { get; set; }
-    public List<OrderActivity> orderActivityCollection { get; set; } = null!;
-    public List<TDOrder> replacingOrderCollection { get; set; } = null!;
-    public List<TDOrder> childOrderStrategies { get; set; } = null!;
-    public string statusDescription { get; set; } = null!;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.PriceLinkBasis PriceLinkBasis { get; set; }
 
-    public string tag { get; set; } = null!;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.PriceLinkType PriceLinkType { get; set; }
 
-    public long savedOrderId { get; set; }
-    public string savedTime { get; set; } = null!;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.TaxLotMethod TaxLotMethod { get; set; }
+
+    public double ActivationPrice { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.SpecialInstruction SpecialInstruction { get; set; }
+
+    public long OrderId { get; set; }
+    public bool Cancelable { get; set; }
+    public bool Editable { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TDOrderEnums.Status Status { get; set; }
+
+    public string EnteredTime { get; set; } = null!;
+    public string CloseTime { get; set; } = null!;
+    public double AccountId { get; set; }
+    public List<OrderActivity> OrderActivityCollection { get; set; } = null!;
+    public List<TDOrder> ReplacingOrderCollection { get; set; } = null!;
+    public List<TDOrder> ChildOrderStrategies { get; set; } = null!;
+    public string StatusDescription { get; set; } = null!;
+
+    public string Tag { get; set; } = null!;
+
+    public long SavedOrderId { get; set; }
+    public string SavedTime { get; set; } = null!;
 
     public override string ToString()
     {
-        var result = $"accountId={accountId} orderId={orderId} {orderLegCollection[0]} {orderType}";
-        if (price != 0)
+        var result = $"accountId={AccountId} orderId={OrderId} {OrderLegCollection[0]} {OrderType}";
+        if (Price != 0)
         {
-            result += $" {price}";
+            result += $" {Price}";
         }
         return result;
     }

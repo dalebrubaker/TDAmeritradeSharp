@@ -144,16 +144,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = service.ToString(),
-                    command = "SUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = service.ToString(),
+                    Command = "SUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols,
                         fields = "0,1,2,3,4,5,6,7,8"
@@ -179,16 +179,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = service.ToString(),
-                    command = "UNSUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = service.ToString(),
+                    Command = "UNSUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols
                     }
@@ -212,16 +212,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = "QUOTE",
-                    command = "SUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = "QUOTE",
+                    Command = "SUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols,
                         fields = "0,1,2,3,4,5,8,9,10,11,12,13,14,15,24,28"
@@ -247,16 +247,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = "QUOTE",
-                    command = "UNSUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = "QUOTE",
+                    Command = "UNSUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols
                     }
@@ -282,16 +282,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = service.ToString(),
-                    command = "SUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = service.ToString(),
+                    Command = "SUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols,
                         fields = "0,1,2,3,4"
@@ -318,16 +318,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = service.ToString(),
-                    command = "UNSUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = service.ToString(),
+                    Command = "UNSUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols
                     }
@@ -351,16 +351,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = option.ToString(),
-                    command = "SUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = option.ToString(),
+                    Command = "SUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols,
                         fields = "0,1,2,3"
@@ -385,16 +385,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = option.ToString(),
-                    command = "UNSUBS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = option.ToString(),
+                    Command = "UNSUBS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         keys = symbols
                     }
@@ -419,16 +419,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = "ADMIN",
-                    command = "QOS",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = "ADMIN",
+                    Command = "QOS",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         qoslevel = (int)quality
                     }
@@ -537,16 +537,16 @@ public class ClientStream : IDisposable
 
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = "ADMIN",
-                    command = "LOGIN",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new
+                    Service = "ADMIN",
+                    Command = "LOGIN",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new
                     {
                         _prince?.streamerInfo?.token,
                         version = "1.0",
@@ -567,16 +567,16 @@ public class ClientStream : IDisposable
         }
         var request = new TDRealtimeRequestContainer
         {
-            requests = new[]
+            Requests = new[]
             {
                 new TDRealtimeRequest
                 {
-                    service = "ADMIN",
-                    command = "LOGOUT",
-                    requestid = Interlocked.Increment(ref _counter),
-                    account = _account.accountId,
-                    source = _prince?.streamerInfo?.appId,
-                    parameters = new { }
+                    Service = "ADMIN",
+                    Command = "LOGOUT",
+                    Requestid = Interlocked.Increment(ref _counter),
+                    Account = _account.accountId,
+                    Source = _prince?.streamerInfo?.appId,
+                    Parameters = new { }
                 }
             }
         };

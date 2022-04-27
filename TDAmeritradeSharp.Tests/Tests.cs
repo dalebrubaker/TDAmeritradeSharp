@@ -53,13 +53,13 @@ public class Tests
     {
         var chain = await _client.GetOptionsChainAsync(new TDOptionChainRequest
         {
-            symbol = "QQQ",
-            fromDate = new DateTime(DateTime.Now.AddDays(-7).Ticks),
-            toDate = new DateTime(DateTime.Now.AddDays(7).Ticks),
-            strikeCount = 1
+            Symbol = "QQQ",
+            FromDate = new DateTime(DateTime.Now.AddDays(-7).Ticks),
+            ToDate = new DateTime(DateTime.Now.AddDays(7).Ticks),
+            StrikeCount = 1
         });
-        Assert.IsTrue(chain!.callExpDateMap!.optionsAtStrike.Count > 0);
-        Assert.IsTrue(chain!.callExpDateMap!.optionsAtStrike[0].options!.Count > 0);
+        Assert.IsTrue(chain!.CallExpDateMap!.OptionsAtStrike.Count > 0);
+        Assert.IsTrue(chain!.CallExpDateMap!.OptionsAtStrike[0].Options!.Count > 0);
     }
 
     [Test]
@@ -80,7 +80,7 @@ public class Tests
         var array = new TDPriceCandle[9];
         for (var i = 0; i < 9; i++)
         {
-            array[i] = new TDPriceCandle { close = i, high = i, low = i, open = i, volume = i, datetime = i };
+            array[i] = new TDPriceCandle { Close = i, High = i, Low = i, Open = i, Volume = i, Datetime = i };
         }
         var merge1 = array.ConsolidateByTotalCount(3);
         Assert.IsTrue(merge1.Length == 3);
@@ -89,11 +89,11 @@ public class Tests
         var merge3 = array.ConsolidateByTotalCount(1);
         Assert.IsTrue(merge3.Length == 1);
 
-        Assert.IsTrue(merge3[0].open == 0);
-        Assert.IsTrue(merge3[0].high == 8);
-        Assert.IsTrue(merge3[0].low == 0);
-        Assert.IsTrue(merge3[0].close == 8);
-        Assert.IsTrue(merge3[0].volume == 36);
+        Assert.IsTrue(merge3[0].Open == 0);
+        Assert.IsTrue(merge3[0].High == 8);
+        Assert.IsTrue(merge3[0].Low == 0);
+        Assert.IsTrue(merge3[0].Close == 8);
+        Assert.IsTrue(merge3[0].Volume == 36);
     }
 
     [Test]
@@ -102,7 +102,7 @@ public class Tests
         var array = new TDPriceCandle[9];
         for (var i = 0; i < 9; i++)
         {
-            array[i] = new TDPriceCandle { close = i, high = i, low = i, open = i, volume = i, datetime = i };
+            array[i] = new TDPriceCandle { Close = i, High = i, Low = i, Open = i, Volume = i, Datetime = i };
         }
         var merge1 = array.ConsolidateByPeriodCount(3);
         Assert.IsTrue(merge1.Length == 3);
@@ -111,39 +111,39 @@ public class Tests
         var merge3 = array.ConsolidateByPeriodCount(9);
         Assert.IsTrue(merge3.Length == 1);
 
-        Assert.IsTrue(merge3[0].open == 0);
-        Assert.IsTrue(merge3[0].high == 8);
-        Assert.IsTrue(merge3[0].low == 0);
-        Assert.IsTrue(merge3[0].close == 8);
-        Assert.IsTrue(merge3[0].volume == 36);
+        Assert.IsTrue(merge3[0].Open == 0);
+        Assert.IsTrue(merge3[0].High == 8);
+        Assert.IsTrue(merge3[0].Low == 0);
+        Assert.IsTrue(merge3[0].Close == 8);
+        Assert.IsTrue(merge3[0].Volume == 36);
     }
 
     [Test]
     public async Task TestTDQuoteClient_Equity()
     {
         var data = await _client.GetQuote_EquityAsync("MSFT");
-        Assert.IsTrue(data.symbol == "MSFT");
+        Assert.IsTrue(data.Symbol == "MSFT");
     }
 
     [Test]
     public async Task TestTDQuoteClient_Index()
     {
         var data = await _client.GetQuote_IndexAsync("$SPX.X");
-        Assert.IsTrue(data.symbol == "$SPX.X");
+        Assert.IsTrue(data.Symbol == "$SPX.X");
     }
 
     [Test]
     public async Task TestTDQuoteClient_Future()
     {
         var data = await _client.GetQuote_FutureAsync("/ES");
-        Assert.IsTrue(data.symbol == "/ES");
+        Assert.IsTrue(data.Symbol == "/ES");
     }
 
     [Test]
     public async Task TestTDQuoteClient_Option()
     {
         var data = await _client.GetQuote_OptionAsync("SPY_231215C500");
-        Assert.IsTrue(data.symbol == "SPY_231215C500");
+        Assert.IsTrue(data.Symbol == "SPY_231215C500");
     }
 
     [Test]
@@ -152,11 +152,11 @@ public class Tests
         var candles = await _client.GetPriceHistoryAsync(new TDPriceHistoryRequest
         {
             // limit is 20 years of daily or 10 days of minute 
-            symbol = "MSFT",
-            frequencyType = TDPriceHistoryRequest.FrequencyType.minute,
-            frequency = 5,
-            periodType = TDPriceHistoryRequest.PeriodTypes.day,
-            period = 5
+            Symbol = "MSFT",
+            FrequencyType = TDPriceHistoryRequest.FrequencyTypeEnum.minute,
+            Frequency = 5,
+            PeriodType = TDPriceHistoryRequest.PeriodTypes.day,
+            Period = 5
         });
         Assert.IsTrue(candles.Length > 0);
     }
@@ -167,11 +167,11 @@ public class Tests
         var candles = await _client.GetPriceHistoryAsync(new TDPriceHistoryRequest
         {
             // limit is 20 years of daily or 10 days of minute 
-            symbol = "MSFT",
-            frequencyType = TDPriceHistoryRequest.FrequencyType.daily,
-            frequency = 1,
-            periodType = TDPriceHistoryRequest.PeriodTypes.year,
-            period = 20
+            Symbol = "MSFT",
+            FrequencyType = TDPriceHistoryRequest.FrequencyTypeEnum.daily,
+            Frequency = 1,
+            PeriodType = TDPriceHistoryRequest.PeriodTypes.year,
+            Period = 20
         });
         Assert.IsTrue(candles.Length > 0);
     }

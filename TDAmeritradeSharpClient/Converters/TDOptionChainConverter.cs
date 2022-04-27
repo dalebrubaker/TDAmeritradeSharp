@@ -16,19 +16,19 @@ public class TDOptionChainConverter : JsonConverter<TDOptionChain>
         }
         var result = new TDOptionChain
         {
-            symbol = node["symbol"]?.GetValue<string>(),
-            status = node["status"]?.GetValue<string>(),
-            underlying = node["underlying"].Deserialize<TDUnderlying>(),
-            strategy = node["strategy"]?.GetValue<string>(),
-            interval = node["interval"]!.GetValue<double>(),
-            isDelayed = node["isDelayed"]!.GetValue<bool>(),
-            isIndex = node["isIndex"]!.GetValue<bool>(),
-            daysToExpiration = node["daysToExpiration"]!.GetValue<double>(),
-            interestRate = node["interestRate"]!.GetValue<double>(),
-            underlyingPrice = node["underlyingPrice"]!.GetValue<double>(),
-            volatility = node["volatility"]!.GetValue<double>(),
-            callExpDateMap = GetMap(node["callExpDateMap"]),
-            putExpDateMap = GetMap(node["putExpDateMap"])
+            Symbol = node["symbol"]?.GetValue<string>(),
+            Status = node["status"]?.GetValue<string>(),
+            Underlying = node["underlying"].Deserialize<TDUnderlying>(),
+            Strategy = node["strategy"]?.GetValue<string>(),
+            Interval = node["interval"]!.GetValue<double>(),
+            IsDelayed = node["isDelayed"]!.GetValue<bool>(),
+            IsIndex = node["isIndex"]!.GetValue<bool>(),
+            DaysToExpiration = node["daysToExpiration"]!.GetValue<double>(),
+            InterestRate = node["interestRate"]!.GetValue<double>(),
+            UnderlyingPrice = node["underlyingPrice"]!.GetValue<double>(),
+            Volatility = node["volatility"]!.GetValue<double>(),
+            CallExpDateMap = GetMap(node["callExpDateMap"]),
+            PutExpDateMap = GetMap(node["putExpDateMap"])
         };
         return result;
     }
@@ -39,21 +39,21 @@ public class TDOptionChainConverter : JsonConverter<TDOptionChain>
         var jsonObject = (JsonObject)node!;
         foreach (KeyValuePair<string,JsonNode?> pair in jsonObject)
         {
-            exp.expires = DateTime.Parse(pair.Key.Split(':')[0]);
-            exp.optionsAtStrike = new List<TDOptionsAtStrike>(); // This is an array in TDA json although we seem to have only one instance in each array
+            exp.Expires = DateTime.Parse(pair.Key.Split(':')[0]);
+            exp.OptionsAtStrike = new List<TDOptionsAtStrike>(); // This is an array in TDA json although we seem to have only one instance in each array
             var optionsAtStrike = new TDOptionsAtStrike();
-            exp.optionsAtStrike.Add(optionsAtStrike);
+            exp.OptionsAtStrike.Add(optionsAtStrike);
             Debug.Assert(jsonObject.Count > 0);
             var strikeObject = (JsonObject)pair.Value!;
             var strikeNode = strikeObject.FirstOrDefault();
             double.TryParse(strikeNode.Key, out var strikePrice);
-            optionsAtStrike.strikePrice = strikePrice;
-            optionsAtStrike.options = new List<TDOption>();
+            optionsAtStrike.StrikePrice = strikePrice;
+            optionsAtStrike.Options = new List<TDOption>();
             var array = strikeNode.Value?.AsArray();
             foreach (var optionNode in array!)
             {
                 var option = optionNode.Deserialize<TDOption>();
-                optionsAtStrike.options.Add(option ?? throw new InvalidOperationException());
+                optionsAtStrike.Options.Add(option ?? throw new InvalidOperationException());
             }
         }
         return exp;

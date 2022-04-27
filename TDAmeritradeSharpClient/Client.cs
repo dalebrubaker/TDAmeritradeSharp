@@ -390,45 +390,45 @@ public class Client : IDisposable
         {
             queryString.Add("apikey", AuthValues.ConsumerKey);
         }
-        queryString.Add("symbol", request.symbol);
-        if (request.contractType.HasValue)
+        queryString.Add("symbol", request.Symbol);
+        if (request.ContractType.HasValue)
         {
-            queryString.Add("contractType", request.contractType.ToString());
+            queryString.Add("contractType", request.ContractType.ToString());
         }
-        if (request.strikeCount.HasValue)
+        if (request.StrikeCount.HasValue)
         {
-            queryString.Add("strikeCount", request.strikeCount.ToString());
+            queryString.Add("strikeCount", request.StrikeCount.ToString());
         }
-        queryString.Add("includeQuotes", request.includeQuotes ? "FALSE" : "TRUE");
-        if (request.interval.HasValue)
+        queryString.Add("includeQuotes", request.IncludeQuotes ? "FALSE" : "TRUE");
+        if (request.Interval.HasValue)
         {
-            queryString.Add("interval", request.interval.ToString());
+            queryString.Add("interval", request.Interval.ToString());
         }
-        if (request.strike.HasValue)
+        if (request.Strike.HasValue)
         {
-            queryString.Add("strike", request.strike.Value.ToString());
+            queryString.Add("strike", request.Strike.Value.ToString());
         }
-        if (request.fromDate.HasValue)
+        if (request.FromDate.HasValue)
         {
-            queryString.Add("fromDate", request.fromDate.Value.ToString("yyyy-MM-dd"));
+            queryString.Add("fromDate", request.FromDate.Value.ToString("yyyy-MM-dd"));
         }
-        if (request.toDate.HasValue)
+        if (request.ToDate.HasValue)
         {
-            var str = request.toDate.Value.ToString("yyyy-MM-dd");
+            var str = request.ToDate.Value.ToString("yyyy-MM-dd");
             queryString.Add("toDate", str);
         }
-        if (!string.IsNullOrEmpty(request.expMonth))
+        if (!string.IsNullOrEmpty(request.ExpMonth))
         {
-            queryString.Add("expMonth", request.expMonth);
+            queryString.Add("expMonth", request.ExpMonth);
         }
-        queryString.Add("optionType", request.optionType.ToString());
+        queryString.Add("optionType", request.OptionType.ToString());
 
-        if (request.strategy == TDOptionChainStrategy.ANALYTICAL)
+        if (request.Strategy == TDOptionChainStrategy.ANALYTICAL)
         {
-            queryString.Add("volatility", request.volatility.ToString());
-            queryString.Add("underlyingPrice", request.underlyingPrice.ToString());
-            queryString.Add("interestRate", request.interestRate.ToString());
-            queryString.Add("daysToExpiration", request.daysToExpiration.ToString());
+            queryString.Add("volatility", request.Volatility.ToString());
+            queryString.Add("underlyingPrice", request.UnderlyingPrice.ToString());
+            queryString.Add("interestRate", request.InterestRate.ToString());
+            queryString.Add("daysToExpiration", request.DaysToExpiration.ToString());
         }
 
         var q = queryString.ToString();
@@ -475,30 +475,30 @@ public class Client : IDisposable
             throw new Exception("ConsumerKey is null");
         }
         var key = HttpUtility.UrlEncode(AuthValues.ConsumerKey);
-        var builder = new UriBuilder($"https://api.tdameritrade.com/v1/marketdata/{model.symbol}/pricehistory");
+        var builder = new UriBuilder($"https://api.tdameritrade.com/v1/marketdata/{model.Symbol}/pricehistory");
         var query = HttpUtility.ParseQueryString(builder.Query);
         if (!IsSignedIn)
         {
             query["apikey"] = key;
         }
-        if (model.frequencyType.HasValue)
+        if (model.FrequencyType.HasValue)
         {
-            query["frequencyType"] = model.frequencyType.ToString();
-            query["frequency"] = model.frequency.ToString();
+            query["frequencyType"] = model.FrequencyType.ToString();
+            query["frequency"] = model.Frequency.ToString();
         }
-        if (model.endDate.HasValue)
+        if (model.EndDate.HasValue)
         {
-            query["endDate"] = model.endDate.Value.ToString(CultureInfo.InvariantCulture);
-            query["startDate"] = model.startDate?.ToString();
+            query["endDate"] = model.EndDate.Value.ToString(CultureInfo.InvariantCulture);
+            query["startDate"] = model.StartDate?.ToString();
         }
-        if (model.periodType.HasValue)
+        if (model.PeriodType.HasValue)
         {
-            query["periodType"] = model.periodType.ToString();
-            query["period"] = model.period.ToString();
+            query["periodType"] = model.PeriodType.ToString();
+            query["period"] = model.Period.ToString();
         }
-        if (model.needExtendedHoursData.HasValue)
+        if (model.NeedExtendedHoursData.HasValue)
         {
-            query["needExtendedHoursData"] = model.needExtendedHoursData.ToString();
+            query["needExtendedHoursData"] = model.NeedExtendedHoursData.ToString();
         }
         builder.Query = query.ToString();
         var url = builder.ToString();
@@ -872,7 +872,7 @@ public class Client : IDisposable
                 break;
             default:
                 var existingOrder = await GetOrderAsync(accountId, orderId);
-                var status = existingOrder.status;
+                var status = existingOrder.Status;
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }
     }
