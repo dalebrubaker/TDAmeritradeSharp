@@ -76,6 +76,10 @@ public class TDInstrumentConverter : JsonConverter<TDInstrument>
                     (properties, propertyNamesDictByCamelCaseNames) = SetPropertiesInfoForType(_currentType);
                     break;
                 case JsonTokenType.EndObject:
+                    if (_currentObject == instrument)
+                    {
+                        return instrument;
+                    }
                     // We may be at the end of a sub-object 
                     _currentObject = instrument;
                     (properties, propertyNamesDictByCamelCaseNames) = SetPropertiesInfoForType(instrument.GetType());
@@ -151,7 +155,8 @@ public class TDInstrumentConverter : JsonConverter<TDInstrument>
                         case JsonTokenType.False:
                             throw new JsonException("Unexpected to get here.");
                         case JsonTokenType.Null:
-                            throw new JsonException("Unexpected to get here.");
+                            // We get here at the end of an instrument when deserializing as a member of some class
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException();
                     }

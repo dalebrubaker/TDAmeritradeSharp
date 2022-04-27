@@ -78,12 +78,9 @@ public class TDOrder
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.OrderStrategyType orderStrategyType { get; set; }
 
-    public List<OrderLegBase> orderLegCollection { get; set; } = new();
+    public List<OrderLeg> orderLegCollection { get; set; } = new();
 
-    /// <summary>
-    ///     Must be object, not IOrderBase, to get serialization in System.Text.Json
-    /// </summary>
-    public List<object> childOrderStrategies { get; set; } = new();
+    public List<TDOrder> childOrderStrategies { get; set; } = new();
 
     public double price
     {
@@ -190,26 +187,6 @@ public class TDOrder
         }
         return json;
     }
-
-    /// <summary>
-    ///     Return a deep clone of this order
-    /// </summary>
-    /// <returns></returns>
-    public TDOrder CloneDeep()
-    {
-        var json = JsonSerializer.Serialize(this);
-        var clone = JsonSerializer.Deserialize<TDOrder>(json);
-        return clone!;
-    }
-}
-
-public interface IOrderBase
-{
-    /// <summary>
-    ///     Returns json without type names, suitable for sending to TD Ameritrade
-    /// </summary>
-    /// <returns></returns>
-    string GetJson();
 }
 
 public class OcoOrder
@@ -230,132 +207,7 @@ public class OcoOrder
     }
 }
 
-public class EquityOrder : IOrderBase
-{
-    private double _price;
 
-    private double? _stopPrice;
-
-    public EquityOrder()
-    {
-        var orderLeg = new EquityOrderLeg();
-        orderLegCollection.Add(orderLeg);
-    }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderType orderType { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Session session { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Duration duration { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.OrderStrategyType orderStrategyType { get; set; }
-
-    public List<EquityOrderLeg> orderLegCollection { get; set; } = new();
-
-    /// <summary>
-    ///     Must be object, not IOrderBase, to get serialization in System.Text.Json
-    /// </summary>
-    public List<object> childOrderStrategies { get; set; } = new();
-
-    public double price
-    {
-        get
-        {
-            // TDA enforces 2 or 4 digits this during ReplaceOrder
-            var digits = _price < 1 ? 4 : 2;
-            var rounded = Math.Round(_price, digits);
-            return rounded;
-        }
-        set => _price = value;
-    }
-
-    public double? stopPrice
-    {
-        get
-        {
-            if (_stopPrice == null)
-            {
-                return null;
-            }
-            // TDA enforces 2 or 4 digits this during ReplaceOrder
-            var digits = _stopPrice < 1 ? 4 : 2;
-            var rounded = Math.Round((double)_stopPrice, digits);
-            return rounded;
-        }
-        set => _stopPrice = value;
-    }
-
-    [JsonIgnore]
-    public EquityOrderLeg OrderLeg
-    {
-        get => orderLegCollection[0];
-        set => orderLegCollection[0] = value;
-    }
-
-    /// <summary>
-    ///     Returns json without type names, suitable for sending to TD Ameritrade
-    /// </summary>
-    /// <returns></returns>
-    public string GetJson()
-    {
-        var json = JsonSerializer.Serialize(this);
-        if (orderType == TDOrderEnums.OrderType.MARKET)
-        {
-            // Remove the price field
-            var obj = JsonSerializer.Deserialize<JsonObject>(json);
-            obj?.Remove("price");
-            json = JsonSerializer.Serialize(obj);
-        }
-        if (orderType != TDOrderEnums.OrderType.STOP && orderType != TDOrderEnums.OrderType.STOP_LIMIT && orderType != TDOrderEnums.OrderType.TRAILING_STOP_LIMIT)
-        {
-            // Remove the stopPrice field
-            var obj = JsonSerializer.Deserialize<JsonObject>(json);
-            obj?.Remove("stopPrice");
-            json = JsonSerializer.Serialize(obj);
-        }
-        return json;
-    }
-
-    /// <summary>
-    ///     Return a deep clone of this order
-    /// </summary>
-    /// <returns></returns>
-    public EquityOrder CloneDeep()
-    {
-        var json = JsonSerializer.Serialize(this);
-        var clone = JsonSerializer.Deserialize<EquityOrder>(json);
-        return clone!;
-    }
-}
-
-public class OrderLegBase
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Instruction instruction { get; set; }
-
-    public TDInstrument instrument { get; set; } = null!;
-
-    public double quantity { get; set; }
-}
-
-public class EquityOrderLeg
-{
-    public EquityOrderLeg()
-    {
-        instrument = new InstrumentEquity();
-    }
-
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public TDOrderEnums.Instruction instruction { get; set; }
-
-    public InstrumentEquity instrument { get; set; } = null!;
-
-    public double quantity { get; set; }
-}
 
 public class TDOrderResponse
 {

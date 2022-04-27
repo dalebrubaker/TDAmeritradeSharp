@@ -31,7 +31,7 @@ public class Client : IDisposable
                 new TDOptionChainConverter(),
                 new TDInstrumentConverter()
             },
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
             DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
             //NumberHandling = JsonNumberHandling.AllowReadingFromString
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -45,7 +45,7 @@ public class Client : IDisposable
                 new StringConverter(),
                 new TDOptionChainConverter(),
             },
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
             DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
             //NumberHandling = JsonNumberHandling.AllowReadingFromString
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -119,7 +119,18 @@ public class Client : IDisposable
         return instrument;
     }
     
-    #endregion
+    /// <summary>
+    ///     Return a deep clone of this order
+    /// </summary>
+    /// <returns></returns>
+    public TDOrder CloneDeep(TDOrder order)
+    {
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+        var clone = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
+        return clone!;
+    }
+    
+    #endregion Helpers
 
     #region Auth
 
@@ -820,7 +831,7 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task<long> PlaceOrderAsync(IOrderBase order, string accountId)
+    public async Task<long> PlaceOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
         var json = order.GetJson();
@@ -875,7 +886,7 @@ public class Client : IDisposable
     /// <param name="orderId">The orderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task<long> ReplaceOrderAsync(IOrderBase replacementOrder, string accountId, long orderId)
+    public async Task<long> ReplaceOrderAsync(TDOrder replacementOrder, string accountId, long orderId)
     {
         var json = replacementOrder.GetJson();
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -902,7 +913,7 @@ public class Client : IDisposable
     /// <param name="accountId">The accountId</param>
     /// <returns>the orderId assigned by TDAmeritrade to this order.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task CreateSavedOrderAsync(IOrderBase order, string accountId)
+    public async Task CreateSavedOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
         var json = order.GetJson();
@@ -964,7 +975,7 @@ public class Client : IDisposable
     /// <param name="savedOrderId">The savedOrderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task ReplaceSavedOrderAsync(IOrderBase replacementOrder, string accountId, long savedOrderId)
+    public async Task ReplaceSavedOrderAsync(TDOrder replacementOrder, string accountId, long savedOrderId)
     {
         var json = replacementOrder.GetJson();
         var content = new StringContent(json, Encoding.UTF8, "application/json");
