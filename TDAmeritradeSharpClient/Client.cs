@@ -674,27 +674,27 @@ public class Client : IDisposable
         switch (marketType)
         {
             case MarketTypes.BOND:
-                break;
+                return node["bond"]?["BON"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.EQUITY:
                 return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.ETF:
-                break;
+                throw new NotSupportedException();
             case MarketTypes.FOREX:
-                break;
+                return node["forex"]?["forex"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.FUTURE:
-                break;
+                return node["future"]?["DFE"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.FUTURE_OPTION:
-                break;
+                throw new NotSupportedException();
             case MarketTypes.INDEX:
-                break;
+                throw new NotSupportedException();
             case MarketTypes.INDICAT:
-                break;
+                throw new NotSupportedException();
             case MarketTypes.MUTUAL_FUND:
-                break;
+                throw new NotSupportedException();
             case MarketTypes.OPTION:
                 return node["option"]?["EQO"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
             case MarketTypes.UNKNOWN:
-                break;
+                throw new NotSupportedException();
             default:
                 throw new ArgumentOutOfRangeException(nameof(marketType), marketType, null);
         }

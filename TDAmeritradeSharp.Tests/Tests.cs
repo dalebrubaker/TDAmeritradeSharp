@@ -64,6 +64,9 @@ public class Tests
 
     [Test]
     [TestCase(MarketTypes.EQUITY)]
+    [TestCase(MarketTypes.BOND)]
+    [TestCase(MarketTypes.FUTURE)]
+    [TestCase(MarketTypes.FOREX)]
     [TestCase(MarketTypes.OPTION)]
     public async Task TestMarketHours(MarketTypes marketType)
     {
