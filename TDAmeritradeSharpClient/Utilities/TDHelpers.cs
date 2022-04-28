@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.ComponentModel;
+using System.Text.Json;
 
 namespace TDAmeritradeSharpClient;
 
@@ -194,5 +195,17 @@ public static class TDHelpers
     {
         using var jDoc = JsonDocument.Parse(json);
         return JsonSerializer.Serialize(jDoc, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    public static (PropertyDescriptorCollection properties, Dictionary<string, string> propertyNamesDictByCamelCaseNames) SetPropertiesInfoForType(this object obj)
+    {
+        var properties = TypeDescriptor.GetProperties(obj.GetType());
+        var propertyNamesDictByCamelCaseNames = new Dictionary<string, string>(properties.Count);
+        foreach (PropertyDescriptor prop in properties)
+        {
+            var camelCaseName = JsonNamingPolicy.CamelCase.ConvertName(prop.Name);
+            propertyNamesDictByCamelCaseNames.Add(camelCaseName, prop.Name);
+        }
+        return (properties, propertyNamesDictByCamelCaseNames);
     }
 }

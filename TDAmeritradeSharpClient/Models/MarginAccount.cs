@@ -2,127 +2,121 @@
 
 namespace TDAmeritradeSharpClient;
 
-public class MarginAccount
+public class MarginAccount : SecuritiesAccount
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public AccountType Type { get; set; }
+    public override AccountType Type { get; } = AccountType.MARGIN;
 
-    public string AccountId { get; set; } = null!;
-    public int RoundTrips { get; set; }
-    public bool IsDayTrader { get; set; }
-    public bool IsClosingOnlyRestricted { get; set; }
-    public Position[]? Positions { get; set; }
-    public OrderStrategy[]? OrderStrategies { get; set; }
-    public InitialBalancesMargin? InitialBalances { get; set; }
-    public CurrentBalancesMargin? CurrentBalances { get; set; }
-    public ProjectedBalancesMargin? ProjectedBalances { get; set; }
+    public InitialBalancesMargin InitialBalances { get; set; } = new InitialBalancesMargin();
+    public CurrentBalancesMargin CurrentBalances { get; set; } = new CurrentBalancesMargin();
+    public ProjectedBalancesMargin ProjectedBalances { get; set; } = new ProjectedBalancesMargin();
 }
 
 public class InitialBalancesMargin
 {
-    public int AccruedInterest { get; set; }
-    public int AvailableFundsNonMarginableTrade { get; set; }
-    public int BondValue { get; set; }
-    public int BuyingPower { get; set; }
-    public int CashBalance { get; set; }
-    public int CashAvailableForTrading { get; set; }
-    public int CashReceipts { get; set; }
-    public int DayTradingBuyingPower { get; set; }
-    public int DayTradingBuyingPowerCall { get; set; }
-    public int DayTradingEquityCall { get; set; }
-    public int Equity { get; set; }
-    public int EquityPercentage { get; set; }
-    public int LiquidationValue { get; set; }
-    public int LongMarginValue { get; set; }
-    public int LongOptionMarketValue { get; set; }
-    public int LongStockValue { get; set; }
-    public int MaintenanceCall { get; set; }
-    public int MaintenanceRequirement { get; set; }
-    public int Margin { get; set; }
-    public int MarginEquity { get; set; }
-    public int MoneyMarketFund { get; set; }
-    public int MutualFundValue { get; set; }
-    public int RegTCall { get; set; }
-    public int ShortMarginValue { get; set; }
-    public int ShortOptionMarketValue { get; set; }
-    public int ShortStockValue { get; set; }
-    public int TotalCash { get; set; }
+    public double AccruedInterest { get; set; }
+    public double AvailableFundsNonMarginableTrade { get; set; }
+    public double BondValue { get; set; }
+    public double BuyingPower { get; set; }
+    public double CashBalance { get; set; }
+    public double CashAvailableForTrading { get; set; }
+    public double CashReceipts { get; set; }
+    public double DayTradingBuyingPower { get; set; }
+    public double DayTradingBuyingPowerCall { get; set; }
+    public double DayTradingEquityCall { get; set; }
+    public double Equity { get; set; }
+    public double EquityPercentage { get; set; }
+    public double LiquidationValue { get; set; }
+    public double LongMarginValue { get; set; }
+    public double LongOptionMarketValue { get; set; }
+    public double LongStockValue { get; set; }
+    public double MaintenanceCall { get; set; }
+    public double MaintenanceRequirement { get; set; }
+    public double Margin { get; set; }
+    public double MarginEquity { get; set; }
+    public double MoneyMarketFund { get; set; }
+    public double MutualFundValue { get; set; }
+    public double RegTCall { get; set; }
+    public double ShortMarginValue { get; set; }
+    public double ShortOptionMarketValue { get; set; }
+    public double ShortStockValue { get; set; }
+    public double TotalCash { get; set; }
     public bool IsInCall { get; set; }
-    public int UnsettledCash { get; set; }
-    public int PendingDeposits { get; set; }
-    public int MarginBalance { get; set; }
-    public int ShortBalance { get; set; }
-    public int AccountValue { get; set; }
+    public double UnsettledCash { get; set; }
+    public double PendingDeposits { get; set; }
+    public double MarginBalance { get; set; }
+    public double ShortBalance { get; set; }
+    public double AccountValue { get; set; }
 }
 
 public class CurrentBalancesMargin
 {
-    public int AccruedInterest { get; set; }
-    public int CashBalance { get; set; }
-    public int CashReceipts { get; set; }
-    public int LongOptionMarketValue { get; set; }
-    public int LiquidationValue { get; set; }
-    public int LongMarketValue { get; set; }
-    public int MoneyMarketFund { get; set; }
-    public int Savings { get; set; }
-    public int ShortMarketValue { get; set; }
-    public int PendingDeposits { get; set; }
-    public int AvailableFunds { get; set; }
-    public int AvailableFundsNonMarginableTrade { get; set; }
-    public int BuyingPower { get; set; }
-    public int BuyingPowerNonMarginableTrade { get; set; }
-    public int DayTradingBuyingPower { get; set; }
-    public int DayTradingBuyingPowerCall { get; set; }
-    public int Equity { get; set; }
-    public int EquityPercentage { get; set; }
-    public int LongMarginValue { get; set; }
-    public int MaintenanceCall { get; set; }
-    public int MaintenanceRequirement { get; set; }
-    public int MarginBalance { get; set; }
-    public int RegTCall { get; set; }
-    public int ShortBalance { get; set; }
-    public int ShortMarginValue { get; set; }
-    public int ShortOptionMarketValue { get; set; }
-    public int Sma { get; set; }
-    public int MutualFundValue { get; set; }
-    public int BondValue { get; set; }
+    public double AccruedInterest { get; set; }
+    public double CashBalance { get; set; }
+    public double CashReceipts { get; set; }
+    public double LongOptionMarketValue { get; set; }
+    public double LiquidationValue { get; set; }
+    public double LongMarketValue { get; set; }
+    public double MoneyMarketFund { get; set; }
+    public double Savings { get; set; }
+    public double ShortMarketValue { get; set; }
+    public double PendingDeposits { get; set; }
+    public double AvailableFunds { get; set; }
+    public double AvailableFundsNonMarginableTrade { get; set; }
+    public double BuyingPower { get; set; }
+    public double BuyingPowerNonMarginableTrade { get; set; }
+    public double DayTradingBuyingPower { get; set; }
+    public double DayTradingBuyingPowerCall { get; set; }
+    public double Equity { get; set; }
+    public double EquityPercentage { get; set; }
+    public double LongMarginValue { get; set; }
+    public double MaintenanceCall { get; set; }
+    public double MaintenanceRequirement { get; set; }
+    public double MarginBalance { get; set; }
+    public double RegTCall { get; set; }
+    public double ShortBalance { get; set; }
+    public double ShortMarginValue { get; set; }
+    public double ShortOptionMarketValue { get; set; }
+    public double Sma { get; set; }
+    public double MutualFundValue { get; set; }
+    public double BondValue { get; set; }
     public bool IsInCall { get; set; }
-    public int StockBuyingPower { get; set; }
-    public int OptionBuyingPower { get; set; }
+    public double StockBuyingPower { get; set; }
+    public double OptionBuyingPower { get; set; }
 }
 
 public class ProjectedBalancesMargin
 {
-    public int AccruedInterest { get; set; }
-    public int CashBalance { get; set; }
-    public int CashReceipts { get; set; }
-    public int LongOptionMarketValue { get; set; }
-    public int LiquidationValue { get; set; }
-    public int LongMarketValue { get; set; }
-    public int MoneyMarketFund { get; set; }
-    public int Savings { get; set; }
-    public int ShortMarketValue { get; set; }
-    public int PendingDeposits { get; set; }
-    public int AvailableFunds { get; set; }
-    public int AvailableFundsNonMarginableTrade { get; set; }
-    public int BuyingPower { get; set; }
-    public int BuyingPowerNonMarginableTrade { get; set; }
-    public int DayTradingBuyingPower { get; set; }
-    public int DayTradingBuyingPowerCall { get; set; }
-    public int Equity { get; set; }
-    public int EquityPercentage { get; set; }
-    public int LongMarginValue { get; set; }
-    public int MaintenanceCall { get; set; }
-    public int MaintenanceRequirement { get; set; }
-    public int MarginBalance { get; set; }
-    public int RegTCall { get; set; }
-    public int ShortBalance { get; set; }
-    public int ShortMarginValue { get; set; }
-    public int ShortOptionMarketValue { get; set; }
-    public int Sma { get; set; }
-    public int MutualFundValue { get; set; }
-    public int BondValue { get; set; }
+    public double AccruedInterest { get; set; }
+    public double CashBalance { get; set; }
+    public double CashReceipts { get; set; }
+    public double LongOptionMarketValue { get; set; }
+    public double LiquidationValue { get; set; }
+    public double LongMarketValue { get; set; }
+    public double MoneyMarketFund { get; set; }
+    public double Savings { get; set; }
+    public double ShortMarketValue { get; set; }
+    public double PendingDeposits { get; set; }
+    public double AvailableFunds { get; set; }
+    public double AvailableFundsNonMarginableTrade { get; set; }
+    public double BuyingPower { get; set; }
+    public double BuyingPowerNonMarginableTrade { get; set; }
+    public double DayTradingBuyingPower { get; set; }
+    public double DayTradingBuyingPowerCall { get; set; }
+    public double Equity { get; set; }
+    public double EquityPercentage { get; set; }
+    public double LongMarginValue { get; set; }
+    public double MaintenanceCall { get; set; }
+    public double MaintenanceRequirement { get; set; }
+    public double MarginBalance { get; set; }
+    public double RegTCall { get; set; }
+    public double ShortBalance { get; set; }
+    public double ShortMarginValue { get; set; }
+    public double ShortOptionMarketValue { get; set; }
+    public double Sma { get; set; }
+    public double MutualFundValue { get; set; }
+    public double BondValue { get; set; }
     public bool IsInCall { get; set; }
-    public int StockBuyingPower { get; set; }
-    public int OptionBuyingPower { get; set; }
+    public double StockBuyingPower { get; set; }
+    public double OptionBuyingPower { get; set; }
 }

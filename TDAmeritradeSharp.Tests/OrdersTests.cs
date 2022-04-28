@@ -92,6 +92,58 @@ public class OrdersTests
     }
 
     [Test]
+    public void TestTDAccountConverter()
+    {
+        const string AccountId = "TestAccountId";
+        const int RoundTrips = 29;
+
+        var account = new CashAccount
+        {
+            AccountId = AccountId,
+            RoundTrips = RoundTrips,
+            Positions = new List<Position>
+            {
+                new()
+                {
+                    AgedQuantity = 1.23
+                },
+                new()
+                {
+                    AgedQuantity = 2.34
+                }
+            },
+            OrderStrategies = new List<TDOrder>
+            {
+                new()
+                {
+                    Quantity = 3.45
+                },
+                new()
+                {
+                    Quantity = 4.56
+                }
+            },
+            InitialBalances = new InitialBalancesCash
+            {
+                AccountValue = 100,
+                AccruedInterest = 1,
+                CashAvailableForTrading = 2
+            },
+            ProjectedBalances = new ProjectedBalancesCash
+            {
+                CashBalance = 200
+            }
+        };
+        account.OrderStrategies[0].OrderLegCollection.Add(new OrderLeg { Quantity = 123.456 });
+        var json = _client.SerializeAccount(account);
+        Assert.IsNotEmpty(json);
+        var accountDeserialized = (CashAccount)_client.DeserializeToAccount(json);
+        Assert.IsNotNull(accountDeserialized);
+        var jsonSerialized = _client.SerializeAccount(accountDeserialized);
+        Assert.AreEqual(json, jsonSerialized);
+    }
+
+    [Test]
     public async Task TestSingleLimitOrder()
     {
         var close = _testQuote.ClosePrice;
@@ -443,11 +495,11 @@ public class OrdersTests
                 }
             }
         };
-        order.ChildOrderStrategies = new List<TDOrder> 
-            { 
-                target, 
-                stop
-            };
+        order.ChildOrderStrategies = new List<TDOrder>
+        {
+            target,
+            stop
+        };
         var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
         //var orders = await _client.GetOrdersByPathAsync(_testAccountId).ConfigureAwait(false);
         var order2 = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);

@@ -91,18 +91,19 @@ public class TDProjectedBalances
     public double StockBuyingPower { get; set; }
 }
 
-public class SecuritiesAccount
+public abstract class SecuritiesAccount
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public AccountType Type { get; set; }
+    public abstract AccountType Type { get; }
     public string AccountId { get; set; } = null!; // string in Account but integer in Order
     public int RoundTrips { get; set; }
     public bool IsDayTrader { get; set; }
     public bool IsClosingOnlyRestricted { get; set; }
-    public TDInitialBalances InitialBalances { get; set; } = null!;
-    public TDCurrentBalances CurrentBalances { get; set; } = null!;
-    public TDProjectedBalances ProjectedBalances { get; set; } = null!;
     
+    // ReSharper disable once CollectionNeverQueried.Global
+    public List<Position> Positions { get; set; } = new List<Position>();
+    public List<TDOrder> OrderStrategies { get; set; } = new List<TDOrder>();
+
     public override string ToString()
     {
         return $"AccountId={AccountId}";

@@ -102,18 +102,6 @@ public class Client : IDisposable
     }
     
     /// <summary>
-    ///     Use this to correctly serialize an account of any type
-    ///     TDA Accounds are polymorphic.
-    /// </summary>
-    /// <param name="principalAccount"></param>
-    /// <returns></returns>
-    public string SerializeAccount(TDPrincipalAccount principalAccount)
-    {
-        var json = JsonSerializer.Serialize(principalAccount, principalAccount.GetType(), _jsonOptionsWithoutPolymorphicConverters);
-        return json;
-    }
-
-    /// <summary>
     ///     Use this to correctly deserialize to an instrument of the correct type.
     ///     TDA Instruments are polymorphic.
     /// </summary>
@@ -123,6 +111,30 @@ public class Client : IDisposable
     {
         var instrument = JsonSerializer.Deserialize<TDInstrument>(json, JsonOptions);
         return instrument;
+    }
+
+    /// <summary>
+    ///     Use this to correctly serialize an account of any type
+    ///     TDA Accounts are polymorphic.
+    /// </summary>
+    /// <param name="account"></param>
+    /// <returns></returns>
+    public string SerializeAccount(SecuritiesAccount account)
+    {
+        var json = JsonSerializer.Serialize(account, account.GetType(), _jsonOptionsWithoutPolymorphicConverters);
+        return json;
+    }
+
+    /// <summary>
+    ///     Use this to correctly deserialize to an account of the correct type.
+    ///     TDA Accounts are polymorphic.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <returns></returns>
+    public SecuritiesAccount? DeserializeToAccount(string json)
+    {
+        var account = JsonSerializer.Deserialize<SecuritiesAccount>(json, JsonOptions);
+        return account;
     }
 
     /// <summary>
