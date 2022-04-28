@@ -489,7 +489,8 @@ public class ClientStream : IDisposable
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    throw new Exception("WebSocketMessageType.Close");
+                    break;
+                    //throw new Exception("WebSocketMessageType.Close");
                 }
 
                 ms.Seek(0, SeekOrigin.Begin);
