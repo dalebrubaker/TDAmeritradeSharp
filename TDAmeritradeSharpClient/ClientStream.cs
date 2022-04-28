@@ -88,9 +88,9 @@ public class ClientStream : IDisposable
             }
 
             _prince = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys, TDPrincipalsFields.preferences);
-            _account = _prince.accounts?.Find(o => o.accountId == _prince.primaryAccountId);
+            _account = _prince.Accounts?.Find(o => o.AccountId == _prince.PrimaryAccountId);
 
-            var path = new Uri("wss://" + _prince.streamerInfo?.streamerSocketUrl + "/ws");
+            var path = new Uri("wss://" + _prince.StreamerInfo?.StreamerSocketUrl + "/ws");
             _socket = new ClientWebSocket();
 
             await _socket.ConnectAsync(path, CancellationToken.None);
@@ -151,8 +151,8 @@ public class ClientStream : IDisposable
                     Service = service.ToString(),
                     Command = "SUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols,
@@ -186,8 +186,8 @@ public class ClientStream : IDisposable
                     Service = service.ToString(),
                     Command = "UNSUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols
@@ -219,8 +219,8 @@ public class ClientStream : IDisposable
                     Service = "QUOTE",
                     Command = "SUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols,
@@ -254,8 +254,8 @@ public class ClientStream : IDisposable
                     Service = "QUOTE",
                     Command = "UNSUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols
@@ -289,8 +289,8 @@ public class ClientStream : IDisposable
                     Service = service.ToString(),
                     Command = "SUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols,
@@ -325,8 +325,8 @@ public class ClientStream : IDisposable
                     Service = service.ToString(),
                     Command = "UNSUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols
@@ -358,8 +358,8 @@ public class ClientStream : IDisposable
                     Service = option.ToString(),
                     Command = "SUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols,
@@ -392,8 +392,8 @@ public class ClientStream : IDisposable
                     Service = option.ToString(),
                     Command = "UNSUBS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         keys = symbols
@@ -426,8 +426,8 @@ public class ClientStream : IDisposable
                     Service = "ADMIN",
                     Command = "QOS",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
                         qoslevel = (int)quality
@@ -514,21 +514,21 @@ public class ClientStream : IDisposable
             return Task.CompletedTask;
         }
         //Converts ISO-8601 response in snapshot to ms since epoch accepted by Streamer
-        var tokenTimeStampAsDateObj = DateTime.Parse(_prince?.streamerInfo?.tokenTimestamp);
+        var tokenTimeStampAsDateObj = DateTime.Parse(_prince?.StreamerInfo?.TokenTimestamp);
         var tokenTimeStampAsMs = tokenTimeStampAsDateObj.ToUniversalTime().ToUnixTimeMilliseconds();
 
         var queryString = HttpUtility.ParseQueryString(string.Empty);
 
-        queryString.Add("userid", _account.accountId);
-        queryString.Add("company", _account.company);
-        queryString.Add("segment", _account.segment);
-        queryString.Add("cddomain", _account.accountCdDomainId);
+        queryString.Add("userid", _account.AccountId);
+        queryString.Add("company", _account.Company);
+        queryString.Add("segment", _account.Segment);
+        queryString.Add("cddomain", _account.AccountCdDomainId);
 
-        queryString.Add("token", _prince?.streamerInfo?.token);
-        queryString.Add("usergroup", _prince?.streamerInfo?.userGroup);
-        queryString.Add("accessLevel", _prince?.streamerInfo?.accessLevel);
-        queryString.Add("appId", _prince?.streamerInfo?.appId);
-        queryString.Add("acl", _prince?.streamerInfo?.acl);
+        queryString.Add("token", _prince?.StreamerInfo?.Token);
+        queryString.Add("usergroup", _prince?.StreamerInfo?.UserGroup);
+        queryString.Add("accessLevel", _prince?.StreamerInfo?.AccessLevel);
+        queryString.Add("appId", _prince?.StreamerInfo?.AppId);
+        queryString.Add("acl", _prince?.StreamerInfo?.Acl);
 
         queryString.Add("timestamp", tokenTimeStampAsMs.ToString(CultureInfo.InvariantCulture));
         queryString.Add("authorized", "Y");
@@ -545,11 +545,11 @@ public class ClientStream : IDisposable
                     Service = "ADMIN",
                     Command = "LOGIN",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
-                        _prince?.streamerInfo?.token,
+                        token = _prince?.StreamerInfo?.Token,
                         version = "1.0",
                         credential = encoded
                     }
@@ -575,8 +575,8 @@ public class ClientStream : IDisposable
                     Service = "ADMIN",
                     Command = "LOGOUT",
                     Requestid = Interlocked.Increment(ref _counter),
-                    Account = _account.accountId,
-                    Source = _prince?.streamerInfo?.appId,
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new { }
                 }
             }

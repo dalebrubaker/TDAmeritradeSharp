@@ -580,7 +580,7 @@ public class OrdersTests
     public async Task TestGetAccountPrincipalInfo()
     {
         var account = await _client.GetAccountPrincipalInfoAsync(_testAccountId);
-        Assert.AreEqual(_testAccountId, account.accountId);
-        Assert.IsNotNull(account.displayName);
+        Assert.AreEqual(_testAccountId, account.AccountId);
+        Assert.IsNotNull(account.DisplayName);
     }
 }

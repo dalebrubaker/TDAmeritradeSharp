@@ -183,7 +183,7 @@ public class Tests
         //var data2 = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo);
         //var data3 = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerSubscriptionKeys);
         var data = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.preferences, TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys);
-        Assert.IsTrue(!string.IsNullOrEmpty(data.accessLevel));
+        Assert.IsTrue(!string.IsNullOrEmpty(data.AccessLevel));
     }
 
     [Test]

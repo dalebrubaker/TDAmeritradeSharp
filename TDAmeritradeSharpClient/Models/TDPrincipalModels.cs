@@ -1,106 +1,105 @@
-﻿// ReSharper disable InconsistentNaming
-namespace TDAmeritradeSharpClient;
+﻿namespace TDAmeritradeSharpClient;
 
 [Serializable]
 public class TDStreamerInfo
 {
-    public string? streamerBinaryUrl { get; set; }
-    public string? streamerSocketUrl { get; set; }
-    public string? token { get; set; }
-    public string? tokenTimestamp { get; set; }
-    public string? userGroup { get; set; }
-    public string? accessLevel { get; set; }
-    public string? acl { get; set; }
-    public string? appId { get; set; }
+    public string? StreamerBinaryUrl { get; set; }
+    public string? StreamerSocketUrl { get; set; }
+    public string? Token { get; set; }
+    public string? TokenTimestamp { get; set; }
+    public string? UserGroup { get; set; }
+    public string? AccessLevel { get; set; }
+    public string? Acl { get; set; }
+    public string? AppId { get; set; }
 }
 
 [Serializable]
 public class TDQuotes
 {
-    public bool isNyseDelayed { get; set; }
-    public bool isNasdaqDelayed { get; set; }
-    public bool isOpraDelayed { get; set; }
-    public bool isAmexDelayed { get; set; }
-    public bool isCmeDelayed { get; set; }
-    public bool isIceDelayed { get; set; }
-    public bool isForexDelayed { get; set; }
+    public bool IsNyseDelayed { get; set; }
+    public bool IsNasdaqDelayed { get; set; }
+    public bool IsOpraDelayed { get; set; }
+    public bool IsAmexDelayed { get; set; }
+    public bool IsCmeDelayed { get; set; }
+    public bool IsIceDelayed { get; set; }
+    public bool IsForexDelayed { get; set; }
 }
 
 [Serializable]
 public class TDKey
 {
-    public string? key { get; set; }
+    public string? Key { get; set; }
 }
 
 [Serializable]
 public class TDStreamerSubscriptionKeys
 {
-    public List<TDKey>? keys { get; set; }
+    public List<TDKey>? Keys { get; set; }
 }
 
 [Serializable]
 public class TDPreferences
 {
-    public bool expressTrading { get; set; }
-    public bool directOptionsRouting { get; set; }
-    public bool directEquityRouting { get; set; }
-    public string? defaultEquityOrderLegInstruction { get; set; }
-    public string? defaultEquityOrderType { get; set; }
-    public string? defaultEquityOrderPriceLinkType { get; set; }
-    public string? defaultEquityOrderDuration { get; set; }
-    public string? defaultEquityOrderMarketSession { get; set; }
-    public int defaultEquityQuantity { get; set; }
-    public string? mutualFundTaxLotMethod { get; set; }
-    public string? optionTaxLotMethod { get; set; }
-    public string? equityTaxLotMethod { get; set; }
-    public string? defaultAdvancedToolLaunch { get; set; }
-    public string? authTokenTimeout { get; set; }
+    public bool ExpressTrading { get; set; }
+    public bool DirectOptionsRouting { get; set; }
+    public bool DirectEquityRouting { get; set; }
+    public string? DefaultEquityOrderLegInstruction { get; set; }
+    public string? DefaultEquityOrderType { get; set; }
+    public string? DefaultEquityOrderPriceLinkType { get; set; }
+    public string? DefaultEquityOrderDuration { get; set; }
+    public string? DefaultEquityOrderMarketSession { get; set; }
+    public int DefaultEquityQuantity { get; set; }
+    public string? MutualFundTaxLotMethod { get; set; }
+    public string? OptionTaxLotMethod { get; set; }
+    public string? EquityTaxLotMethod { get; set; }
+    public string? DefaultAdvancedToolLaunch { get; set; }
+    public string? AuthTokenTimeout { get; set; }
 }                
 
 [Serializable]
 public class TDAuthorizations
 {
-    public bool apex { get; set; }
-    public bool levelTwoQuotes { get; set; }
-    public bool stockTrading { get; set; }
-    public bool marginTrading { get; set; }
-    public bool streamingNews { get; set; }
-    public string? optionTradingLevel { get; set; }
-    public bool streamerAccess { get; set; }
-    public bool advancedMargin { get; set; }
-    public bool scottradeAccount { get; set; }
+    public bool Apex { get; set; }
+    public bool LevelTwoQuotes { get; set; }
+    public bool StockTrading { get; set; }
+    public bool MarginTrading { get; set; }
+    public bool StreamingNews { get; set; }
+    public string? OptionTradingLevel { get; set; }
+    public bool StreamerAccess { get; set; }
+    public bool AdvancedMargin { get; set; }
+    public bool ScottradeAccount { get; set; }
 }
 
 [Serializable]
 public class TDPrincipalAccount
 {
-    public string? accountId { get; set; }
-    public string? description { get; set; }
-    public string? displayName { get; set; }
-    public string? accountCdDomainId { get; set; }
-    public string? company { get; set; }
-    public string? segment { get; set; }
-    public string? surrogateIds { get; set; }
-    public TDPreferences? preferences { get; set; }
-    public string? acl { get; set; }
-    public TDAuthorizations? authorizations { get; set; }
+    public string? AccountId { get; set; }
+    public string? Description { get; set; }
+    public string? DisplayName { get; set; }
+    public string? AccountCdDomainId { get; set; }
+    public string? Company { get; set; }
+    public string? Segment { get; set; }
+    public string? SurrogateIds { get; set; }
+    public TDPreferences? Preferences { get; set; }
+    public string? Acl { get; set; }
+    public TDAuthorizations? Authorizations { get; set; }
 }
 
 [Serializable]
 public class TDPrincipal
 {
-    public string? authToken { get; set; }
-    public string? userId { get; set; }
-    public string? userCdDomainId { get; set; }
-    public string? primaryAccountId { get; set; }
-    public string? lastLoginTime { get; set; }
-    public string? tokenExpirationTime { get; set; }
-    public string? loginTime { get; set; }
-    public string? accessLevel { get; set; }
-    public bool stalePassword { get; set; }
-    public TDStreamerInfo? streamerInfo { get; set; }
-    public string? professionalStatus { get; set; }
-    public TDQuotes? quotes { get; set; }
-    public TDStreamerSubscriptionKeys? streamerSubscriptionKeys { get; set; }
-    public List<TDPrincipalAccount>? accounts { get; set; }
+    public string? AuthToken { get; set; }
+    public string? UserId { get; set; }
+    public string? UserCdDomainId { get; set; }
+    public string? PrimaryAccountId { get; set; }
+    public string? LastLoginTime { get; set; }
+    public string? TokenExpirationTime { get; set; }
+    public string? LoginTime { get; set; }
+    public string? AccessLevel { get; set; }
+    public bool StalePassword { get; set; }
+    public TDStreamerInfo? StreamerInfo { get; set; }
+    public string? ProfessionalStatus { get; set; }
+    public TDQuotes? Quotes { get; set; }
+    public TDStreamerSubscriptionKeys? StreamerSubscriptionKeys { get; set; }
+    public List<TDPrincipalAccount>? Accounts { get; set; }
 }

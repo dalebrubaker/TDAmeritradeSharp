@@ -583,7 +583,7 @@ public class Client : IDisposable
     public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
         var json = await GetUserPrincipalsJsonAsync(fields);
-        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json) : null!) ?? throw new TDAmeritradeSharpException();
+        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json, JsonOptions) : null!) ?? throw new TDAmeritradeSharpException();
     }
 
     /// <summary>
@@ -594,7 +594,7 @@ public class Client : IDisposable
     public async Task<TDPrincipalAccount?> GetAccountPrincipalInfoAsync(string accountId)
     {
         var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
-        var account = (data.accounts ?? throw new TDAmeritradeSharpException()).FirstOrDefault(x => x.accountId == accountId);
+        var account = (data.Accounts ?? throw new TDAmeritradeSharpException()).FirstOrDefault(x => x.AccountId == accountId);
         return account;
     }
 
