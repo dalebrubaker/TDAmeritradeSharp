@@ -16,7 +16,7 @@ public class ClientStream : IDisposable
     private readonly Client _client;
     private readonly TDStreamJsonProcessor _parser;
     private readonly SemaphoreSlim _slim = new(1);
-    private TDAccount? _account;
+    private TDPrincipalAccount? _account;
     private int _counter;
     private TDPrincipal? _prince;
     private ClientWebSocket? _socket;

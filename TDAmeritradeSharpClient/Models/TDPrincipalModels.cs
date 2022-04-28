@@ -72,7 +72,7 @@ public class TDAuthorizations
 }
 
 [Serializable]
-public class TDAccount
+public class TDPrincipalAccount
 {
     public string? accountId { get; set; }
     public string? description { get; set; }
@@ -102,5 +102,5 @@ public class TDPrincipal
     public string? professionalStatus { get; set; }
     public TDQuotes? quotes { get; set; }
     public TDStreamerSubscriptionKeys? streamerSubscriptionKeys { get; set; }
-    public List<TDAccount>? accounts { get; set; }
+    public List<TDPrincipalAccount>? accounts { get; set; }
 }

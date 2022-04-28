@@ -15,7 +15,7 @@ namespace TDAmeritradeSharpClient;
 public class Client : IDisposable
 {
     public const string Success = "Authorization was successful";
-    private readonly JsonSerializerOptions _jsonOptionsWithoutInstrumentConverter;
+    private readonly JsonSerializerOptions _jsonOptionsWithoutPolymorphicConverters;
     private HttpClient _httpClient;
 
     public Client()
@@ -28,14 +28,15 @@ public class Client : IDisposable
             {
                 new StringConverter(),
                 new TDOptionChainConverter(),
-                new TDInstrumentConverter()
+                new TDInstrumentConverter(),
+                new TDAccountConverter()
             },
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = true
         };
-        _jsonOptionsWithoutInstrumentConverter = new JsonSerializerOptions
+        _jsonOptionsWithoutPolymorphicConverters = new JsonSerializerOptions
         {
             AllowTrailingCommas = true,
             Converters =
@@ -96,7 +97,19 @@ public class Client : IDisposable
     /// <returns></returns>
     public string SerializeInstrument(TDInstrument instrument)
     {
-        var json = JsonSerializer.Serialize(instrument, instrument.GetType(), _jsonOptionsWithoutInstrumentConverter);
+        var json = JsonSerializer.Serialize(instrument, instrument.GetType(), _jsonOptionsWithoutPolymorphicConverters);
+        return json;
+    }
+    
+    /// <summary>
+    ///     Use this to correctly serialize an account of any type
+    ///     TDA Accounds are polymorphic.
+    /// </summary>
+    /// <param name="principalAccount"></param>
+    /// <returns></returns>
+    public string SerializeAccount(TDPrincipalAccount principalAccount)
+    {
+        var json = JsonSerializer.Serialize(principalAccount, principalAccount.GetType(), _jsonOptionsWithoutPolymorphicConverters);
         return json;
     }
 
@@ -118,7 +131,7 @@ public class Client : IDisposable
     /// <returns></returns>
     public TDOrder CloneDeep(TDOrder order)
     {
-        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutPolymorphicConverters);
         var clone = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
         return clone!;
     }
@@ -132,7 +145,7 @@ public class Client : IDisposable
     /// <exception cref="TDAmeritradeSharpException"></exception>
     public string SerializeOrder(TDOrder order)
     {
-        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutPolymorphicConverters);
         if (json == "null")
         {
             throw new TDAmeritradeSharpException();
@@ -566,7 +579,7 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="accountId"></param>
     /// <returns></returns>
-    public async Task<TDAccount?> GetAccountPrincipalInfoAsync(string accountId)
+    public async Task<TDPrincipalAccount?> GetAccountPrincipalInfoAsync(string accountId)
     {
         var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
         var account = (data.accounts ?? throw new TDAmeritradeSharpException()).FirstOrDefault(x => x.accountId == accountId);
@@ -881,7 +894,7 @@ public class Client : IDisposable
     public async Task<long> PlaceOcoOrderAsync(OcoOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
+        var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutPolymorphicConverters);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
