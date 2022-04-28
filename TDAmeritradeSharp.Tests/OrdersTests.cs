@@ -89,6 +89,8 @@ public class OrdersTests
         Assert.IsNotNull(instrumentDeserialized);
         Assert.AreEqual(instrument.UnderlyingSymbol, instrumentDeserialized.UnderlyingSymbol);
         Assert.AreEqual(instrument.OptionDeliverables[1].DeliverableUnits, instrumentDeserialized.OptionDeliverables![1].DeliverableUnits);
+        var jsonSerialized = _client.SerializeInstrument(instrumentDeserialized);
+        Assert.AreEqual(json, jsonSerialized);
     }
 
     [Test]
