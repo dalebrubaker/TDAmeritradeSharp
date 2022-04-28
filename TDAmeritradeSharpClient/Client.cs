@@ -699,19 +699,19 @@ public class Client : IDisposable
 
     #region Accounts
 
-    public async Task<TDAccountModel> GetAccountAsync(string accountId)
+    public async Task<TDAccount> GetAccountAsync(string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts//{accountId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var account = JsonSerializer.Deserialize<TDAccountModel>(json, JsonOptions);
+        var account = JsonSerializer.Deserialize<TDAccount>(json, JsonOptions);
         return account ?? throw new TDAmeritradeSharpException();
     }
 
-    public async Task<IEnumerable<TDAccountModel>> GetAccountsAsync()
+    public async Task<IEnumerable<TDAccount>> GetAccountsAsync()
     {
         var path = "https://api.tdameritrade.com/v1/accounts";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccountModel>>(json, JsonOptions);
+        var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccount>>(json, JsonOptions);
         Debug.Assert(accounts != null, nameof(accounts) + " != null");
         return accounts ?? throw new TDAmeritradeSharpException();
     }

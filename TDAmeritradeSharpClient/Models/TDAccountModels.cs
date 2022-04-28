@@ -109,7 +109,7 @@ public class SecuritiesAccount
     }
 }
 
-public class TDAccountModel
+public class TDAccount
 {
     public SecuritiesAccount SecuritiesAccount { get; set; } = null!;
 
