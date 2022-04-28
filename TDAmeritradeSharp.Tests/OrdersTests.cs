@@ -23,9 +23,9 @@ public class OrdersTests
         {
             await _client.RequireNotExpiredTokensAsync().ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Assert.IsTrue(false);
+            Assert.IsTrue(false, ex.Message);
             throw;
         }
         Assert.IsTrue(_client.IsSignedIn);
@@ -181,7 +181,7 @@ public class OrdersTests
             }
         };
         var clone = _client.CloneDeep(order);
-        Assert.AreEqual(_client.GetPlaceOrderJson(order), _client.GetPlaceOrderJson(clone));
+        Assert.AreEqual(_client.SerializeOrder(order), _client.SerializeOrder(clone));
     }
 
     [Test]

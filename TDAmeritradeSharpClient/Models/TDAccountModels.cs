@@ -85,7 +85,7 @@ public class TDProjectedBalances
 public class SecuritiesAccount
 {
     public string Type { get; set; } = null!;
-    public string AccountId { get; set; } = null!;
+    public string AccountId { get; set; } = null!; // string in Account but integer in Order
     public int RoundTrips { get; set; }
     public bool IsDayTrader { get; set; }
     public bool IsClosingOnlyRestricted { get; set; }

@@ -124,65 +124,22 @@ public class Client : IDisposable
     }
 
     /// <summary>
-    ///     Get the json for order with fields removed that would cause and order in PlaceOrder
+    ///     Serialize the order without using <see cref="TDInstrumentConverter" />, which supports deserialization but not serialization
+    ///     (because System.Text.Json chose not to handle polymorphic deserialization).
     /// </summary>
     /// <param name="order"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public string GetPlaceOrderJson(TDOrder order)
+    public string SerializeOrder(TDOrder order)
     {
         var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
-
-        // "error": "Following parameters are not allowed when placing an order: orderId,status,accountId,filledQuantity,remainingQuantity"
-        var root = JsonNode.Parse(json);
-        var rootObj = root as JsonObject;
-        if (rootObj == null)
-        {
-            throw new InvalidOperationException();
-        }
-        rootObj.Remove("orderId");
-        rootObj.Remove("status");
-        rootObj.Remove("accountId");
-        rootObj.Remove("filledQuantity");
-        rootObj.Remove("remainingQuantity");
-
-        //"error": "A requestedDestination cannot be specified. Equity direct routing is not enabled for this account."
-        rootObj.Remove("requestedDestination");
-
-        // "error": "Following parameters are not allowed when placing an order: positionEffect,instrument cusip"
-        rootObj.TryGetPropertyValue("orderLegCollection", out var orderLegCollectionNode);
-        var orderLegArray = orderLegCollectionNode?.AsArray();
-        foreach (var orderLegNode in orderLegArray!)
-        {
-            var orderLegObj = (JsonObject)orderLegNode!;
-            orderLegObj.Remove("positionEffect");
-            orderLegObj.TryGetPropertyValue("instrument", out var instrumentNode);
-            var instrumentObj = (JsonObject)instrumentNode!;
-            instrumentObj.Remove("cusip");
-        }
-
-        json = rootObj.ToJsonString();
-        // if (order.orderType == TDOrderEnums.OrderType.MARKET)
-        // {
-        //     // Remove the price field
-        //     var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
-        //     obj?.Remove("price");
-        //     json = JsonSerializer.Serialize(obj);
-        // }
-        // if (order.orderType != TDOrderEnums.OrderType.STOP && order.orderType != TDOrderEnums.OrderType.STOP_LIMIT && order.orderType != TDOrderEnums.OrderType.TRAILING_STOP_LIMIT)
-        // {
-        //     // Remove the stopPrice field
-        //     var obj = JsonSerializer.Deserialize<dynamic>(json) as JsonObject;
-        //     obj?.Remove("stopPrice");
-        //     json = JsonSerializer.Serialize(obj);
-        // }
         if (json == "null")
         {
             throw new InvalidOperationException();
         }
         return json;
     }
-    
+
     #endregion Helpers
 
     #region Auth
@@ -733,7 +690,7 @@ public class Client : IDisposable
     {
         var path = $"https://api.tdameritrade.com/v1/accounts//{accountId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var account = JsonSerializer.Deserialize<TDAccountModel>(json);
+        var account = JsonSerializer.Deserialize<TDAccountModel>(json, JsonOptions);
         return account ?? throw new InvalidOperationException();
     }
 
@@ -741,8 +698,7 @@ public class Client : IDisposable
     {
         var path = "https://api.tdameritrade.com/v1/accounts";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        //var accountsTmp = JsonSerializer.Deserialize(json);
-        var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccountModel>>(json);
+        var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccountModel>>(json, JsonOptions);
         Debug.Assert(accounts != null, nameof(accounts) + " != null");
         return accounts ?? throw new InvalidOperationException();
     }
@@ -751,11 +707,11 @@ public class Client : IDisposable
 
     #region Orders
 
-    public async Task<TDOrderResponse> GetOrderAsync(string accountId, long orderId)
+    public async Task<TDOrder> GetOrderAsync(string accountId, long orderId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonSerializer.Deserialize<TDOrderResponse>(json, JsonOptions);
+        var result = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
         return result ?? throw new InvalidOperationException();
     }
 
@@ -771,7 +727,7 @@ public class Client : IDisposable
     /// <param name="toEnteredTime">Specifies that no orders entered after this time should be returned. <c>null</c> means to end 60 days after toEnteredTime.</param>
     /// <param name="status">Specifies that only orders of this status should be returned. <c>null</c> means "all".</param>
     /// <returns>The list of orders matching this query.</returns>
-    public async Task<IEnumerable<TDOrderResponse>> GetOrdersByPathAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
+    public async Task<IEnumerable<TDOrder>> GetOrdersByPathAsync(string accountId, int? maxResults = null, DateTime? fromEnteredTime = null,
         DateTime? toEnteredTime = null, TDOrderEnums.Status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
@@ -797,8 +753,7 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            //var result0 = JsonSerializer.Deserialize(json);
-            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrder>>(json, JsonOptions);
             return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
@@ -821,7 +776,7 @@ public class Client : IDisposable
     /// <param name="status">
     ///     Specifies that only orders of this status should be returned. <c>null</c> means "all".<</param>
     /// <returns>The list of orders matching this query.</returns>
-    public async Task<IEnumerable<TDOrderResponse>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
+    public async Task<IEnumerable<TDOrder>> GetOrdersByQueryAsync(string? accountId = null, int? maxResults = null, DateTime? fromEnteredTime = null,
         DateTime? toEnteredTime = null, TDOrderEnums.Status? status = null)
     {
         // Add queryString /orders?maxResults=1&status=CANCELED" Dates are yyyy-mm-dd if not null
@@ -851,8 +806,7 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            //var result0 = JsonSerializer.Deserialize(json);
-            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrder>>(json, JsonOptions);
             return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
@@ -886,8 +840,21 @@ public class Client : IDisposable
     /// <exception cref="Exception"></exception>
     public async Task<long> PlaceOrderAsync(TDOrder order, string accountId)
     {
+        var json = SerializeOrder(order);
+        return await PlaceOrderAsync(json, accountId);
+    }
+
+    /// <summary>
+    ///     This method allows you to send the raw json that you would enter manually at https://developer.tdameritrade.com/account-access/apis/post/accounts/%7BaccountId%7D/orders-0
+    ///     The TD Ameritrade API will give you errors feedback there that is not available here in the http response.
+    /// </summary>
+    /// <param name="json"></param>
+    /// <param name="accountId"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<long> PlaceOrderAsync(string json, string accountId)
+    {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders";
-        var json = GetPlaceOrderJson(order);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -941,7 +908,7 @@ public class Client : IDisposable
     /// <exception cref="Exception"></exception>
     public async Task<long> ReplaceOrderAsync(TDOrder replacementOrder, string accountId, long orderId)
     {
-        var json = GetPlaceOrderJson(replacementOrder);
+        var json = SerializeOrder(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
@@ -969,7 +936,7 @@ public class Client : IDisposable
     public async Task CreateSavedOrderAsync(TDOrder order, string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
-        var json = GetPlaceOrderJson(order);
+        var json = SerializeOrder(order);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var httpResponseMessage = await _httpClient.Throttle().PostAsync(path, content);
         switch (httpResponseMessage.StatusCode)
@@ -981,21 +948,25 @@ public class Client : IDisposable
         }
     }
 
-    public async Task<TDOrderResponse> GetSavedOrderAsync(string accountId, long savedOrderId)
+    public async Task<TDOrder> GetSavedOrderAsync(string accountId, long? savedOrderId)
     {
+        if (savedOrderId == null)
+        {
+            throw new InvalidOperationException();
+        }
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
-        var result = JsonSerializer.Deserialize<TDOrderResponse>(json, JsonOptions);
+        var result = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
         return result ?? throw new InvalidOperationException();
     }
 
-    public async Task<IEnumerable<TDOrderResponse>> GetSavedOrdersByPathAsync(string accountId)
+    public async Task<IEnumerable<TDOrder>> GetSavedOrdersByPathAsync(string accountId)
     {
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         try
         {
-            var result = JsonSerializer.Deserialize<IEnumerable<TDOrderResponse>>(json, JsonOptions);
+            var result = JsonSerializer.Deserialize<IEnumerable<TDOrder>>(json, JsonOptions);
             return result ?? throw new InvalidOperationException();
         }
         catch (Exception e)
@@ -1005,8 +976,12 @@ public class Client : IDisposable
         }
     }
 
-    public async Task DeleteSavedOrderAsync(string accountId, long savedOrderId)
+    public async Task DeleteSavedOrderAsync(string accountId, long? savedOrderId)
     {
+        if (savedOrderId == null)
+        {
+            throw new InvalidOperationException();
+        }
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var res = await _httpClient.Throttle().DeleteAsync(path);
         switch (res.StatusCode)
@@ -1028,9 +1003,13 @@ public class Client : IDisposable
     /// <param name="savedOrderId">The savedOrderId of the order to replace.</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task ReplaceSavedOrderAsync(TDOrder replacementOrder, string accountId, long savedOrderId)
+    public async Task ReplaceSavedOrderAsync(TDOrder replacementOrder, string accountId, long? savedOrderId)
     {
-        var json = GetPlaceOrderJson(replacementOrder);
+        if (savedOrderId == null)
+        {
+            throw new InvalidOperationException();
+        }
+        var json = SerializeOrder(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var httpResponseMessage = await _httpClient.Throttle().PutAsync(path, content);
