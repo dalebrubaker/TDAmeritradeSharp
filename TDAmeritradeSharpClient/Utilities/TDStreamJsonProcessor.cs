@@ -119,7 +119,7 @@ public class TDStreamJsonProcessor
         var model = new TDBookSignal
         {
             Timestamp = timestamp,
-            _id = (TDBookOptions)Enum.Parse(typeof(TDBookOptions), service)
+            Id = (TDBookOptions)Enum.Parse(typeof(TDBookOptions), service)
         };
         foreach (var item in content)
         {
@@ -137,11 +137,11 @@ public class TDStreamJsonProcessor
                 //    break;
                 case "2":
                     var arrayBids = item.Value.AsArray();
-                    model._bids = arrayBids.Deserialize<TDBookLevel[]>()!;
+                    model.Bids = arrayBids.Deserialize<TDBookLevel[]>()!;
                     break;
                 case "3":
                     var arrayAsks = item.Value.AsArray();
-                    model._asks = arrayAsks.Deserialize<TDBookLevel[]>()!;
+                    model.Asks = arrayAsks.Deserialize<TDBookLevel[]>()!;
                     break;
             }
         }
@@ -166,25 +166,25 @@ public class TDStreamJsonProcessor
                     model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "seq":
-                    model._sequence = item.Value.GetValue<long>();
+                    model.Sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model._charttime = item.Value.GetValue<long>();
+                    model.ChartTime = item.Value.GetValue<long>();
                     break;
                 case "2":
-                    model._openprice = item.Value.GetValue<double>();
+                    model.OpenPrice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model._highprice = item.Value.GetValue<double>();
+                    model.HighPrice = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model._lowprice = item.Value.GetValue<double>();
+                    model.LowPrice = item.Value.GetValue<double>();
                     break;
                 case "5":
-                    model._closeprice = item.Value.GetValue<double>();
+                    model.ClosePrice = item.Value.GetValue<double>();
                     break;
                 case "6":
-                    model._volume = item.Value.GetValue<double>();
+                    model.Volume = item.Value.GetValue<double>();
                     break;
             }
         }
@@ -209,31 +209,31 @@ public class TDStreamJsonProcessor
                     model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "seq":
-                    model._sequence = item.Value.GetValue<long>();
+                    model.Sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model._openprice = item.Value.GetValue<double>();
+                    model.OpenPrice = item.Value.GetValue<double>();
                     break;
                 case "2":
-                    model._highprice = item.Value.GetValue<double>();
+                    model.HighPrice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model._lowprice = item.Value.GetValue<double>();
+                    model.LowPrice = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model._closeprice = item.Value.GetValue<double>();
+                    model.ClosePrice = item.Value.GetValue<double>();
                     break;
                 case "5":
-                    model._volume = item.Value.GetValue<double>();
+                    model.Volume = item.Value.GetValue<double>();
                     break;
                 case "6":
-                    model._sequence = item.Value.GetValue<long>();
+                    model.Sequence = item.Value.GetValue<long>();
                     break;
                 case "7":
-                    model._charttime = item.Value.GetValue<long>();
+                    model.ChartTime = item.Value.GetValue<long>();
                     break;
                 case "8":
-                    model._chartday = item.Value.GetValue<int>();
+                    model.ChartDay = item.Value.GetValue<int>();
                     break;
             }
         }
@@ -258,19 +258,19 @@ public class TDStreamJsonProcessor
                     model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "seq":
-                    model._sequence = item.Value.GetValue<long>();
+                    model.Sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model._tradetime = item.Value.GetValue<long>();
+                    model.Tradetime = item.Value.GetValue<long>();
                     break;
                 case "2":
-                    model._lastprice = item.Value.GetValue<double>();
+                    model.Lastprice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model._lastsize = item.Value.GetValue<double>();
+                    model.Lastsize = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model._lastsequence = item.Value.GetValue<long>();
+                    model.Lastsequence = item.Value.GetValue<long>();
                     break;
             }
         }
@@ -295,55 +295,55 @@ public class TDStreamJsonProcessor
                     model.Symbol = item.Value.GetValue<string>();
                     break;
                 case "1":
-                    model._bidprice = item.Value.GetValue<double>();
+                    model.BidPrice = item.Value.GetValue<double>();
                     break;
                 case "2":
-                    model._askprice = item.Value.GetValue<double>();
+                    model.AskPrice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model._lastprice = item.Value.GetValue<double>();
+                    model.LastPrice = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model._bidsize = item.Value.GetValue<double>();
+                    model.BidSize = item.Value.GetValue<double>();
                     break;
                 case "5":
-                    model._asksize = item.Value.GetValue<double>();
+                    model.AskSize = item.Value.GetValue<double>();
                     break;
                 case "6":
-                    model._askid = item.Value.GetValue<char>();
+                    model.AskId = item.Value.GetValue<char>();
                     break;
                 case "7":
-                    model._bidid = item.Value.GetValue<char>();
+                    model.BidId = item.Value.GetValue<char>();
                     break;
                 case "8":
-                    model._totalvolume = item.Value.GetValue<long>();
+                    model.TotalVolume = item.Value.GetValue<long>();
                     break;
                 case "9":
-                    model._lastsize = item.Value.GetValue<double>();
+                    model.LastSize = item.Value.GetValue<double>();
                     break;
                 case "10":
-                    model._tradetime = item.Value.GetValue<long>();
+                    model.TradeTime = item.Value.GetValue<long>();
                     break;
                 case "11":
-                    model._quotetime = item.Value.GetValue<long>();
+                    model.QuoteTime = item.Value.GetValue<long>();
                     break;
                 case "12":
-                    model._highprice = item.Value.GetValue<double>();
+                    model.HighPrice = item.Value.GetValue<double>();
                     break;
                 case "13":
-                    model._lowprice = item.Value.GetValue<double>();
+                    model.LowPrice = item.Value.GetValue<double>();
                     break;
                 case "14":
-                    model._bidtick = item.Value.GetValue<char>();
+                    model.BidTick = item.Value.GetValue<char>();
                     break;
                 case "15":
-                    model._closeprice = item.Value.GetValue<double>();
+                    model.ClosePrice = item.Value.GetValue<double>();
                     break;
                 case "24":
-                    model._volatility = item.Value.GetValue<double>();
+                    model.Volatility = item.Value.GetValue<double>();
                     break;
                 case "28":
-                    model._openprice = item.Value.GetValue<double>();
+                    model.OpenPrice = item.Value.GetValue<double>();
                     break;
             }
         }

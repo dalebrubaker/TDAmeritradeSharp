@@ -1,5 +1,4 @@
-﻿// ReSharper disable IdentifierTypo
-
+﻿
 using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
@@ -63,17 +62,17 @@ public struct TDBookSignal : ISignal
     /// <summary>
     ///     Book source
     /// </summary>
-    public TDBookOptions _id;
+    public TDBookOptions Id { get; set; }
 
     /// <summary>
     ///     2 bids
     /// </summary>
-    public TDBookLevel[] _bids;
+    public TDBookLevel[] Bids { get; set; }
 
     /// <summary>
     ///     3 asks
     /// </summary>
-    public TDBookLevel[] _asks;
+    public TDBookLevel[] Asks { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 }
@@ -85,13 +84,13 @@ public struct TDBookLevel
     ///     0 this price level
     /// </summary>
     [JsonPropertyName("0")]
-    public double _price;
+    public double Price { get; set; }
 
     /// <summary>
     ///     2 total volume at this level
     /// </summary>
     [JsonPropertyName("1")]
-    public double _quantity;
+    public double Quantity { get; set; }
 }
 
 [Serializable]
@@ -110,91 +109,91 @@ public struct TDQuoteSignal : ISignal
     /// <summary>
     ///     1 Current Best Bid Price
     /// </summary>
-    public double _bidprice;
+    public double BidPrice { get; set; }
 
     /// <summary>
     ///     2 Current Best Ask Price
     /// </summary>
-    public double _askprice;
+    public double AskPrice  { get; set; }
 
     /// <summary>
     ///     4 Number of shares for bid
     /// </summary>
-    public double _bidsize;
+    public double BidSize  { get; set; }
 
     /// <summary>
     ///     5 Number of shares for ask
     /// </summary>
-    public double _asksize;
+    public double AskSize { get; set; }
 
     /// <summary>
     ///     3 Price at which the last trade was matched
     /// </summary>
-    public double _lastprice;
+    public double LastPrice  { get; set; }
 
     /// <summary>
     ///     9 Number of shares traded with last trade
     /// </summary>
-    public double _lastsize;
+    public double LastSize { get; set; }
 
     /// <summary>
     ///     8 Aggregated shares traded throughout the day, including pre/post market hours.
     /// </summary>
-    public long _totalvolume;
+    public long TotalVolume { get; set; }
 
     /// <summary>
     ///     28 Previous day’s opening price
     /// </summary>
-    public double _openprice;
+    public double OpenPrice { get; set; }
 
     /// <summary>
     ///     15 Previous day’s closing price
     /// </summary>
-    public double _closeprice;
+    public double ClosePrice { get; set; }
 
     /// <summary>
     ///     13 Day’s low trade price
     /// </summary>
-    public double _lowprice;
+    public double LowPrice { get; set; }
 
     /// <summary>
     ///     12 Day’s high trade price
     /// </summary>
-    public double _highprice;
+    public double HighPrice { get; set; }
 
     /// <summary>
     ///     10 Trade time of the last trade
     /// </summary>
-    public double _tradetime;
+    public double TradeTime { get; set; }
 
     /// <summary>
     ///     11 Quote time of the last trade
     /// </summary>
-    public double _quotetime;
+    public double QuoteTime { get; set; }
 
     /// <summary>
     ///     7 Exchange with the best bid
     /// </summary>
-    public char _bidid;
+    public char BidId { get; set; }
 
     /// <summary>
     ///     6 Exchange with the best ask
     /// </summary>
-    public char _askid;
+    public char AskId { get; set; }
 
     /// <summary>
     ///     14 Indicates Up or Downtick(NASDAQ NMS & Small Cap)
     /// </summary>
-    public char _bidtick;
+    public char BidTick { get; set; }
 
     /// <summary>
     ///     24 Option Risk/Volatility Measurement
     /// </summary>
-    public double _volatility;
+    public double Volatility { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
-    public DateTime QuoteTime => TDHelpers.FromUnixTimeMilliseconds(_quotetime);
-    public DateTime TradeTime => TDHelpers.FromUnixTimeMilliseconds(_tradetime);
+    public DateTime QuoteDateTime => TDHelpers.FromUnixTimeMilliseconds(QuoteTime);
+    public DateTime TradeDateTime => TDHelpers.FromUnixTimeMilliseconds(TradeTime);
 }
 
 [Serializable]
@@ -213,30 +212,30 @@ public struct TDTimeSaleSignal : ISignal
     /// <summary>
     ///     order
     /// </summary>
-    public long _sequence;
+    public long Sequence  { get; set; }
 
     /// <summary>
     ///     1 Trade time of the last trade
     /// </summary>
-    public double _tradetime;
+    public double Tradetime  { get; set; }
 
     /// <summary>
     ///     2 Price at which the last trade was matched
     /// </summary>
-    public double _lastprice;
+    public double Lastprice  { get; set; }
 
     /// <summary>
     ///     3 Number of shares traded with last trade
     /// </summary>
-    public double _lastsize;
+    public double Lastsize  { get; set; }
 
     /// <summary>
     ///     4 Number of Number of shares for bid
     /// </summary>
-    public long _lastsequence;
+    public long Lastsequence  { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
-    public DateTime TradeTime => TDHelpers.FromUnixTimeMilliseconds(_tradetime);
+    public DateTime TradeDateTime => TDHelpers.FromUnixTimeMilliseconds(Tradetime);
 }
 
 [Serializable]
@@ -255,48 +254,48 @@ public struct TDChartSignal : ISignal
     /// <summary>
     ///     1 Opening price for the minute
     /// </summary>
-    public double _openprice;
+    public double OpenPrice { get; set; }
 
     /// <summary>
     ///     2 Highest price for the minute
     /// </summary>
-    public double _highprice;
+    public double HighPrice  { get; set; }
 
     /// <summary>
     ///     3 Chart’s lowest price for the minute
     /// </summary>
-    public double _lowprice;
+    public double LowPrice  { get; set; }
 
     /// <summary>
     ///     4 Closing price for the minute
     /// </summary>
-    public double _closeprice;
+    public double ClosePrice  { get; set; }
 
     /// <summary>
     ///     5 Total volume for the minute
     /// </summary>
-    public double _volume;
+    public double Volume  { get; set; }
 
     /// <summary>
     ///     6 Identifies the candle minute
     /// </summary>
-    public long _sequence;
+    public long Sequence  { get; set; }
 
     /// <summary>
     ///     7 Milliseconds since Epoch
     /// </summary>
-    public long _charttime;
+    public long ChartTime  { get; set; }
 
     /// <summary>
     ///     8 Not useful
     /// </summary>
-    public int _chartday;
+    public int ChartDay  { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 
-    public DateTime ChartTime => TDHelpers.FromUnixTimeMilliseconds(_charttime);
+    public DateTime ChartDateTime => TDHelpers.FromUnixTimeMilliseconds(ChartTime);
 
-    public int ChartIndex => ChartTime.ToCandleIndex(1);
+    public int ChartIndex => ChartDateTime.ToCandleIndex(1);
 }
 
 // ReSharper disable InconsistentNaming
@@ -308,6 +307,7 @@ public enum TDChartSubs
     CHART_FUTURES
 }
 
+// ReSharper disable IdentifierTypo
 [Serializable]
 public enum TDTimeSaleServices
 {

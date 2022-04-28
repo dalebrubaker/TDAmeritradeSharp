@@ -1,4 +1,5 @@
-﻿namespace TDAmeritradeSharpClient;
+﻿// ReSharper disable InconsistentNaming
+namespace TDAmeritradeSharpClient;
 
 [Serializable]
 public enum TDPrincipalsFields
