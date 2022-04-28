@@ -67,7 +67,7 @@ public class TDInstrumentConverter : JsonConverter<TDInstrument>
                     break;
                 case JsonTokenType.StartObject:
                     // New properties on this new object
-                    _currentObject = Activator.CreateInstance(_currentType ?? throw new InvalidOperationException());
+                    _currentObject = Activator.CreateInstance(_currentType ?? throw new TDAmeritradeSharpException());
                     if (_currentType == typeof(OptionDeliverable))
                     {
                         var instrumentOption = (InstrumentOption)instrument;
@@ -92,7 +92,7 @@ public class TDInstrumentConverter : JsonConverter<TDInstrument>
                     var propertyName = reader.GetString();
                     if (propertyName == null)
                     {
-                        throw new InvalidOperationException();
+                        throw new TDAmeritradeSharpException();
                     }
                     var propName = propertyNamesDictByCamelCaseNames[propertyName];
                     var property = properties[propName];
@@ -106,7 +106,7 @@ public class TDInstrumentConverter : JsonConverter<TDInstrument>
                         case JsonTokenType.None:
                             throw new JsonException("Unexpected to get here.");
                         case JsonTokenType.StartObject:
-                            _currentObject = Activator.CreateInstance(_currentType ?? throw new InvalidOperationException());
+                            _currentObject = Activator.CreateInstance(_currentType ?? throw new TDAmeritradeSharpException());
                             (properties, propertyNamesDictByCamelCaseNames) = SetPropertiesInfoForType(_currentType);
                             break;
                         case JsonTokenType.EndObject:

@@ -15,8 +15,8 @@ public class TDAuthValues
     {
         RedirectUrl = redirectUrl;
         ConsumerKey = consumerKey;
-        AccessToken = authResponse.access_token ?? throw new InvalidOperationException();;
-        RefreshToken = authResponse.refresh_token ?? throw new InvalidOperationException();
+        AccessToken = authResponse.access_token ?? throw new TDAmeritradeSharpException();;
+        RefreshToken = authResponse.refresh_token ?? throw new TDAmeritradeSharpException();
         AccessTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.expires_in);
         RefreshTokenExpirationUtc = DateTime.UtcNow.AddSeconds(authResponse.refresh_token_expires_in);
     }

@@ -44,13 +44,13 @@ public class TDStreamJsonProcessor
         var nodeData = node?["data"];
         if (nodeData == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var dataArray = nodeData.AsArray();
         Debug.Assert(dataArray != null, nameof(dataArray) + " != null");
         if (dataArray == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         foreach (var arrayNode in dataArray)
         {
@@ -62,7 +62,7 @@ public class TDStreamJsonProcessor
             var nodeTimestamp = arrayNode["timestamp"];
             if (nodeTimestamp == null)
             {
-                throw new InvalidOperationException();
+                throw new TDAmeritradeSharpException();
             }
             var timestamp = nodeTimestamp.GetValue<long>();
             var contents = arrayNode["content"];

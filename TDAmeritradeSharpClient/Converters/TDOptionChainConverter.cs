@@ -12,7 +12,7 @@ public class TDOptionChainConverter : JsonConverter<TDOptionChain>
         var node = JsonNode.Parse(ref reader);
         if (node == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var result = new TDOptionChain
         {
@@ -53,7 +53,7 @@ public class TDOptionChainConverter : JsonConverter<TDOptionChain>
             foreach (var optionNode in array!)
             {
                 var option = optionNode.Deserialize<TDOption>();
-                optionsAtStrike.Options.Add(option ?? throw new InvalidOperationException());
+                optionsAtStrike.Options.Add(option ?? throw new TDAmeritradeSharpException());
             }
         }
         return exp;

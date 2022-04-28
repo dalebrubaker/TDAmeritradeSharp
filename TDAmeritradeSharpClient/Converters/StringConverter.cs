@@ -17,7 +17,7 @@ public class StringConverter : JsonConverter<string>
                         return stringValue.ToString();
                     }
                 case JsonTokenType.String:
-                    return reader.GetString() ?? throw new InvalidOperationException();
+                    return reader.GetString() ?? throw new TDAmeritradeSharpException();
                 default:
                     throw new JsonException();
             }

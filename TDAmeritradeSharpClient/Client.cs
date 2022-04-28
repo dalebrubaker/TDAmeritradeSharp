@@ -129,13 +129,13 @@ public class Client : IDisposable
     /// </summary>
     /// <param name="order"></param>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="TDAmeritradeSharpException"></exception>
     public string SerializeOrder(TDOrder order)
     {
         var json = JsonSerializer.Serialize(order, _jsonOptionsWithoutInstrumentConverter);
         if (json == "null")
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         return json;
     }
@@ -169,7 +169,7 @@ public class Client : IDisposable
         {
             var json = await SendRequestAsync(req);
             var authResponse = JsonSerializer.Deserialize<TDAuthResponse>(json);
-            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse ?? throw new InvalidOperationException());
+            AuthValues = new TDAuthValues(callback!, consumerKey!, authResponse ?? throw new TDAmeritradeSharpException());
             SaveAuthResult(AuthValues);
             LoadAuthResult();
             return Success;
@@ -322,7 +322,7 @@ public class Client : IDisposable
         var json = await GetOptionsChainJsonAsync(request);
         if (IsNullOrEmpty(json))
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var result = JsonSerializer.Deserialize<TDOptionChain>(json, JsonOptions);
         return result;
@@ -508,12 +508,12 @@ public class Client : IDisposable
         var json = await GetQuoteJsonAsync(symbol);
         if (IsNullOrEmpty(json))
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var node = JsonNode.Parse(json);
         if (node == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var nodeQuote = node[symbol];
         var result = nodeQuote?.Deserialize<T>(JsonOptions);
@@ -558,7 +558,7 @@ public class Client : IDisposable
     public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
         var json = await GetUserPrincipalsJsonAsync(fields);
-        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json) : null!) ?? throw new InvalidOperationException();
+        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json) : null!) ?? throw new TDAmeritradeSharpException();
     }
 
     /// <summary>
@@ -569,7 +569,7 @@ public class Client : IDisposable
     public async Task<TDAccount?> GetAccountPrincipalInfoAsync(string accountId)
     {
         var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
-        var account = (data.accounts ?? throw new InvalidOperationException()).FirstOrDefault(x => x.accountId == accountId);
+        var account = (data.accounts ?? throw new TDAmeritradeSharpException()).FirstOrDefault(x => x.accountId == accountId);
         return account;
     }
 
@@ -618,7 +618,7 @@ public class Client : IDisposable
             return null!;
         }
         var result = GetMarketHours(marketType, json);
-        return result ?? throw new InvalidOperationException();
+        return result ?? throw new TDAmeritradeSharpException();
     }
 
     private TDMarketHours? GetMarketHours(MarketTypes marketType, string json)
@@ -626,20 +626,20 @@ public class Client : IDisposable
         var node = JsonNode.Parse(json);
         if (node == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         switch (marketType)
         {
             case MarketTypes.BOND:
-                return node["bond"]?["BON"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+                return node["bond"]?["BON"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new TDAmeritradeSharpException();
             case MarketTypes.EQUITY:
-                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+                return node["equity"]?["EQ"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new TDAmeritradeSharpException();
             case MarketTypes.ETF:
                 throw new NotSupportedException();
             case MarketTypes.FOREX:
-                return node["forex"]?["forex"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+                return node["forex"]?["forex"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new TDAmeritradeSharpException();
             case MarketTypes.FUTURE:
-                return node["future"]?["DFE"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+                return node["future"]?["DFE"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new TDAmeritradeSharpException();
             case MarketTypes.FUTURE_OPTION:
                 throw new NotSupportedException();
             case MarketTypes.INDEX:
@@ -649,13 +649,13 @@ public class Client : IDisposable
             case MarketTypes.MUTUAL_FUND:
                 throw new NotSupportedException();
             case MarketTypes.OPTION:
-                return node["option"]?["EQO"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new InvalidOperationException();
+                return node["option"]?["EQO"]?.Deserialize<TDMarketHours>(JsonOptions) ?? throw new TDAmeritradeSharpException();
             case MarketTypes.UNKNOWN:
                 throw new NotSupportedException();
             default:
                 throw new ArgumentOutOfRangeException(nameof(marketType), marketType, null);
         }
-        throw new InvalidOperationException();
+        throw new TDAmeritradeSharpException();
     }
 
     private async Task<string> SendRequestAsync(string path)
@@ -691,7 +691,7 @@ public class Client : IDisposable
         var path = $"https://api.tdameritrade.com/v1/accounts//{accountId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         var account = JsonSerializer.Deserialize<TDAccountModel>(json, JsonOptions);
-        return account ?? throw new InvalidOperationException();
+        return account ?? throw new TDAmeritradeSharpException();
     }
 
     public async Task<IEnumerable<TDAccountModel>> GetAccountsAsync()
@@ -700,7 +700,7 @@ public class Client : IDisposable
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         var accounts = JsonSerializer.Deserialize<IEnumerable<TDAccountModel>>(json, JsonOptions);
         Debug.Assert(accounts != null, nameof(accounts) + " != null");
-        return accounts ?? throw new InvalidOperationException();
+        return accounts ?? throw new TDAmeritradeSharpException();
     }
 
     #endregion Accounts
@@ -712,7 +712,7 @@ public class Client : IDisposable
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/orders/{orderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         var result = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
-        return result ?? throw new InvalidOperationException();
+        return result ?? throw new TDAmeritradeSharpException();
     }
 
     /// <summary>
@@ -754,7 +754,7 @@ public class Client : IDisposable
         try
         {
             var result = JsonSerializer.Deserialize<IEnumerable<TDOrder>>(json, JsonOptions);
-            return result ?? throw new InvalidOperationException();
+            return result ?? throw new TDAmeritradeSharpException();
         }
         catch (Exception e)
         {
@@ -807,7 +807,7 @@ public class Client : IDisposable
         try
         {
             var result = JsonSerializer.Deserialize<IEnumerable<TDOrder>>(json, JsonOptions);
-            return result ?? throw new InvalidOperationException();
+            return result ?? throw new TDAmeritradeSharpException();
         }
         catch (Exception e)
         {
@@ -952,12 +952,12 @@ public class Client : IDisposable
     {
         if (savedOrderId == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var json = await SendRequestAsync(path).ConfigureAwait(false);
         var result = JsonSerializer.Deserialize<TDOrder>(json, JsonOptions);
-        return result ?? throw new InvalidOperationException();
+        return result ?? throw new TDAmeritradeSharpException();
     }
 
     public async Task<IEnumerable<TDOrder>> GetSavedOrdersByPathAsync(string accountId)
@@ -967,7 +967,7 @@ public class Client : IDisposable
         try
         {
             var result = JsonSerializer.Deserialize<IEnumerable<TDOrder>>(json, JsonOptions);
-            return result ?? throw new InvalidOperationException();
+            return result ?? throw new TDAmeritradeSharpException();
         }
         catch (Exception e)
         {
@@ -980,7 +980,7 @@ public class Client : IDisposable
     {
         if (savedOrderId == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var path = $"https://api.tdameritrade.com/v1/accounts/{accountId}/savedorders/{savedOrderId}";
         var res = await _httpClient.Throttle().DeleteAsync(path);
@@ -1007,7 +1007,7 @@ public class Client : IDisposable
     {
         if (savedOrderId == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var json = SerializeOrder(replacementOrder);
         var content = new StringContent(json, Encoding.UTF8, "application/json");

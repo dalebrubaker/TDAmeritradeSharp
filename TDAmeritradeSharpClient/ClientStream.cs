@@ -140,7 +140,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -175,7 +175,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -208,7 +208,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -243,7 +243,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -278,7 +278,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -314,7 +314,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -347,7 +347,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -381,7 +381,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -415,7 +415,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
@@ -563,7 +563,7 @@ public class ClientStream : IDisposable
     {
         if (_account == null)
         {
-            throw new InvalidOperationException();
+            throw new TDAmeritradeSharpException();
         }
         var request = new TDRealtimeRequestContainer
         {
