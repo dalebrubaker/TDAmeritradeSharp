@@ -1,6 +1,15 @@
-﻿namespace TDAmeritradeSharpClient;
+﻿using System.Text.Json.Serialization;
 
-// Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
+namespace TDAmeritradeSharpClient;
+
+// ReSharper disable InconsistentNaming
+public enum AccountType
+{
+    CASH,
+    MARGIN
+}
+// ReSharper restore InconsistentNaming
+
 public class TDInitialBalances
 {
     public double AccruedInterest { get; set; }
@@ -84,7 +93,8 @@ public class TDProjectedBalances
 
 public class SecuritiesAccount
 {
-    public string Type { get; set; } = null!;
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public AccountType Type { get; set; }
     public string AccountId { get; set; } = null!; // string in Account but integer in Order
     public int RoundTrips { get; set; }
     public bool IsDayTrader { get; set; }
