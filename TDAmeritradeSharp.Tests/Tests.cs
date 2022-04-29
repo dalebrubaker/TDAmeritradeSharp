@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Serilog;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritrade.Tests;
@@ -9,6 +10,18 @@ namespace TDAmeritrade.Tests;
 public class Tests
 {
     private Client _client;
+
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        SetLogging();
+    }
+
+    [OneTimeTearDown]
+    public void TearDown()
+    {
+        Log.CloseAndFlush();
+    }
 
     [SetUp]
     public async Task Init()
@@ -25,6 +38,27 @@ public class Tests
             throw;
         }
         Assert.IsTrue(_client.IsSignedIn);
+    }
+
+    public static void SetLogging()
+    {
+        // Allow logging during Tests
+        var seqURL = Environment.GetEnvironmentVariable("SeqURL");
+        var apiKey = Environment.GetEnvironmentVariable("DTCSharpSeqApiKey");
+        if (seqURL != null)
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .Enrich.FromLogContext()
+                .Enrich.WithThreadId()
+                .Enrich.WithThreadName()
+                .Enrich.WithProcessId()
+                .Enrich.WithProcessName()
+                .Enrich
+                .WithProperty("Application", nameof(Tests))
+                .WriteTo.Seq(seqURL, apiKey: apiKey)
+                .CreateLogger();
+        }
     }
 
     [Test]

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Serilog;
 using TDAmeritradeSharpClient;
 
 namespace TDAmeritrade.Tests;
@@ -13,10 +14,24 @@ public class OrdersTests
     private Client _client;
     private string _testAccountId;
     private TDEquityQuote _testQuote;
+    
+    [OneTimeSetUp]
+    public void Setup()
+    {
+        Tests.SetLogging();
+    }
+
+    [OneTimeTearDown]
+    public void TearDown()
+    {
+        Log.CloseAndFlush();
+    }
 
     [SetUp]
     public async Task Init()
     {
+        Tests.SetLogging();
+
         // Please sign in first, following services uses the client file
         _client = new Client();
         try

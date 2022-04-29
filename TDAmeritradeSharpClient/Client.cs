@@ -3,23 +3,28 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Web;
+using Serilog;
 
 namespace TDAmeritradeSharpClient;
 
 public class Client : IDisposable
 {
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+    
     public const string Success = "Authorization was successful";
     private readonly JsonSerializerOptions _jsonOptionsWithoutPolymorphicConverters;
     private HttpClient _httpClient;
 
     public Client()
     {
+        s_logger.Verbose("Starting Client");
         _httpClient = new HttpClient();
         JsonOptions = new JsonSerializerOptions
         {
