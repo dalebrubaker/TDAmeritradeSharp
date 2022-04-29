@@ -154,7 +154,7 @@ public partial class AuthUserControl : UserControl
         }
         catch (Exception ex)
         {
-            // Show message and return without enabling timer. It will be reenabled on btnGetAuthCode_Click
+            // Show message and return without enabling timer. It will be re-enabled on btnGetAuthCode_Click
             MessageBox.Show(ex.Message);
             return;
         }
@@ -168,14 +168,14 @@ public partial class AuthUserControl : UserControl
             }
             lblAccessTokenExpires.Text = timeUntilAccessTokenExpires.Ticks < 0
                 ? "Access token is no longer valid."
-                : $"Access token expires in {timeUntilAccessTokenExpires.Pretty()}";
+                : $"Access token expires in {timeUntilAccessTokenExpires.Pretty()} (Will auto-renew 1 minute before expiring.)";
         }
         else
         {
             lblAccessTokenExpires.Text = "Access token is not valid yet.";
         }
         lblRefreshTokenExpires.Text = _client.AuthValues.RefreshTokenExpirationUtc.Date != DateTime.MinValue.Date
-            ? $"Refresh token expires {_client.AuthValues.RefreshTokenExpirationUtc.Date:d}"
+            ? $"Refresh token expires {_client.AuthValues.RefreshTokenExpirationUtc.Date:d} (Will auto-renew 7 days before expiring.)"
             : "Refresh token is expired or never was set. Initialize using buttons above.";
         timer1.Enabled = true;
     }

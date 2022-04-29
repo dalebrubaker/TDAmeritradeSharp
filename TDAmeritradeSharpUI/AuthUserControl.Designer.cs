@@ -133,10 +133,10 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.logControl1.HideTimestamps = false;
-            this.logControl1.Location = new System.Drawing.Point(0, 316);
+            this.logControl1.Location = new System.Drawing.Point(0, 252);
             this.logControl1.MaximumLogLengthChars = 104857600;
             this.logControl1.Name = "logControl1";
-            this.logControl1.Size = new System.Drawing.Size(1051, 89);
+            this.logControl1.Size = new System.Drawing.Size(1051, 153);
             this.logControl1.TabIndex = 8;
             this.logControl1.Title = "Log";
             // 
@@ -196,7 +196,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(14, 178);
+            this.button1.Location = new System.Drawing.Point(12, 178);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(268, 23);
             this.button1.TabIndex = 33;
@@ -217,7 +217,7 @@
             // lblRequestsInLastMinute
             // 
             this.lblRequestsInLastMinute.AutoSize = true;
-            this.lblRequestsInLastMinute.Location = new System.Drawing.Point(14, 245);
+            this.lblRequestsInLastMinute.Location = new System.Drawing.Point(13, 234);
             this.lblRequestsInLastMinute.Name = "lblRequestsInLastMinute";
             this.lblRequestsInLastMinute.Size = new System.Drawing.Size(132, 15);
             this.lblRequestsInLastMinute.TabIndex = 36;
@@ -231,7 +231,7 @@
             // lblAccessTokenExpires
             // 
             this.lblAccessTokenExpires.AutoSize = true;
-            this.lblAccessTokenExpires.Location = new System.Drawing.Point(187, 245);
+            this.lblAccessTokenExpires.Location = new System.Drawing.Point(13, 219);
             this.lblAccessTokenExpires.Name = "lblAccessTokenExpires";
             this.lblAccessTokenExpires.Size = new System.Drawing.Size(132, 15);
             this.lblAccessTokenExpires.TabIndex = 37;
@@ -240,7 +240,7 @@
             // lblRefreshTokenExpires
             // 
             this.lblRefreshTokenExpires.AutoSize = true;
-            this.lblRefreshTokenExpires.Location = new System.Drawing.Point(14, 220);
+            this.lblRefreshTokenExpires.Location = new System.Drawing.Point(13, 204);
             this.lblRefreshTokenExpires.Name = "lblRefreshTokenExpires";
             this.lblRefreshTokenExpires.Size = new System.Drawing.Size(122, 15);
             this.lblRefreshTokenExpires.TabIndex = 38;
