@@ -16,9 +16,8 @@ namespace TDAmeritradeSharpClient;
 
 public class Client : IDisposable
 {
-    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
-    
     public const string Success = "Authorization was successful";
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
     private readonly JsonSerializerOptions _jsonOptionsWithoutPolymorphicConverters;
     private HttpClient _httpClient;
 
@@ -105,7 +104,7 @@ public class Client : IDisposable
         var json = JsonSerializer.Serialize(instrument, instrument.GetType(), _jsonOptionsWithoutPolymorphicConverters);
         return json;
     }
-    
+
     /// <summary>
     ///     Use this to correctly deserialize to an instrument of the correct type.
     ///     TDA Instruments are polymorphic.
@@ -588,7 +587,12 @@ public class Client : IDisposable
     public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
         var json = await GetUserPrincipalsJsonAsync(fields);
-        return (!IsNullOrEmpty(json) ? JsonSerializer.Deserialize<TDPrincipal>(json, JsonOptions) : null!) ?? throw new TDAmeritradeSharpException();
+        if (IsNullOrEmpty(json))
+        {
+            throw new TDAmeritradeSharpException();
+        }
+        var result = JsonSerializer.Deserialize<TDPrincipal>(json, JsonOptions);
+        return result ?? throw new TDAmeritradeSharpException();
     }
 
     /// <summary>

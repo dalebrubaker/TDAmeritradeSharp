@@ -172,6 +172,7 @@ public struct TDQuoteSignal : ISignal
     /// <summary>
     ///     7 Exchange with the best bid
     /// </summary>
+    // ReSharper disable once IdentifierTypo
     public char BidId { get; set; }
 
     /// <summary>
@@ -356,7 +357,8 @@ public class TDRealtimeRequest
 {
     public string? Service { get; set; }
     public string? Command { get; set; }
-    public int RequestId { get; set; }
+    // ReSharper disable once IdentifierTypo
+    public int Requestid { get; set; } // this MUST NOT BE RequestId. Would cause login command to fail
     public string? Account { get; set; } // the AccountId
     public string? Source { get; set; }
     public object? Parameters { get; set; }
@@ -378,7 +380,7 @@ public class TDRealtimeResponseContainer
 public class TDRealtimeResponse
 {
     public string? Service { get; set; }
-    public string? RequestId { get; set; }
+    public string? Requestid { get; set; } // Don't use RequestId, case matters!
     public string? Command { get; set; }
     public double Timestamp { get; set; }
     public TDRealtimeContent? Content { get; set; }

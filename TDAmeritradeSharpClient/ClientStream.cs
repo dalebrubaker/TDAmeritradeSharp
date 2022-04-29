@@ -1,8 +1,10 @@
 ﻿using System.Globalization;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Web;
+using Serilog;
 
 namespace TDAmeritradeSharpClient;
 
@@ -13,7 +15,10 @@ namespace TDAmeritradeSharpClient;
 /// </summary>
 public class ClientStream : IDisposable
 {
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+
     private readonly Client _client;
+    private readonly CancellationTokenSource _cts;
     private readonly TDStreamJsonProcessor _parser;
     private readonly SemaphoreSlim _slim = new(1);
     private TDPrincipalAccount? _account;
@@ -23,6 +28,7 @@ public class ClientStream : IDisposable
 
     public ClientStream(Client client)
     {
+        _cts = new CancellationTokenSource();
         _client = client;
         _parser = new TDStreamJsonProcessor();
         _parser.OnHeartbeatSignal += o => { OnHeartbeatSignal(o); };
@@ -41,6 +47,8 @@ public class ClientStream : IDisposable
 
     public void Dispose()
     {
+        s_logger.Verbose("Starting {Method}", nameof(Dispose));
+        _cts.Cancel();
         var t = DisconnectAsync();
         t.Wait(1000);
     }
@@ -86,18 +94,18 @@ public class ClientStream : IDisposable
             {
                 throw new Exception("Busy");
             }
-
+            s_logger.Verbose("Starting {Method}", nameof(Connect));
             _prince = await _client.GetUserPrincipalsAsync(TDPrincipalsFields.streamerConnectionInfo, TDPrincipalsFields.streamerSubscriptionKeys, TDPrincipalsFields.preferences);
             _account = _prince.Accounts?.Find(o => o.AccountId == _prince.PrimaryAccountId);
 
             var path = new Uri("wss://" + _prince.StreamerInfo?.StreamerSocketUrl + "/ws");
             _socket = new ClientWebSocket();
 
-            await _socket.ConnectAsync(path, CancellationToken.None);
+            await _socket.ConnectAsync(path, _cts.Token);
 
             if (_socket.State == WebSocketState.Open)
             {
-                await LoginAsync();
+                await LoginAsync().ConfigureAwait(false);
                 ReceiveAsync();
             }
         }
@@ -106,6 +114,7 @@ public class ClientStream : IDisposable
             OnException(ex);
             Dispose();
         }
+        s_logger.Verbose("Exiting {Method}", nameof(Connect));
     }
 
     /// <summary>
@@ -149,7 +158,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ACCT_ACTIVITY",
                     Command = "SUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -183,7 +192,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ACCT_ACTIVITY",
                     Command = "UNSUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -217,7 +226,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "SUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -252,7 +261,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "UNSUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -285,7 +294,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "QUOTE",
                     Command = "SUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -320,7 +329,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "QUOTE",
                     Command = "UNSUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -355,7 +364,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "SUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -391,7 +400,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "UNSUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -424,7 +433,7 @@ public class ClientStream : IDisposable
                 {
                     Service = option.ToString(),
                     Command = "SUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -458,7 +467,7 @@ public class ClientStream : IDisposable
                 {
                     Service = option.ToString(),
                     Command = "UNSUBS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -492,7 +501,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "QOS",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -538,6 +547,7 @@ public class ClientStream : IDisposable
 
     private async void ReceiveAsync()
     {
+        s_logger.Verbose("Starting {Method}", nameof(ReceiveAsync));
         var buffer = new ArraySegment<byte>(new byte[2048]);
         try
         {
@@ -550,12 +560,14 @@ public class ClientStream : IDisposable
                     result = await _socket?.ReceiveAsync(buffer, CancellationToken.None)!;
                     if (buffer.Array != null)
                     {
+                        // s_logger.Debug("Writing {Count} bytes in {Method}", result.Count, nameof(ReceiveAsync));
                         ms.Write(buffer.Array, buffer.Offset, result.Count);
                     }
-                } while (!result.EndOfMessage);
+                } while (!result.EndOfMessage && !_cts.IsCancellationRequested);
 
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
+                    // s_logger.Debug("WebSocketMessageType.Close in {Method}", nameof(ReceiveAsync));
                     break;
                     //throw new Exception("WebSocketMessageType.Close");
                 }
@@ -572,6 +584,7 @@ public class ClientStream : IDisposable
             OnException(ex);
             Dispose();
         }
+        s_logger.Verbose("Exiting {Method}", nameof(ReceiveAsync));
     }
 
     private Task LoginAsync()
@@ -580,6 +593,9 @@ public class ClientStream : IDisposable
         {
             return Task.CompletedTask;
         }
+
+        s_logger.Verbose("Starting {Method}", nameof(LoginAsync));
+
         //Converts ISO-8601 response in snapshot to ms since epoch accepted by Streamer
         var tokenTimeStampAsDateObj = DateTime.Parse(_prince?.StreamerInfo?.TokenTimestamp);
         var tokenTimeStampAsMs = tokenTimeStampAsDateObj.ToUniversalTime().ToUnixTimeMilliseconds();
@@ -611,7 +627,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "LOGIN",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -623,8 +639,14 @@ public class ClientStream : IDisposable
                 }
             }
         };
-        var data = JsonSerializer.Serialize(request);
-        return SendToServerAsync(data);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+        var data = JsonSerializer.Serialize(request, options);
+        var result = SendToServerAsync(data);
+        s_logger.Verbose("Exiting {Method}", nameof(LoginAsync));
+        return result;
     }
 
     private Task LogOutAsync()
@@ -641,14 +663,14 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "LOGOUT",
-                    RequestId = Interlocked.Increment(ref _counter),
+                    Requestid = Interlocked.Increment(ref _counter),  // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new { }
                 }
             }
         };
-        var data = JsonSerializer.Serialize(request);
+        var data = JsonSerializer.Serialize(request, JsonOptions);
         return SendToServerAsync(data);
     }
 
@@ -656,6 +678,7 @@ public class ClientStream : IDisposable
     {
         try
         {
+            // s_logger.Verbose("Writing {Msg} in {Method}", msg, nameof(HandleMessage));
             OnJsonSignal(msg);
             _parser.Parse(msg);
         }

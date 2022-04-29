@@ -245,6 +245,7 @@ public class Tests
         await socket.SubscribeBookAsync(Symbol, TDBookOptions.LISTED_BOOK);
         await socket.SubscribeBookAsync(Symbol, TDBookOptions.NASDAQ_BOOK);
         Assert.IsTrue(socket.IsConnected);
+        await Task.Delay(1000);
         await socket.DisconnectAsync();
     }
 

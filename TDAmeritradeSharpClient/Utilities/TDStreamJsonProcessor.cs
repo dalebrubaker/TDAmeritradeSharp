@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Serilog;
 
 namespace TDAmeritradeSharpClient;
 
@@ -9,6 +11,8 @@ namespace TDAmeritradeSharpClient;
 /// </summary>
 public class TDStreamJsonProcessor
 {
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+
     /// <summary> Server Sent Events </summary>
     public event Action<TDHeartbeatSignal> OnHeartbeatSignal = delegate { };
 
@@ -42,70 +46,66 @@ public class TDStreamJsonProcessor
             }
         }
         var nodeData = node?["data"];
-        if (nodeData == null)
+        if (nodeData != null)
         {
-            throw new TDAmeritradeSharpException();
-        }
-        var dataArray = nodeData.AsArray();
-        Debug.Assert(dataArray != null, nameof(dataArray) + " != null");
-        if (dataArray == null)
-        {
-            throw new TDAmeritradeSharpException();
-        }
-        foreach (var arrayNode in dataArray)
-        {
-            if (arrayNode == null)
-            {
-                continue;
-            }
-            var service = arrayNode["service"]?.GetValue<string>();
-            var nodeTimestamp = arrayNode["timestamp"];
-            if (nodeTimestamp == null)
+            var dataArray = nodeData.AsArray();
+            Debug.Assert(dataArray != null, nameof(dataArray) + " != null");
+            if (dataArray == null)
             {
                 throw new TDAmeritradeSharpException();
             }
-            var timestamp = nodeTimestamp.GetValue<long>();
-            var contents = arrayNode["content"];
-            if (contents == null)
+            foreach (var arrayNode in dataArray)
             {
-                return;
-            }
-            var contentsArray = contents.AsArray();
-            foreach (var jsonNode in contentsArray) //.Children<JObject>())
-            {
-                if (jsonNode == null)
+                if (arrayNode == null)
                 {
                     continue;
                 }
-                var content = (JsonObject)jsonNode;
-                switch (service)
+                var service = arrayNode["service"]?.GetValue<string>();
+                var nodeTimestamp = arrayNode["timestamp"];
+                if (nodeTimestamp == null)
                 {
-                    case "QUOTE":
-                        ParseQuote(timestamp, content);
-                        break;
-                    case "CHART_FUTURES":
-                        ParseChartFutures(timestamp, content);
-                        break;
-                    case "CHART_EQUITY":
-                        ParseChartEquity(timestamp, content);
-                        break;
-                    case "LISTED_BOOK":
-                    case "NASDAQ_BOOK":
-                    case "OPTIONS_BOOK":
-                        ParseBook(timestamp, content, service);
-                        break;
-                    case "TIMESALE_EQUITY":
-                    case "TIMESALE_FUTURES":
-                    case "TIMESALE_FOREX":
-                    case "TIMESALE_OPTIONS":
-                        ParseTimeSaleEquity(timestamp, content);
-                        break;
+                    throw new TDAmeritradeSharpException();
+                }
+                var timestamp = nodeTimestamp.GetValue<long>();
+                var contents = arrayNode["content"];
+                if (contents == null)
+                {
+                    return;
+                }
+                var contentsArray = contents.AsArray();
+                foreach (var jsonNode in contentsArray) //.Children<JObject>())
+                {
+                    if (jsonNode == null)
+                    {
+                        continue;
+                    }
+                    var content = (JsonObject)jsonNode;
+                    switch (service)
+                    {
+                        case "QUOTE":
+                            ParseQuote(timestamp, content);
+                            break;
+                        case "CHART_FUTURES":
+                            ParseChartFutures(timestamp, content);
+                            break;
+                        case "CHART_EQUITY":
+                            ParseChartEquity(timestamp, content);
+                            break;
+                        case "LISTED_BOOK":
+                        case "NASDAQ_BOOK":
+                        case "OPTIONS_BOOK":
+                            ParseBook(timestamp, content, service);
+                            break;
+                        case "TIMESALE_EQUITY":
+                        case "TIMESALE_FUTURES":
+                        case "TIMESALE_FOREX":
+                        case "TIMESALE_OPTIONS":
+                            ParseTimeSaleEquity(timestamp, content);
+                            break;
+                    }
                 }
             }
-            
         }
-
-        
     }
 
     private void ParseHeartbeat(long timestamp)
@@ -147,7 +147,7 @@ public class TDStreamJsonProcessor
         }
         OnBookSignal(model);
     }
-    
+
     private void ParseChartFutures(long timestamp, JsonObject content)
     {
         var model = new TDChartSignal
@@ -190,7 +190,7 @@ public class TDStreamJsonProcessor
         }
         OnChartSignal(model);
     }
-    
+
     private void ParseChartEquity(long timestamp, JsonObject content)
     {
         var model = new TDChartSignal
@@ -239,7 +239,7 @@ public class TDStreamJsonProcessor
         }
         OnChartSignal(model);
     }
-    
+
     private void ParseTimeSaleEquity(long tmstamp, JsonObject content)
     {
         var model = new TDTimeSaleSignal
@@ -276,7 +276,7 @@ public class TDStreamJsonProcessor
         }
         OnTimeSaleSignal(model);
     }
-    
+
     private void ParseQuote(long timestamp, JsonObject content)
     {
         var model = new TDQuoteSignal

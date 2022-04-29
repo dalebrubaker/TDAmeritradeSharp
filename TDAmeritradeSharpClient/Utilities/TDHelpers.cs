@@ -191,12 +191,6 @@ public static class TDHelpers
         return dateTime;
     }
 
-    public static string JsonPrettify(this string json)
-    {
-        using var jDoc = JsonDocument.Parse(json);
-        return JsonSerializer.Serialize(jDoc, new JsonSerializerOptions { WriteIndented = true });
-    }
-
     public static (PropertyDescriptorCollection properties, Dictionary<string, string> propertyNamesDictByCamelCaseNames) SetPropertiesInfoForType(this object obj)
     {
         var properties = TypeDescriptor.GetProperties(obj.GetType());

@@ -187,16 +187,6 @@ public class OcoOrder
     public TDOrderEnums.OrderStrategyType OrderStrategyType => TDOrderEnums.OrderStrategyType.OCO;
 
     public List<TDOrder> ChildOrderStrategies { get; set; } = new();
-
-    /// <summary>
-    ///     Returns json without type names, suitable for sending to TD Ameritrade
-    /// </summary>
-    /// <returns></returns>
-    public string GetJson()
-    {
-        var json = JsonSerializer.Serialize(this);
-        return json;
-    }
 }
 
 public class Position
