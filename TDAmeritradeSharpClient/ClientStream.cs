@@ -131,6 +131,73 @@ public class ClientStream : IDisposable
     }
 
     /// <summary>
+    ///     Subscribe to the AcctActivity service
+    /// </summary>
+    /// <param name="symbols">spy,qqq,amd</param>
+    /// <returns></returns>
+    public Task SubscribeAcctActivityAsync(string symbols)
+    {
+        if (_account == null)
+        {
+            throw new TDAmeritradeSharpException();
+        }
+        var request = new TDRealtimeRequestContainer
+        {
+            Requests = new[]
+            {
+                new TDRealtimeRequest
+                {
+                    Service = "ACCT_ACTIVITY",
+                    Command = "SUBS",
+                    RequestId = Interlocked.Increment(ref _counter),
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
+                    Parameters = new
+                    {
+                        keys = symbols,
+                        fields = "0,1,2,3,4,5,6,7,8"
+                    }
+                }
+            }
+        };
+        var data = JsonSerializer.Serialize(request, JsonOptions);
+        return SendToServerAsync(data);
+    }
+
+    /// <summary>
+    ///     Unsubscribe from the AcctActivity event service
+    /// </summary>
+    /// <param name="symbols">spy,qqq,amd</param>
+    /// <returns></returns>
+    public Task UnsubscribeAcctActivityAsync(string symbols)
+    {
+        if (_account == null)
+        {
+            throw new TDAmeritradeSharpException();
+        }
+        var request = new TDRealtimeRequestContainer
+        {
+            Requests = new[]
+            {
+                new TDRealtimeRequest
+                {
+                    Service = "ACCT_ACTIVITY",
+                    Command = "UNSUBS",
+                    RequestId = Interlocked.Increment(ref _counter),
+                    Account = _account.AccountId,
+                    Source = _prince?.StreamerInfo?.AppId,
+                    Parameters = new
+                    {
+                        keys = symbols
+                    }
+                }
+            }
+        };
+        var data = JsonSerializer.Serialize(request, JsonOptions);
+        return SendToServerAsync(data);
+    }
+
+    /// <summary>
     ///     Subscribe to the chart event service
     /// </summary>
     /// <param name="symbols">spy,qqq,amd</param>
@@ -150,7 +217,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "SUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -185,7 +252,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "UNSUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -218,7 +285,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "QUOTE",
                     Command = "SUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -253,7 +320,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "QUOTE",
                     Command = "UNSUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -288,7 +355,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "SUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -324,7 +391,7 @@ public class ClientStream : IDisposable
                 {
                     Service = service.ToString(),
                     Command = "UNSUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -357,7 +424,7 @@ public class ClientStream : IDisposable
                 {
                     Service = option.ToString(),
                     Command = "SUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -391,7 +458,7 @@ public class ClientStream : IDisposable
                 {
                     Service = option.ToString(),
                     Command = "UNSUBS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -425,7 +492,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "QOS",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -544,7 +611,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "LOGIN",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
@@ -574,7 +641,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "LOGOUT",
-                    Requestid = Interlocked.Increment(ref _counter),
+                    RequestId = Interlocked.Increment(ref _counter),
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new { }

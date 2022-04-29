@@ -1,5 +1,4 @@
-﻿
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
 
@@ -33,7 +32,6 @@ public struct TDHeartbeatSignal
 }
 
 // ReSharper disable InconsistentNaming
-
 [Serializable]
 public enum TDBookOptions
 {
@@ -114,12 +112,12 @@ public struct TDQuoteSignal : ISignal
     /// <summary>
     ///     2 Current Best Ask Price
     /// </summary>
-    public double AskPrice  { get; set; }
+    public double AskPrice { get; set; }
 
     /// <summary>
     ///     4 Number of shares for bid
     /// </summary>
-    public double BidSize  { get; set; }
+    public double BidSize { get; set; }
 
     /// <summary>
     ///     5 Number of shares for ask
@@ -129,7 +127,7 @@ public struct TDQuoteSignal : ISignal
     /// <summary>
     ///     3 Price at which the last trade was matched
     /// </summary>
-    public double LastPrice  { get; set; }
+    public double LastPrice { get; set; }
 
     /// <summary>
     ///     9 Number of shares traded with last trade
@@ -212,30 +210,30 @@ public struct TDTimeSaleSignal : ISignal
     /// <summary>
     ///     order
     /// </summary>
-    public long Sequence  { get; set; }
+    public long Sequence { get; set; }
 
     /// <summary>
     ///     1 Trade time of the last trade
     /// </summary>
-    public double Tradetime  { get; set; }
+    public double TradeTime { get; set; }
 
     /// <summary>
     ///     2 Price at which the last trade was matched
     /// </summary>
-    public double Lastprice  { get; set; }
+    public double LastPrice { get; set; }
 
     /// <summary>
     ///     3 Number of shares traded with last trade
     /// </summary>
-    public double Lastsize  { get; set; }
+    public double LastSize { get; set; }
 
     /// <summary>
     ///     4 Number of Number of shares for bid
     /// </summary>
-    public long Lastsequence  { get; set; }
+    public long LastSequence { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
-    public DateTime TradeDateTime => TDHelpers.FromUnixTimeMilliseconds(Tradetime);
+    public DateTime TradeDateTime => TDHelpers.FromUnixTimeMilliseconds(TradeTime);
 }
 
 [Serializable]
@@ -259,37 +257,37 @@ public struct TDChartSignal : ISignal
     /// <summary>
     ///     2 Highest price for the minute
     /// </summary>
-    public double HighPrice  { get; set; }
+    public double HighPrice { get; set; }
 
     /// <summary>
     ///     3 Chart’s lowest price for the minute
     /// </summary>
-    public double LowPrice  { get; set; }
+    public double LowPrice { get; set; }
 
     /// <summary>
     ///     4 Closing price for the minute
     /// </summary>
-    public double ClosePrice  { get; set; }
+    public double ClosePrice { get; set; }
 
     /// <summary>
     ///     5 Total volume for the minute
     /// </summary>
-    public double Volume  { get; set; }
+    public double Volume { get; set; }
 
     /// <summary>
     ///     6 Identifies the candle minute
     /// </summary>
-    public long Sequence  { get; set; }
+    public long Sequence { get; set; }
 
     /// <summary>
     ///     7 Milliseconds since Epoch
     /// </summary>
-    public long ChartTime  { get; set; }
+    public long ChartTime { get; set; }
 
     /// <summary>
     ///     8 Not useful
     /// </summary>
-    public int ChartDay  { get; set; }
+    public int ChartDay { get; set; }
 
     public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
 
@@ -299,6 +297,7 @@ public struct TDChartSignal : ISignal
 }
 
 // ReSharper disable InconsistentNaming
+// ReSharper disable IdentifierTypo
 [Serializable]
 public enum TDChartSubs
 {
@@ -307,7 +306,6 @@ public enum TDChartSubs
     CHART_FUTURES
 }
 
-// ReSharper disable IdentifierTypo
 [Serializable]
 public enum TDTimeSaleServices
 {
@@ -351,13 +349,14 @@ public enum TDQOSLevels
     SLOW
 }
 // ReSharper restore InconsistentNaming
+// ReSharper restore IdentifierTypo
 
 [Serializable]
 public class TDRealtimeRequest
 {
     public string? Service { get; set; }
     public string? Command { get; set; }
-    public int Requestid { get; set; }
+    public int RequestId { get; set; }
     public string? Account { get; set; } // the AccountId
     public string? Source { get; set; }
     public object? Parameters { get; set; }
@@ -379,7 +378,7 @@ public class TDRealtimeResponseContainer
 public class TDRealtimeResponse
 {
     public string? Service { get; set; }
-    public string? Requestid { get; set; }
+    public string? RequestId { get; set; }
     public string? Command { get; set; }
     public double Timestamp { get; set; }
     public TDRealtimeContent? Content { get; set; }

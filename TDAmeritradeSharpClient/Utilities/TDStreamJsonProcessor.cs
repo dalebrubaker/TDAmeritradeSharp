@@ -261,16 +261,16 @@ public class TDStreamJsonProcessor
                     model.Sequence = item.Value.GetValue<long>();
                     break;
                 case "1":
-                    model.Tradetime = item.Value.GetValue<long>();
+                    model.TradeTime = item.Value.GetValue<long>();
                     break;
                 case "2":
-                    model.Lastprice = item.Value.GetValue<double>();
+                    model.LastPrice = item.Value.GetValue<double>();
                     break;
                 case "3":
-                    model.Lastsize = item.Value.GetValue<double>();
+                    model.LastSize = item.Value.GetValue<double>();
                     break;
                 case "4":
-                    model.Lastsequence = item.Value.GetValue<long>();
+                    model.LastSequence = item.Value.GetValue<long>();
                     break;
             }
         }
