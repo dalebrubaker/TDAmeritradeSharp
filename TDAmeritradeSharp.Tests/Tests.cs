@@ -26,6 +26,8 @@ public class Tests
     [SetUp]
     public async Task Init()
     {
+        SetLogging();
+
         // Please sign in first, following services uses the client file
         _client = new Client();
         try

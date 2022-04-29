@@ -16,6 +16,8 @@ namespace TDAmeritradeSharpClient;
 
 public class Client : IDisposable
 {
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+    
     public const string Success = "Authorization was successful";
     private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
     private readonly JsonSerializerOptions _jsonOptionsWithoutPolymorphicConverters;
