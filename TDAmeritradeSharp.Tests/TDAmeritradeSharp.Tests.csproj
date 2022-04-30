@@ -6,6 +6,8 @@
     <IsPackable>false</IsPackable>
 
     <RootNamespace>TDAmeritrade.Tests</RootNamespace>
+
+    <UserSecretsId>ed1b6951-034c-4f40-93e3-ce6518591a21</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +29,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TDAmeritradeSharpClient\TDAmeritradeSharpClient.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

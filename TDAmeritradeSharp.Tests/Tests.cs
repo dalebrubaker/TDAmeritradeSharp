@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 using Serilog;
 using TDAmeritradeSharpClient;
@@ -44,24 +45,14 @@ public class Tests
 
     public static void SetLogging()
     {
-        // Allow logging during Tests
-        var seqURL = Environment.GetEnvironmentVariable("SeqURL");
-        var apiKey = Environment.GetEnvironmentVariable("DTCSharpSeqApiKey");
-        if (seqURL != null)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .Enrich.FromLogContext()
-                .Enrich.WithThreadId()
-                .Enrich.WithThreadName()
-                .Enrich.WithProcessId()
-                .Enrich.WithProcessName()
-                .Enrich
-                .WithProperty("Application", nameof(Tests))
-                .WriteTo.Seq(seqURL, apiKey: apiKey)
-                .CreateLogger();
-        }
-    }
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddUserSecrets<Tests>()
+            .Build();
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom
+            .Configuration(configuration)
+            .CreateLogger();    }
 
     [Test]
     public void TestTimeConverter()
