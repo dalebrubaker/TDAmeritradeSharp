@@ -36,31 +36,13 @@ internal static class Program
 
     private static void CreateSerilogLogger()
     {
-        var seqURL = Environment.GetEnvironmentVariable("SeqURL");
-        var apiKey = Environment.GetEnvironmentVariable("SeqApiKeyTDAmeritradeSharp");
-        IConfigurationRoot? configuration;
-        if (string.IsNullOrEmpty(seqURL))
-        {
-            configuration = new ConfigurationBuilder()
+        var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
+                .AddUserSecrets<AuthUserControl>()
                 .Build();
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.Seq("http://localhost:8081")
                 .ReadFrom
                 .Configuration(configuration)
                 .CreateLogger();
-        }
-        else
-        {
-            // Add Seq using environment variables, to keep them out of appsettings.json
-            configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettingsWriteSeqFromEnvironmentVariables.json")
-                .Build();
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Seq(seqURL, apiKey: apiKey)
-                .ReadFrom
-                .Configuration(configuration)
-                .CreateLogger();
-        }
     }
 }
