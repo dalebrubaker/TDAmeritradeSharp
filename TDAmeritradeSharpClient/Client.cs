@@ -586,7 +586,13 @@ public class Client : IDisposable
     /// </summary>
     public async Task<TDPrincipal> GetUserPrincipalsAsync(params TDPrincipalsFields[] fields)
     {
-        var json = await GetUserPrincipalsJsonAsync(fields);
+        if (!IsSignedIn)
+        {
+            throw new Exception("Not authenticated");
+        }
+        var arg = string.Join(",", fields.Select(o => o.ToString()));
+        var path = $"https://api.tdameritrade.com/v1/userprincipals?fields={arg}";
+        var json = await SendRequestAsync(path).ConfigureAwait(false);
         if (IsNullOrEmpty(json))
         {
             throw new TDAmeritradeSharpException();
@@ -605,22 +611,6 @@ public class Client : IDisposable
         var data = await GetUserPrincipalsAsync(TDPrincipalsFields.preferences); // gives Accounts including display names    }
         var account = (data.Accounts ?? throw new TDAmeritradeSharpException()).FirstOrDefault(x => x.AccountId == accountId);
         return account;
-    }
-
-    /// <summary>
-    ///     User Principal details.
-    /// </summary>
-    /// <param name="fields">A comma separated String which allows one to specify additional fields to return. None of these fields are returned by default.</param>
-    /// <returns></returns>
-    private async Task<string> GetUserPrincipalsJsonAsync(params TDPrincipalsFields[] fields)
-    {
-        if (!IsSignedIn)
-        {
-            throw new Exception("Not authenticated");
-        }
-        var arg = string.Join(",", fields.Select(o => o.ToString()));
-        var path = $"https://api.tdameritrade.com/v1/userprincipals?fields={arg}";
-        return await SendRequestAsync(path).ConfigureAwait(false);
     }
 
     #endregion UserInfo

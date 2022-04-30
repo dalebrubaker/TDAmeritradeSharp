@@ -27,8 +27,6 @@ public class Tests
     [SetUp]
     public async Task Init()
     {
-        SetLogging();
-
         // Please sign in first, following services uses the client file
         _client = new Client();
         try
@@ -259,6 +257,27 @@ public class Tests
         await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_FUTURES);
         await socket.SubscribeTimeSaleAsync(Symbol, TDTimeSaleServices.TIMESALE_FUTURES);
         Assert.IsTrue(socket.IsConnected);
+        await socket.DisconnectAsync();
+    }
+    
+    [Test]
+    public async Task TestAcctItemStream()
+    {
+        using var socket = new ClientStream(_client);
+
+        // socket.OnHeartbeatSignal += o => { };
+        // socket.OnQuoteSignal += o => { };
+        // socket.OnTimeSaleSignal += o => { };
+        // socket.OnChartSignal += o => { };
+        // socket.OnBookSignal += o => { };
+
+        await socket.Connect();
+        await socket.SubscribeAcctActivityAsync();
+        Assert.IsTrue(socket.IsConnected);
+        
+        // TODO send an order and see what events I receive. Hook up to the event here in a lambda expression
+
+        await Task.Delay(5000);
         await socket.DisconnectAsync();
     }
 

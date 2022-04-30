@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Web;
 using Serilog;
 
@@ -142,14 +143,18 @@ public class ClientStream : IDisposable
     /// <summary>
     ///     Subscribe to the AcctActivity service
     /// </summary>
-    /// <param name="symbols">spy,qqq,amd</param>
     /// <returns></returns>
-    public Task SubscribeAcctActivityAsync(string symbols)
+    public Task SubscribeAcctActivityAsync()
     {
         if (_account == null)
         {
             throw new TDAmeritradeSharpException();
         }
+        if (_prince == null || _prince!.StreamerSubscriptionKeys == null)
+        {
+            throw new TDAmeritradeSharpException();
+        }
+        
         var request = new TDRealtimeRequestContainer
         {
             Requests = new[]
@@ -163,8 +168,8 @@ public class ClientStream : IDisposable
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
-                        keys = symbols,
-                        fields = "0,1,2,3,4,5,6,7,8"
+                        keys = _prince?.MessageKey,
+                        fields = "0,1,2,3"
                     }
                 }
             }
@@ -184,6 +189,11 @@ public class ClientStream : IDisposable
         {
             throw new TDAmeritradeSharpException();
         }
+        if (_prince == null || _prince!.StreamerSubscriptionKeys == null)
+        {
+            throw new TDAmeritradeSharpException();
+        }
+        var messageKey = _prince.StreamerSubscriptionKeys.Keys![0].Key;
         var request = new TDRealtimeRequestContainer
         {
             Requests = new[]
@@ -197,7 +207,7 @@ public class ClientStream : IDisposable
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
-                        keys = symbols
+                        keys = _prince?.MessageKey,
                     }
                 }
             }
@@ -678,7 +688,7 @@ public class ClientStream : IDisposable
     {
         try
         {
-            // s_logger.Verbose("Writing {Msg} in {Method}", msg, nameof(HandleMessage));
+            s_logger.Verbose("{Method}: {Msg}", nameof(HandleMessage), msg);
             OnJsonSignal(msg);
             _parser.Parse(msg);
         }

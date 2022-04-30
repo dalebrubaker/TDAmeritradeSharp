@@ -102,4 +102,9 @@ public class TDPrincipal
     public TDQuotes? Quotes { get; set; }
     public TDStreamerSubscriptionKeys? StreamerSubscriptionKeys { get; set; }
     public List<TDPrincipalAccount>? Accounts { get; set; }
+    
+    // Thanks to XariZaru at https://www.reddit.com/r/algotrading/comments/hoj3cg/td_ameritrade_account_streaming/
+    // “Got it. It's pretty lame, but the Streaming Key returned with the TDA Principal object is the key you use for the MessageKey.
+    // Inconsistency, but at least I figured it out.”
+    public string? MessageKey =>   StreamerSubscriptionKeys?.Keys?[0].Key;
 }
