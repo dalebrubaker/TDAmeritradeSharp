@@ -28,7 +28,7 @@ public class TDStreamJsonProcessor
     /// <summary> Server Sent Events </summary>
     public event Action<TDBookSignal> OnBookSignal = delegate { };
 
-    public void Parse(string json)
+    public string? Parse(string json)
     {
         var node = JsonNode.Parse(json);
         var nodeNotify = node?["notify"];
@@ -42,7 +42,7 @@ public class TDStreamJsonProcessor
                 var timestampStr = nodeTimestamp.GetValue<string>();
                 long.TryParse(timestampStr, out var timestamp);
                 ParseHeartbeat(timestamp);
-                return;
+                return "heartbeat";
             }
         }
         var nodeData = node?["data"];
@@ -70,7 +70,7 @@ public class TDStreamJsonProcessor
                 var contents = arrayNode["content"];
                 if (contents == null)
                 {
-                    return;
+                    return null;
                 }
                 var contentsArray = contents.AsArray();
                 foreach (var jsonNode in contentsArray) //.Children<JObject>())
@@ -82,6 +82,9 @@ public class TDStreamJsonProcessor
                     var content = (JsonObject)jsonNode;
                     switch (service)
                     {
+                        case "ACCT_ACTIVITY":
+                            //ParseQuote(timestamp, content);
+                            break;
                         case "QUOTE":
                             ParseQuote(timestamp, content);
                             break;
@@ -103,9 +106,11 @@ public class TDStreamJsonProcessor
                             ParseTimeSaleEquity(timestamp, content);
                             break;
                     }
+                    return service;
                 }
             }
         }
+        return null;
     }
 
     private void ParseHeartbeat(long timestamp)

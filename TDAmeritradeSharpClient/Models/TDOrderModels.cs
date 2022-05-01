@@ -1,6 +1,5 @@
 ﻿// ReSharper disable IdentifierTypo
 // ReSharper disable ClassNeverInstantiated.Global
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace TDAmeritradeSharpClient;
@@ -161,7 +160,7 @@ public class TDOrder
     public List<TDOrder>? ReplacingOrderCollection { get; set; }
     public List<TDOrder>? ChildOrderStrategies { get; set; }
     public string? StatusDescription { get; set; }
-    
+
     public long? SavedOrderId { get; set; }
     public string? SavedTime { get; set; }
 
@@ -174,8 +173,6 @@ public class TDOrder
         }
         return result;
     }
-
-    
 }
 
 /// <summary>
@@ -203,4 +200,7 @@ public class Position
     public double MarketValue { get; set; }
 }
 
-
+public class AccountActivity
+{
+    
+}

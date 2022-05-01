@@ -78,6 +78,14 @@ public class ClientStream : IDisposable
     /// <summary> Server Sent Events </summary>
     public event Action<TDBookSignal> OnBookSignal = delegate { };
 
+    public event EventHandler<AccountActivity>? AccountActivityReceived;
+
+    private void OnAccountActivityReceived(AccountActivity accountActivity)
+    {
+        var tmp = AccountActivityReceived; // for thread safety
+        tmp?.Invoke(this, accountActivity);
+    }
+
     /// <summary>
     ///     Connects to the live stream service
     /// </summary>
@@ -690,7 +698,12 @@ public class ClientStream : IDisposable
         {
             s_logger.Verbose("{Method}: {Msg}", nameof(HandleMessage), msg);
             OnJsonSignal(msg);
-            _parser.Parse(msg);
+            var service = _parser.Parse(msg);
+            if (service == "ACCT_ACTIVITY")
+            {
+                var accountActivity = new AccountActivity();
+                OnAccountActivityReceived(accountActivity);
+            }
         }
         catch (Exception ex)
         {

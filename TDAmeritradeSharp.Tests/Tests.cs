@@ -50,7 +50,8 @@ public class Tests
         Log.Logger = new LoggerConfiguration()
             .ReadFrom
             .Configuration(configuration)
-            .CreateLogger();    }
+            .CreateLogger();
+    }
 
     [Test]
     public void TestTimeConverter()
@@ -257,27 +258,6 @@ public class Tests
         await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_FUTURES);
         await socket.SubscribeTimeSaleAsync(Symbol, TDTimeSaleServices.TIMESALE_FUTURES);
         Assert.IsTrue(socket.IsConnected);
-        await socket.DisconnectAsync();
-    }
-    
-    [Test]
-    public async Task TestAcctItemStream()
-    {
-        using var socket = new ClientStream(_client);
-
-        // socket.OnHeartbeatSignal += o => { };
-        // socket.OnQuoteSignal += o => { };
-        // socket.OnTimeSaleSignal += o => { };
-        // socket.OnChartSignal += o => { };
-        // socket.OnBookSignal += o => { };
-
-        await socket.Connect();
-        await socket.SubscribeAcctActivityAsync();
-        Assert.IsTrue(socket.IsConnected);
-        
-        // TODO send an order and see what events I receive. Hook up to the event here in a lambda expression
-
-        await Task.Delay(5000);
         await socket.DisconnectAsync();
     }
 

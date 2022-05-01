@@ -14,7 +14,7 @@ public class OrdersTests
     private Client _client;
     private string _testAccountId;
     private TDEquityQuote _testQuote;
-    
+
     [OneTimeSetUp]
     public void Setup()
     {
@@ -161,7 +161,7 @@ public class OrdersTests
     }
 
     [Test]
-    public async Task TestSingleLimitOrder()
+    public async Task TestSingleLimitOrderSendThenCancel()
     {
         var close = _testQuote.ClosePrice;
         var limitPrice = close * 0.5; // attempt to avoid a fill
@@ -199,7 +199,7 @@ public class OrdersTests
     }
 
     [Test]
-    [Ignore("Actually buys!")]
+    [Ignore("Actually buys in your account at _testAccountId!")]
     public async Task TestSingleMarketOrder()
     {
         var order = new TDOrder
@@ -597,5 +597,34 @@ public class OrdersTests
         var account = await _client.GetAccountPrincipalInfoAsync(_testAccountId);
         Assert.AreEqual(_testAccountId, account.AccountId);
         Assert.IsNotNull(account.DisplayName);
+    }
+
+    [Test]
+    public async Task TestAcctItemStream()
+    {
+        const int Timeout = 5000;
+        using var socket = new ClientStream(_client);
+        var events = new List<AccountActivity>();
+        socket.AccountActivityReceived += (sender, activity) =>
+        {
+            events.Add(activity);
+        };
+
+        await socket.Connect().ConfigureAwait(false);
+        await socket.SubscribeAcctActivityAsync().ConfigureAwait(false);
+        Assert.IsTrue(socket.IsConnected);
+
+        await TestSingleLimitOrderSendThenCancel().ConfigureAwait(false);
+        var deadline = DateTime.UtcNow.AddMilliseconds(Timeout);
+        while (events.Count == 0 && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(100).ConfigureAwait(false);
+        }
+        var elapsed = DateTime.UtcNow - deadline;
+        Assert.LessOrEqual(elapsed, TimeSpan.Zero, "Timed out.");
+        Assert.IsNotEmpty(events, "Expected at least one event back from TDA");
+
+        await Task.Delay(5000).ConfigureAwait(false);
+        await socket.DisconnectAsync();
     }
 }
