@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Serilog;
 
 namespace TDAmeritradeSharpClient;
 
@@ -11,14 +9,15 @@ namespace TDAmeritradeSharpClient;
 /// </summary>
 public class TDStreamJsonProcessor
 {
-    private readonly ClientStream _clientStream;
     // private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+
+    private readonly ClientStream _clientStream;
 
     public TDStreamJsonProcessor(ClientStream clientStream)
     {
         _clientStream = clientStream;
     }
-    
+
     private JsonSerializerOptions JsonOptions => _clientStream.JsonOptions;
 
     public string? Parse(string json)
@@ -114,6 +113,21 @@ public class TDStreamJsonProcessor
 
     private void ParseAcctActivity(long timestamp, JsonObject content)
     {
+        var node2 = content["2"];
+        var str = node2?.GetValue<string>();
+        if (str == "SUBSCRIBED")
+        {
+            return;
+        }
+        switch (str)
+        {
+            case "SUBSCRIBED":
+                return;
+            case "OrderEntryRequest":
+                var nodeXml = content["3"];
+                var encoding = nodeXml?.GetValue<string>();
+                break;
+        }
     }
 
     private void ParseHeartbeat(long timestamp)

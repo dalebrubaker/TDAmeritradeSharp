@@ -385,6 +385,7 @@ public class TDRealtimeResponseContainer
 public class TDRealtimeResponse
 {
     public string? Service { get; set; }
+    // ReSharper disable once IdentifierTypo
     public string? Requestid { get; set; } // Don't use RequestId, case matters!
     public string? Command { get; set; }
     public double Timestamp { get; set; }
@@ -401,8 +402,6 @@ public class TDRealtimeResponse
 [Serializable]
 public class TDRealtimeContent
 {
-    // public int code { get; set; }
-    // public string msg { get; set; }
     public int Code { get; set; }
     public string? Msg { get; set; }
 
