@@ -626,5 +626,7 @@ public class OrdersTests
 
         await Task.Delay(5000).ConfigureAwait(false);
         await socket.DisconnectAsync();
+
+        var _ = socket.MessagesReceived;
     }
 }

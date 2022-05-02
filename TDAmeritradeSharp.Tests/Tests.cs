@@ -225,11 +225,6 @@ public class Tests
     {
         using var socket = new ClientStream(_client);
         const string Symbol = "SPY";
-        socket.OnHeartbeatSignal += o => { };
-        socket.OnQuoteSignal += o => { };
-        socket.OnTimeSaleSignal += o => { };
-        socket.OnChartSignal += o => { };
-        socket.OnBookSignal += o => { };
         await socket.Connect();
         await socket.SubscribeQuoteAsync(Symbol);
         await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_EQUITY);
@@ -247,43 +242,39 @@ public class Tests
         using var socket = new ClientStream(_client);
         const string Symbol = "/NQ";
 
-        socket.OnHeartbeatSignal += o => { };
-        socket.OnQuoteSignal += o => { };
-        socket.OnTimeSaleSignal += o => { };
-        socket.OnChartSignal += o => { };
-        socket.OnBookSignal += o => { };
-
         await socket.Connect();
         await socket.SubscribeQuoteAsync(Symbol);
         await socket.SubscribeChartAsync(Symbol, TDChartSubs.CHART_FUTURES);
         await socket.SubscribeTimeSaleAsync(Symbol, TDTimeSaleServices.TIMESALE_FUTURES);
         Assert.IsTrue(socket.IsConnected);
         await socket.DisconnectAsync();
+        var _ = socket.MessagesReceived;
     }
 
     [Test]
     public void TestParser()
     {
-        var reader = new TDStreamJsonProcessor();
+        using var socket = new ClientStream(_client);
+        var reader = new TDStreamJsonProcessor(socket);
 
         var counter = 5;
-        reader.OnHeartbeatSignal += t =>
+        socket.HeartbeatSignal += (sender, signal) =>
         {
             counter--;
         };
-        reader.OnQuoteSignal += quote =>
+        socket.QuoteSignal += (sender, signal) =>
         {
             counter--;
         };
-        reader.OnTimeSaleSignal += sale =>
+        socket.TimeSaleSignal += (sender, signal) =>
         {
             counter--;
         };
-        reader.OnChartSignal += sale =>
+        socket.ChartSignal += (sender, signal) =>
         {
             counter--;
         };
-        reader.OnBookSignal += sale =>
+        socket.BookSignal += (sender, signal) =>
         {
             counter--;
         };

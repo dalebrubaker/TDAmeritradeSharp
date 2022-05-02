@@ -3,7 +3,6 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Web;
 using Serilog;
 
@@ -31,20 +30,17 @@ public class ClientStream : IDisposable
     {
         _cts = new CancellationTokenSource();
         _client = client;
-        _parser = new TDStreamJsonProcessor();
-        _parser.OnHeartbeatSignal += o => { OnHeartbeatSignal(o); };
-        _parser.OnChartSignal += o => { OnChartSignal(o); };
-        _parser.OnQuoteSignal += o => { OnQuoteSignal(o); };
-        _parser.OnTimeSaleSignal += o => { OnTimeSaleSignal(o); };
-        _parser.OnBookSignal += o => { OnBookSignal(o); };
+        _parser = new TDStreamJsonProcessor(this);
     }
 
-    private JsonSerializerOptions JsonOptions => _client.JsonOptions;
+    public JsonSerializerOptions JsonOptions => _client.JsonOptions;
 
     /// <summary>
     ///     Is stream connected
     /// </summary>
     public bool IsConnected => _socket == null || _socket.State == WebSocketState.Open;
+
+    public List<string> MessagesReceived { get; } = new();
 
     public void Dispose()
     {
@@ -55,32 +51,82 @@ public class ClientStream : IDisposable
     }
 
     /// <summary>Client sent errors</summary>
-    public event Action<Exception> OnException = delegate { };
+    public event EventHandler<Exception>? ExceptionEvent;
+    
+        
+    internal void OnException(Exception signal)
+    {
+        var tmp = ExceptionEvent; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
 
     /// <summary> Server Sent Events </summary>
-    public event Action<bool> OnConnect = delegate { };
+    public event EventHandler<bool>? ConnectEvent;
+    
+    internal void OnConnect(bool signal)
+    {
+        var tmp = ConnectEvent; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
 
     /// <summary> Server Sent Events as raw json </summary>
-    public event Action<string> OnJsonSignal = delegate { };
+    public event EventHandler<string>? JsonSignal;
+    
+    internal void OnJsonSignal(string signal)
+    {
+        var tmp = JsonSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
 
     /// <summary> Server Sent Events </summary>
-    public event Action<TDHeartbeatSignal> OnHeartbeatSignal = delegate { };
+    public event EventHandler<TDHeartbeatSignal>? HeartbeatSignal;
+    
+    internal void OnHeartbeatSignal(TDHeartbeatSignal signal)
+    {
+        var tmp = HeartbeatSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
 
     /// <summary> Server Sent Events </summary>
-    public event Action<TDChartSignal> OnChartSignal = delegate { };
+    public event EventHandler<TDChartSignal>? ChartSignal;
+    
+    internal void OnChartSignal(TDChartSignal signal)
+    {
+        var tmp = ChartSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
 
     /// <summary> Server Sent Events </summary>
-    public event Action<TDQuoteSignal> OnQuoteSignal = delegate { };
+    public event EventHandler<TDQuoteSignal>? QuoteSignal;
+    
+    internal void OnQuoteSignal(TDQuoteSignal signal)
+    {
+        var tmp = QuoteSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
 
     /// <summary> Server Sent Events </summary>
-    public event Action<TDTimeSaleSignal> OnTimeSaleSignal = delegate { };
+    public event EventHandler<TDTimeSaleSignal>? TimeSaleSignal;
+
+    internal void OnTimeSaleSignal(TDTimeSaleSignal signal)
+    {
+        var tmp = TimeSaleSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
 
     /// <summary> Server Sent Events </summary>
-    public event Action<TDBookSignal> OnBookSignal = delegate { };
+    public event EventHandler<TDBookSignal>? BookSignal;
+
+    internal void OnBookSignal(TDBookSignal bookSignal)
+    {
+        var tmp = BookSignal; // for thread safety
+        tmp?.Invoke(this, bookSignal);
+    }
 
     public event EventHandler<AccountActivity>? AccountActivityReceived;
 
-    private void OnAccountActivityReceived(AccountActivity accountActivity)
+    internal void OnAccountActivityReceived(AccountActivity accountActivity)
     {
         var tmp = AccountActivityReceived; // for thread safety
         tmp?.Invoke(this, accountActivity);
@@ -162,7 +208,7 @@ public class ClientStream : IDisposable
         {
             throw new TDAmeritradeSharpException();
         }
-        
+
         var request = new TDRealtimeRequestContainer
         {
             Requests = new[]
@@ -215,7 +261,7 @@ public class ClientStream : IDisposable
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new
                     {
-                        keys = _prince?.MessageKey,
+                        keys = _prince?.MessageKey
                     }
                 }
             }
@@ -681,7 +727,7 @@ public class ClientStream : IDisposable
                 {
                     Service = "ADMIN",
                     Command = "LOGOUT",
-                    Requestid = Interlocked.Increment(ref _counter),  // CANNOT BE RequestId!
+                    Requestid = Interlocked.Increment(ref _counter), // CANNOT BE RequestId!
                     Account = _account.AccountId,
                     Source = _prince?.StreamerInfo?.AppId,
                     Parameters = new { }
@@ -694,6 +740,7 @@ public class ClientStream : IDisposable
 
     private void HandleMessage(string msg)
     {
+        MessagesReceived.Add(msg);
         try
         {
             s_logger.Verbose("{Method}: {Msg}", nameof(HandleMessage), msg);

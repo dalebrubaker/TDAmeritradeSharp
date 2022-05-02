@@ -11,26 +11,25 @@ namespace TDAmeritradeSharpClient;
 /// </summary>
 public class TDStreamJsonProcessor
 {
-    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+    private readonly ClientStream _clientStream;
+    // private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
 
-    /// <summary> Server Sent Events </summary>
-    public event Action<TDHeartbeatSignal> OnHeartbeatSignal = delegate { };
-
-    /// <summary> Server Sent Events </summary>
-    public event Action<TDChartSignal> OnChartSignal = delegate { };
-
-    /// <summary> Server Sent Events </summary>
-    public event Action<TDQuoteSignal> OnQuoteSignal = delegate { };
-
-    /// <summary> Server Sent Events </summary>
-    public event Action<TDTimeSaleSignal> OnTimeSaleSignal = delegate { };
-
-    /// <summary> Server Sent Events </summary>
-    public event Action<TDBookSignal> OnBookSignal = delegate { };
+    public TDStreamJsonProcessor(ClientStream clientStream)
+    {
+        _clientStream = clientStream;
+    }
+    
+    private JsonSerializerOptions JsonOptions => _clientStream.JsonOptions;
 
     public string? Parse(string json)
     {
         var node = JsonNode.Parse(json);
+        var nodeResponse = node?["response"];
+        if (nodeResponse != null)
+        {
+            var response = JsonSerializer.Deserialize<TDRealtimeResponseContainer>(json, JsonOptions);
+            return response?.ToString();
+        }
         var nodeNotify = node?["notify"];
         if (nodeNotify != null)
         {
@@ -83,7 +82,7 @@ public class TDStreamJsonProcessor
                     switch (service)
                     {
                         case "ACCT_ACTIVITY":
-                            //ParseQuote(timestamp, content);
+                            ParseAcctActivity(timestamp, content);
                             break;
                         case "QUOTE":
                             ParseQuote(timestamp, content);
@@ -113,10 +112,14 @@ public class TDStreamJsonProcessor
         return null;
     }
 
+    private void ParseAcctActivity(long timestamp, JsonObject content)
+    {
+    }
+
     private void ParseHeartbeat(long timestamp)
     {
         var model = new TDHeartbeatSignal { Timestamp = timestamp };
-        OnHeartbeatSignal(model);
+        _clientStream.OnHeartbeatSignal(model);
     }
 
     private void ParseBook(long timestamp, JsonObject content, string service)
@@ -150,7 +153,7 @@ public class TDStreamJsonProcessor
                     break;
             }
         }
-        OnBookSignal(model);
+        _clientStream.OnBookSignal(model);
     }
 
     private void ParseChartFutures(long timestamp, JsonObject content)
@@ -193,7 +196,7 @@ public class TDStreamJsonProcessor
                     break;
             }
         }
-        OnChartSignal(model);
+        _clientStream.OnChartSignal(model);
     }
 
     private void ParseChartEquity(long timestamp, JsonObject content)
@@ -242,7 +245,7 @@ public class TDStreamJsonProcessor
                     break;
             }
         }
-        OnChartSignal(model);
+        _clientStream.OnChartSignal(model);
     }
 
     private void ParseTimeSaleEquity(long tmstamp, JsonObject content)
@@ -279,7 +282,7 @@ public class TDStreamJsonProcessor
                     break;
             }
         }
-        OnTimeSaleSignal(model);
+        _clientStream.OnTimeSaleSignal(model);
     }
 
     private void ParseQuote(long timestamp, JsonObject content)
@@ -352,6 +355,6 @@ public class TDStreamJsonProcessor
                     break;
             }
         }
-        OnQuoteSignal(model);
+        _clientStream.OnQuoteSignal(model);
     }
 }

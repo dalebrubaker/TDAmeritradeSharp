@@ -374,6 +374,11 @@ public class TDRealtimeRequestContainer
 public class TDRealtimeResponseContainer
 {
     public TDRealtimeResponse[]? Response { get; set; }
+
+    public override string ToString()
+    {
+        return Response == null || Response.Length == 0 ? "" : Response[0].ToString();
+    }
 }
 
 [Serializable]
@@ -385,12 +390,24 @@ public class TDRealtimeResponse
     public double Timestamp { get; set; }
     public TDRealtimeContent? Content { get; set; }
 
-    public DateTime TimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
+    public DateTime DateTimeStamp => TDHelpers.FromUnixTimeMilliseconds(Timestamp);
+
+    public override string ToString()
+    {
+        return $"{Service} {Command} {DateTimeStamp}";
+    }
 }
 
 [Serializable]
 public class TDRealtimeContent
 {
+    // public int code { get; set; }
+    // public string msg { get; set; }
     public int Code { get; set; }
     public string? Msg { get; set; }
+
+    public override string ToString()
+    {
+        return $"{Code}: {Msg}";
+    }
 }
