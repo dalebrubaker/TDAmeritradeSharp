@@ -50,88 +50,6 @@ public class ClientStream : IDisposable
         t.Wait(1000);
     }
 
-    /// <summary>Client sent errors</summary>
-    public event EventHandler<Exception>? ExceptionEvent;
-    
-        
-    internal void OnException(Exception signal)
-    {
-        var tmp = ExceptionEvent; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-
-    /// <summary> Server Sent Events </summary>
-    public event EventHandler<bool>? ConnectEvent;
-    
-    internal void OnConnect(bool signal)
-    {
-        var tmp = ConnectEvent; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-    /// <summary> Server Sent Events as raw json </summary>
-    public event EventHandler<string>? JsonSignal;
-    
-    internal void OnJsonSignal(string signal)
-    {
-        var tmp = JsonSignal; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-    /// <summary> Server Sent Events </summary>
-    public event EventHandler<TDHeartbeatSignal>? HeartbeatSignal;
-    
-    internal void OnHeartbeatSignal(TDHeartbeatSignal signal)
-    {
-        var tmp = HeartbeatSignal; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-    /// <summary> Server Sent Events </summary>
-    public event EventHandler<TDChartSignal>? ChartSignal;
-    
-    internal void OnChartSignal(TDChartSignal signal)
-    {
-        var tmp = ChartSignal; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-    /// <summary> Server Sent Events </summary>
-    public event EventHandler<TDQuoteSignal>? QuoteSignal;
-    
-    internal void OnQuoteSignal(TDQuoteSignal signal)
-    {
-        var tmp = QuoteSignal; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-    /// <summary> Server Sent Events </summary>
-    public event EventHandler<TDTimeSaleSignal>? TimeSaleSignal;
-
-    internal void OnTimeSaleSignal(TDTimeSaleSignal signal)
-    {
-        var tmp = TimeSaleSignal; // for thread safety
-        tmp?.Invoke(this, signal);
-    }
-
-    /// <summary> Server Sent Events </summary>
-    public event EventHandler<TDBookSignal>? BookSignal;
-
-    internal void OnBookSignal(TDBookSignal bookSignal)
-    {
-        var tmp = BookSignal; // for thread safety
-        tmp?.Invoke(this, bookSignal);
-    }
-
-    public event EventHandler<AccountActivity>? AccountActivityReceived;
-
-    internal void OnAccountActivityReceived(AccountActivity accountActivity)
-    {
-        var tmp = AccountActivityReceived; // for thread safety
-        tmp?.Invoke(this, accountActivity);
-    }
-
     /// <summary>
     ///     Connects to the live stream service
     /// </summary>
@@ -738,6 +656,11 @@ public class ClientStream : IDisposable
         return SendToServerAsync(data);
     }
 
+    /// <summary>
+    ///     Handle each received message by throwing it to OnJsonSignal then sending it to _parser,
+    ///     which will throw appropriate events
+    /// </summary>
+    /// <param name="msg"></param>
     private void HandleMessage(string msg)
     {
         MessagesReceived.Add(msg);
@@ -745,17 +668,119 @@ public class ClientStream : IDisposable
         {
             s_logger.Verbose("{Method}: {Msg}", nameof(HandleMessage), msg);
             OnJsonSignal(msg);
-            var service = _parser.Parse(msg);
-            if (service == "ACCT_ACTIVITY")
-            {
-                var accountActivity = new AccountActivity();
-                OnAccountActivityReceived(accountActivity);
-            }
+            _parser.Parse(msg);
         }
         catch (Exception ex)
         {
             OnException(ex);
             //Do not cleanup, this is a user code issue
         }
+    }
+
+    /// <summary>Client sent errors</summary>
+    public event EventHandler<Exception>? ExceptionEvent;
+
+    private void OnException(Exception signal)
+    {
+        var tmp = ExceptionEvent; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events </summary>
+    public event EventHandler<bool>? ConnectEvent;
+
+    private void OnConnect(bool signal)
+    {
+        var tmp = ConnectEvent; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events as raw json </summary>
+    public event EventHandler<string>? JsonSignal;
+
+    private void OnJsonSignal(string signal)
+    {
+        var tmp = JsonSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events </summary>
+    public event EventHandler<TDHeartbeatSignal>? HeartbeatSignal;
+
+    internal void OnHeartbeatSignal(TDHeartbeatSignal signal)
+    {
+        var tmp = HeartbeatSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events </summary>
+    public event EventHandler<TDChartSignal>? ChartSignal;
+
+    internal void OnChartSignal(TDChartSignal signal)
+    {
+        var tmp = ChartSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events </summary>
+    public event EventHandler<TDQuoteSignal>? QuoteSignal;
+
+    internal void OnQuoteSignal(TDQuoteSignal signal)
+    {
+        var tmp = QuoteSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events </summary>
+    public event EventHandler<TDTimeSaleSignal>? TimeSaleSignal;
+
+    internal void OnTimeSaleSignal(TDTimeSaleSignal signal)
+    {
+        var tmp = TimeSaleSignal; // for thread safety
+        tmp?.Invoke(this, signal);
+    }
+
+    /// <summary> Server Sent Events </summary>
+    public event EventHandler<TDBookSignal>? BookSignal;
+
+    internal void OnBookSignal(TDBookSignal bookSignal)
+    {
+        var tmp = BookSignal; // for thread safety
+        tmp?.Invoke(this, bookSignal);
+    }
+
+    /// <summary>
+    ///     A response node came from the stream
+    /// </summary>
+    public event EventHandler<TDRealtimeResponseContainer>? Response;
+
+    public void OnResponse(TDRealtimeResponseContainer response)
+    {
+        var tmp = Response; // for thread safety
+        tmp?.Invoke(this, response);
+    }
+
+    public event EventHandler<OrderEntryRequestMessage>? OrderEntryRequest;
+
+    internal void OnOrderEntryRequest(OrderEntryRequestMessage orderEntryRequest)
+    {
+        var tmp = OrderEntryRequest; // for thread safety
+        tmp?.Invoke(this, orderEntryRequest);
+    }
+
+    public event EventHandler<OrderCancelRequestMessage>? OrderCancelRequest;
+
+    internal void OnOrderCancelRequest(OrderCancelRequestMessage orderCancelRequest)
+    {
+        var tmp = OrderCancelRequest; // for thread safety
+        tmp?.Invoke(this, orderCancelRequest);
+    }
+
+    public event EventHandler<UROUTMessage>? UROUTMessage;
+
+    internal void OnUROUTMessage(UROUTMessage uroutMessage)
+    {
+        var tmp = UROUTMessage; // for thread safety
+        tmp?.Invoke(this, uroutMessage);
     }
 }

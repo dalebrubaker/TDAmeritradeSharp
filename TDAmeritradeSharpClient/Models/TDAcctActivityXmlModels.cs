@@ -4,7 +4,7 @@ using System.Xml.Serialization;
 // ReSharper disable InconsistentNaming
 #pragma warning disable CS8618
 
-namespace TDAmeritradeSharpClient.Models;
+namespace TDAmeritradeSharpClient;
 
 // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
 /// <remarks />
@@ -20,12 +20,12 @@ public class OrderEntryRequestMessage
 
     private DateTime lastUpdatedField;
 
-    private OrderEntryRequestMessageOrder orderField;
+    private Order orderField;
 
-    private OrderEntryRequestMessageOrderGroupID orderGroupIDField;
+    private OrderGroupID orderGroupIDField;
 
     /// <remarks />
-    public OrderEntryRequestMessageOrderGroupID OrderGroupID
+    public OrderGroupID OrderGroupID
     {
         get => orderGroupIDField;
         set => orderGroupIDField = value;
@@ -39,7 +39,7 @@ public class OrderEntryRequestMessage
     }
 
     /// <remarks />
-    public OrderEntryRequestMessageOrder Order
+    public Order Order
     {
         get => orderField;
         set => orderField = value;
@@ -65,7 +65,7 @@ public class OrderEntryRequestMessage
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class OrderEntryRequestMessageOrderGroupID
+public class OrderGroupID
 {
     private uint accountKeyField;
 
@@ -134,7 +134,7 @@ public class OrderEntryRequestMessageOrderGroupID
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class EquityOrderT : OrderEntryRequestMessageOrder
+public class EquityOrderT : Order
 {
 }
 
@@ -143,11 +143,11 @@ public class EquityOrderT : OrderEntryRequestMessageOrder
 [DesignerCategory("code")]
 [XmlInclude(typeof(EquityOrderT))]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class OrderEntryRequestMessageOrder
+public class Order
 {
     private string amountIndicatorField;
 
-    private OrderEntryRequestMessageOrderCharges chargesField;
+    private OrderCharges chargesField;
 
     private ushort clearingIDField;
 
@@ -165,7 +165,7 @@ public class OrderEntryRequestMessageOrder
 
     private ulong orderKeyField;
 
-    private OrderEntryRequestMessageOrderOrderPricing orderPricingField;
+    private OrderPricing orderPricingField;
 
     private string orderSourceField;
 
@@ -173,7 +173,7 @@ public class OrderEntryRequestMessageOrder
 
     private byte originalQuantityField;
 
-    private OrderEntryRequestMessageOrderSecurity securityField;
+    private Security securityField;
 
     private string settlementInstructionsField;
 
@@ -187,14 +187,14 @@ public class OrderEntryRequestMessageOrder
     }
 
     /// <remarks />
-    public OrderEntryRequestMessageOrderSecurity Security
+    public Security Security
     {
         get => securityField;
         set => securityField = value;
     }
 
     /// <remarks />
-    public OrderEntryRequestMessageOrderOrderPricing OrderPricing
+    public OrderPricing OrderPricing
     {
         get => orderPricingField;
         set => orderPricingField = value;
@@ -271,7 +271,7 @@ public class OrderEntryRequestMessageOrder
     }
 
     /// <remarks />
-    public OrderEntryRequestMessageOrderCharges Charges
+    public OrderCharges Charges
     {
         get => chargesField;
         set => chargesField = value;
@@ -303,7 +303,7 @@ public class OrderEntryRequestMessageOrder
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class OrderEntryRequestMessageOrderSecurity
+public class Security
 {
     private string cUSIPField;
 
@@ -337,7 +337,7 @@ public class OrderEntryRequestMessageOrderSecurity
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class LimitT : OrderEntryRequestMessageOrderOrderPricing
+public class LimitT : OrderPricing
 {
     private decimal limitField;
 
@@ -354,7 +354,7 @@ public class LimitT : OrderEntryRequestMessageOrderOrderPricing
 [DesignerCategory("code")]
 [XmlInclude(typeof(LimitT))]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class OrderEntryRequestMessageOrderOrderPricing
+public class OrderPricing
 {
     private decimal askField;
 
@@ -379,12 +379,12 @@ public class OrderEntryRequestMessageOrderOrderPricing
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class OrderEntryRequestMessageOrderCharges
+public class OrderCharges
 {
-    private OrderEntryRequestMessageOrderChargesCharge chargeField;
+    private OrderChargesCharge chargeField;
 
     /// <remarks />
-    public OrderEntryRequestMessageOrderChargesCharge Charge
+    public OrderChargesCharge Charge
     {
         get => chargeField;
         set => chargeField = value;
@@ -395,7 +395,7 @@ public class OrderEntryRequestMessageOrderCharges
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
-public class OrderEntryRequestMessageOrderChargesCharge
+public class OrderChargesCharge
 {
     private byte amountField;
 
@@ -413,5 +413,130 @@ public class OrderEntryRequestMessageOrderChargesCharge
     {
         get => amountField;
         set => amountField = value;
+    }
+}
+
+[Serializable]
+[DesignerCategory("code")]
+[XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+[XmlRoot(Namespace = "urn:xmlns:beb.ameritrade.com", IsNullable = false)]
+public class OrderCancelRequestMessage
+{
+    private DateTime activityTimestampField;
+
+    private object[] confirmTextsField;
+
+    private DateTime lastUpdatedField;
+
+    private Order orderField;
+
+    private OrderGroupID orderGroupIDField;
+
+    private byte pendingCancelQuantityField;
+
+    /// <remarks />
+    public OrderGroupID OrderGroupID
+    {
+        get => orderGroupIDField;
+        set => orderGroupIDField = value;
+    }
+
+    /// <remarks />
+    public DateTime ActivityTimestamp
+    {
+        get => activityTimestampField;
+        set => activityTimestampField = value;
+    }
+
+    /// <remarks />
+    public Order Order
+    {
+        get => orderField;
+        set => orderField = value;
+    }
+
+    /// <remarks />
+    public DateTime LastUpdated
+    {
+        get => lastUpdatedField;
+        set => lastUpdatedField = value;
+    }
+
+    /// <remarks />
+    [XmlArrayItem("ConfirmText", IsNullable = false)]
+    public object[] ConfirmTexts
+    {
+        get => confirmTextsField;
+        set => confirmTextsField = value;
+    }
+
+    /// <remarks />
+    public byte PendingCancelQuantity
+    {
+        get => pendingCancelQuantityField;
+        set => pendingCancelQuantityField = value;
+    }
+}
+
+// NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
+/// <remarks />
+[Serializable]
+[DesignerCategory("code")]
+[XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+[XmlRoot(Namespace = "urn:xmlns:beb.ameritrade.com", IsNullable = false)]
+public class UROUTMessage
+{
+    private DateTime activityTimestampField;
+
+    private byte cancelledQuantityField;
+
+    private string internalExternalRouteIndField;
+
+    private string orderDestinationField;
+
+    private Order orderField;
+
+    private OrderGroupID orderGroupIDField;
+
+    /// <remarks />
+    public OrderGroupID OrderGroupID
+    {
+        get => orderGroupIDField;
+        set => orderGroupIDField = value;
+    }
+
+    /// <remarks />
+    public DateTime ActivityTimestamp
+    {
+        get => activityTimestampField;
+        set => activityTimestampField = value;
+    }
+
+    /// <remarks />
+    public Order Order
+    {
+        get => orderField;
+        set => orderField = value;
+    }
+
+    /// <remarks />
+    public string OrderDestination
+    {
+        get => orderDestinationField;
+        set => orderDestinationField = value;
+    }
+
+    /// <remarks />
+    public string InternalExternalRouteInd
+    {
+        get => internalExternalRouteIndField;
+        set => internalExternalRouteIndField = value;
+    }
+
+    /// <remarks />
+    public byte CancelledQuantity
+    {
+        get => cancelledQuantityField;
+        set => cancelledQuantityField = value;
     }
 }

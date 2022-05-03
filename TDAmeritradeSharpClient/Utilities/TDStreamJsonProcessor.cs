@@ -2,7 +2,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Serialization;
-using TDAmeritradeSharpClient.Models;
 
 namespace TDAmeritradeSharpClient;
 
@@ -22,14 +21,20 @@ public class TDStreamJsonProcessor
 
     private JsonSerializerOptions JsonOptions => _clientStream.JsonOptions;
 
-    public string? Parse(string json)
+    /// <summary>
+    ///     Parse the json received in a TDRealtimeResponseContainer and throw events on ClientStream with the result
+    /// </summary>
+    /// <param name="json"></param>
+    /// <exception cref="TDAmeritradeSharpException"></exception>
+    public void Parse(string json)
     {
         var node = JsonNode.Parse(json);
         var nodeResponse = node?["response"];
         if (nodeResponse != null)
         {
             var response = JsonSerializer.Deserialize<TDRealtimeResponseContainer>(json, JsonOptions);
-            return response?.ToString();
+            _clientStream.OnResponse(response ?? throw new TDAmeritradeSharpException());
+            return;
         }
         var nodeNotify = node?["notify"];
         if (nodeNotify != null)
@@ -42,7 +47,7 @@ public class TDStreamJsonProcessor
                 var timestampStr = nodeTimestamp.GetValue<string>();
                 long.TryParse(timestampStr, out var timestamp);
                 ParseHeartbeat(timestamp);
-                return "heartbeat";
+                return;
             }
         }
         var nodeData = node?["data"];
@@ -70,7 +75,7 @@ public class TDStreamJsonProcessor
                 var contents = arrayNode["content"];
                 if (contents == null)
                 {
-                    return null;
+                    return;
                 }
                 var contentsArray = contents.AsArray();
                 foreach (var jsonNode in contentsArray) //.Children<JObject>())
@@ -106,37 +111,8 @@ public class TDStreamJsonProcessor
                             ParseTimeSaleEquity(timestamp, content);
                             break;
                     }
-                    return service;
                 }
             }
-        }
-        return null;
-    }
-
-    private void ParseAcctActivity(long timestamp, JsonObject content)
-    {
-        //var keys = content.ToList().Select(x => x.Key).ToList();
-        var node2 = content["2"];
-        var messageType = node2?.GetValue<string>();
-        var nodeXml = content["3"];
-        var messageData = nodeXml?.GetValue<string>();
-        using var reader = new StringReader(messageData ?? throw new TDAmeritradeSharpException());
-        try
-        {
-            switch (messageType)
-            {
-                case "SUBSCRIBED":
-                    return;
-                case "OrderEntryRequest":
-                    var serializer = new XmlSerializer(typeof(OrderEntryRequestMessage));
-                    var orderEntryRequestMessage = (OrderEntryRequestMessage)serializer.Deserialize(reader);
-                    break;
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
         }
     }
 
@@ -380,5 +356,74 @@ public class TDStreamJsonProcessor
             }
         }
         _clientStream.OnQuoteSignal(model);
+    }
+
+    /// <summary>
+    ///     See https://developer.tdameritrade.com/content/streaming-data#_Toc504640580 for documentatin
+    /// </summary>
+    /// <param name="timestamp"></param>
+    /// <param name="content"></param>
+    /// <exception cref="TDAmeritradeSharpException"></exception>
+    /// <exception cref="NotImplementedException"></exception>
+    private void ParseAcctActivity(long timestamp, JsonObject content)
+    {
+        //var keys = content.ToList().Select(x => x.Key).ToList();
+        var node2 = content["2"];
+        var messageType = node2?.GetValue<string>();
+        var nodeXml = content["3"];
+        var messageData = nodeXml?.GetValue<string>();
+        using var reader = new StringReader(messageData ?? throw new TDAmeritradeSharpException());
+        try
+        {
+            switch (messageType)
+            {
+                case "SUBSCRIBED":
+                    return;
+                case "ERROR":
+                    throw new NotImplementedException();
+                case "BrokenTrade":
+                    throw new NotImplementedException();
+                case "ManualExecution":
+                    throw new NotImplementedException();
+                case "OrderActivation":
+                    throw new NotImplementedException();
+                case "OrderCancelReplaceRequest":
+                    throw new NotImplementedException();
+                case "OrderCancelRequest":
+                    {
+                        var serializer = new XmlSerializer(typeof(OrderCancelRequestMessage));
+                        var orderCancelRequest = (OrderCancelRequestMessage)serializer.Deserialize(reader);
+                        _clientStream.OnOrderCancelRequest(orderCancelRequest);
+                    }
+                    break;
+                case "OrderEntryRequest":
+                    {
+                        var serializer = new XmlSerializer(typeof(OrderEntryRequestMessage));
+                        var orderEntryRequest = (OrderEntryRequestMessage)serializer.Deserialize(reader);
+                        _clientStream.OnOrderEntryRequest(orderEntryRequest);
+                    }
+                    break;
+                case "OrderFill":
+                    throw new NotImplementedException();
+                case "OrderPartialFill":
+                    throw new NotImplementedException();
+                case "OrderRejection":
+                    throw new NotImplementedException();
+                case "TooLateToCancel":
+                    throw new NotImplementedException();
+                case "UROUT":
+                    {
+                        var serializer = new XmlSerializer(typeof(UROUTMessage));
+                        var uroutMessage = (UROUTMessage)serializer.Deserialize(reader);
+                        _clientStream.OnUROUTMessage(uroutMessage);
+                    }
+                    break;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

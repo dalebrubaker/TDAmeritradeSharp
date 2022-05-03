@@ -602,10 +602,10 @@ public class OrdersTests
     {
         const int Timeout = 5000;
         using var socket = new ClientStream(_client);
-        var events = new List<AccountActivity>();
-        socket.AccountActivityReceived += (sender, activity) =>
+        var events = new List<TDRealtimeResponseContainer>();
+        socket.Response += (sender, response) =>
         {
-            events.Add(activity);
+            events.Add(response);
         };
 
         await socket.Connect().ConfigureAwait(false);
