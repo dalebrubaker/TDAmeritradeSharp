@@ -415,6 +415,7 @@ public class TDStreamJsonProcessor
                 case "OrderPartialFill":
                     throw new NotImplementedException(messageData);
                 case "OrderRejection":
+                    // See TestAcctItemRejectedOrder(). TDA is not sending this event when a limit order is rejected due to bad order price.
                     throw new NotImplementedException(messageData);
                 case "TooLateToCancel":
                     throw new NotImplementedException(messageData);

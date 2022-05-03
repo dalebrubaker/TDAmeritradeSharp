@@ -195,6 +195,41 @@ public class OrdersTests
         Assert.GreaterOrEqual(allOrdersQuery.Count(), 0);
         await _client.CancelOrderAsync(_testAccountId, orderId);
     }
+    
+    [Test]
+    public async Task TestSingleLimitOrderRejected()
+    {
+        var close = _testQuote.ClosePrice;
+        var limitPrice = close * 5; // buy limit above price s.b. rejected
+        var order = new TDOrder
+        {
+            OrderType = TDOrderEnums.OrderType.LIMIT,
+            Session = TDOrderEnums.Session.NORMAL,
+            Duration = TDOrderEnums.Duration.DAY,
+            OrderStrategyType = TDOrderEnums.OrderStrategyType.SINGLE,
+            Price = limitPrice,
+            OrderLegCollection = new List<OrderLeg>
+            {
+                new()
+                {
+                    Instruction = TDOrderEnums.Instruction.BUY,
+                    Quantity = 1,
+                    Instrument = new InstrumentEquity
+                    {
+                        Symbol = _testQuote.Symbol!
+                    }
+                }
+            }
+        };
+        var orderId = await _client.PlaceOrderAsync(order, _testAccountId).ConfigureAwait(false);
+        Assert.IsNotNull(orderId);
+        await Task.Delay(1000).ConfigureAwait(false);
+        var orderPlaced = await _client.GetOrderAsync(_testAccountId, orderId).ConfigureAwait(false);
+        Assert.AreEqual(orderId, orderPlaced.OrderId);
+        Assert.AreEqual(TDOrderEnums.Status.REJECTED, orderPlaced.Status, orderPlaced.StatusDescription);
+        
+        Assert.ThrowsAsync<TDAmeritradeSharpRejectedException>(async () => await _client.CancelOrderAsync(_testAccountId, orderId), "Cancel fails on rejected order.");
+    }
 
     [Test]
     [Ignore("Actually buys in your account at _testAccountId!")]
@@ -657,6 +692,37 @@ public class OrdersTests
         Assert.IsNotEmpty(events, "Expected at least one event back from TDA");
 
         await Task.Delay(1000).ConfigureAwait(false);
+        var _ = socket.MessagesReceived;
+        await socket.UnsubscribeAcctActivityAsync().ConfigureAwait(false);
+        await socket.DisconnectAsync().ConfigureAwait(false);
+    }
+    
+    /// <summary>
+    /// This test shows that the order is rejected but the OrderRejection AcctActivity message is never sent.
+    /// </summary>
+    [Test]
+    public async Task TestAcctItemRejectedOrder()
+    {
+        const int Timeout = 5000;
+        using var socket = await GetConnectedSocket();
+
+        var events = new List<TDRealtimeResponseContainer>();
+        socket.Response += (_, response) =>
+        {
+            events.Add(response);
+        };
+
+        await TestSingleLimitOrderRejected().ConfigureAwait(false);
+        var deadline = DateTime.UtcNow.AddMilliseconds(Timeout);
+        while (events.Count == 0 && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(100).ConfigureAwait(false);
+        }
+        var elapsed = DateTime.UtcNow - deadline;
+        Assert.LessOrEqual(elapsed, TimeSpan.Zero, "Timed out.");
+        Assert.IsNotEmpty(events, "Expected at least one event back from TDA");
+
+        await Task.Delay(5000).ConfigureAwait(false);
         var _ = socket.MessagesReceived;
         await socket.UnsubscribeAcctActivityAsync().ConfigureAwait(false);
         await socket.DisconnectAsync().ConfigureAwait(false);

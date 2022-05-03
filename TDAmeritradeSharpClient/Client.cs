@@ -849,7 +849,11 @@ public class Client : IDisposable
             case HttpStatusCode.OK:
                 break;
             default:
-                var existingOrder = await GetOrderAsync(accountId, orderId);
+                var existingOrder = await GetOrderAsync(accountId, orderId).ConfigureAwait(false);
+                if (existingOrder.Status == TDOrderEnums.Status.REJECTED)
+                {
+                    throw new TDAmeritradeSharpRejectedException(existingOrder.StatusDescription ?? throw new TDAmeritradeSharpException());
+                }
                 var status = existingOrder.Status;
                 throw new Exception($"Bad request: {res.StatusCode} {res.ReasonPhrase}");
         }

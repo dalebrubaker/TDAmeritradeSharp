@@ -1,28 +1,27 @@
 ﻿using System.Runtime.Serialization;
 
-namespace TDAmeritradeSharpClient
+namespace TDAmeritradeSharpClient;
+
+[Serializable]
+public class TDAmeritradeSharpException : Exception
 {
-    [Serializable]
-    public class TDAmeritradeSharpException : Exception
+    public TDAmeritradeSharpException()
     {
-        public TDAmeritradeSharpException()
-        {
-        }
+    }
 
-        public TDAmeritradeSharpException(string message)
-            : base(message)
-        {
-        }
+    public TDAmeritradeSharpException(string message)
+        : base(message)
+    {
+    }
 
-        public TDAmeritradeSharpException(string message, Exception inner)
-            : base(message, inner)
-        {
-        }
+    public TDAmeritradeSharpException(string message, Exception inner)
+        : base(message, inner)
+    {
+    }
 
-        // Ensure Exception is Serializable
-        protected TDAmeritradeSharpException(SerializationInfo info, StreamingContext ctxt)
-            : base(info, ctxt)
-        {
-        }
+    // Ensure Exception is Serializable
+    protected TDAmeritradeSharpException(SerializationInfo info, StreamingContext ctxt)
+        : base(info, ctxt)
+    {
     }
 }
