@@ -60,7 +60,7 @@ public class ExecutionLeg
 
 public class TDOrder
 {
-    private double _price;
+    private double? _price;
     private double? _stopPrice;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -104,13 +104,22 @@ public class TDOrder
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public TDOrderEnums.PriceLinkType? PriceLinkType { get; set; }
 
-    public double Price
+    public double? Price
     {
         get
         {
+            if (_price == null)
+            {
+                return null;
+            }
+            if (_price == 0)
+            {
+                // Don't include price on a Market order
+                return null;
+            }
             // TDA enforces 2 or 4 digits this during ReplaceOrder
             var digits = _price < 1 ? 4 : 2;
-            var rounded = Math.Round(_price, digits);
+            var rounded = Math.Round(_price.Value, digits);
             return rounded;
         }
         set => _price = value;
