@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Serialization;
+using TDAmeritradeSharpClient.Models;
 
 namespace TDAmeritradeSharpClient;
 
@@ -113,20 +115,28 @@ public class TDStreamJsonProcessor
 
     private void ParseAcctActivity(long timestamp, JsonObject content)
     {
+        //var keys = content.ToList().Select(x => x.Key).ToList();
         var node2 = content["2"];
-        var str = node2?.GetValue<string>();
-        if (str == "SUBSCRIBED")
+        var messageType = node2?.GetValue<string>();
+        var nodeXml = content["3"];
+        var messageData = nodeXml?.GetValue<string>();
+        using var reader = new StringReader(messageData ?? throw new TDAmeritradeSharpException());
+        try
         {
-            return;
+            switch (messageType)
+            {
+                case "SUBSCRIBED":
+                    return;
+                case "OrderEntryRequest":
+                    var serializer = new XmlSerializer(typeof(OrderEntryRequestMessage));
+                    var orderEntryRequestMessage = (OrderEntryRequestMessage)serializer.Deserialize(reader);
+                    break;
+            }
         }
-        switch (str)
+        catch (Exception e)
         {
-            case "SUBSCRIBED":
-                return;
-            case "OrderEntryRequest":
-                var nodeXml = content["3"];
-                var encoding = nodeXml?.GetValue<string>();
-                break;
+            Console.WriteLine(e);
+            throw;
         }
     }
 

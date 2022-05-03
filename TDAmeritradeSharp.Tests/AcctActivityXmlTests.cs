@@ -32,7 +32,7 @@ public class AcctActivityXmlTests
     [Test]
     public void TestOrderEntryRequestMessage()
     {
-        const string Response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        const string MessageData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                                 + "<OrderEntryRequestMessage xmlns=\"urn:xmlns:beb.ameritrade.com\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
                                 + "<OrderGroupID><Firm>150</Firm><Branch>865</Branch><ClientKey>123456789</ClientKey><AccountKey>123456789</AccountKey><Segment>ngoms</Segment>"
                                 + "<SubAccountType>Margin</SubAccountType><CDDomainID>A000000031539026</CDDomainID></OrderGroupID>"
@@ -46,10 +46,12 @@ public class AcctActivityXmlTests
                                 + "<ClearingID>777</ClearingID><SettlementInstructions>Normal</SettlementInstructions><EnteringDevice>AA_MyAccount</EnteringDevice></Order>"
                                 + "<LastUpdated>2022-05-03T07:20:14.36-05:00</LastUpdated><ConfirmTexts><ConfirmText/><ConfirmText/></ConfirmTexts></OrderEntryRequestMessage>";
         var serializer = new XmlSerializer(typeof(OrderEntryRequestMessage));
-        using var reader = new StringReader(Response);
+        using var reader = new StringReader(MessageData);
         try
         {
             var test = (OrderEntryRequestMessage)serializer.Deserialize(reader);
+            Assert.IsNotNull(test);
+            Assert.AreEqual(2.1, ((LimitT)test.Order.OrderPricing).Limit);
         }
         catch (Exception ex)
         {

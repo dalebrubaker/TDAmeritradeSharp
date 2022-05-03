@@ -30,8 +30,6 @@ public class OrdersTests
     [SetUp]
     public async Task Init()
     {
-        Tests.SetLogging();
-
         // Please sign in first, following services uses the client file
         _client = new Client();
         try
@@ -624,7 +622,7 @@ public class OrdersTests
         Assert.LessOrEqual(elapsed, TimeSpan.Zero, "Timed out.");
         Assert.IsNotEmpty(events, "Expected at least one event back from TDA");
 
-        await Task.Delay(5000).ConfigureAwait(false);
+        await Task.Delay(1000).ConfigureAwait(false);
         await socket.DisconnectAsync();
 
         var _ = socket.MessagesReceived;
