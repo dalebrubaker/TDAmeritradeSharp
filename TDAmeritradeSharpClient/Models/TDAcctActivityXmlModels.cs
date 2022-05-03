@@ -1,11 +1,14 @@
 ﻿using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace TDAmeritradeSharpClient;
+// ReSharper disable InconsistentNaming
+#pragma warning disable CS8618
+
+namespace TDAmeritradeSharpClient.Models;
 
 // NOTE: Generated code may require at least .NET Framework 4.5 or .NET Core/Standard 2.0.
 /// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 [XmlRoot(Namespace = "urn:xmlns:beb.ameritrade.com", IsNullable = false)]
@@ -59,7 +62,7 @@ public class OrderEntryRequestMessage
 }
 
 /// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderEntryRequestMessageOrderGroupID
@@ -128,9 +131,17 @@ public class OrderEntryRequestMessageOrderGroupID
     }
 }
 
-/// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
+[XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class EquityOrderT : OrderEntryRequestMessageOrder
+{
+}
+
+/// <remarks />
+[Serializable]
+[DesignerCategory("code")]
+[XmlInclude(typeof(EquityOrderT))]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderEntryRequestMessageOrder
 {
@@ -289,7 +300,7 @@ public class OrderEntryRequestMessageOrder
 }
 
 /// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderEntryRequestMessageOrderSecurity
@@ -323,16 +334,31 @@ public class OrderEntryRequestMessageOrderSecurity
 }
 
 /// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
+[XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class LimitT : OrderEntryRequestMessageOrderOrderPricing
+{
+    private decimal limitField;
+
+    /// <remarks />
+    public decimal Limit
+    {
+        get => limitField;
+        set => limitField = value;
+    }
+}
+
+/// <remarks />
+[Serializable]
+[DesignerCategory("code")]
+[XmlInclude(typeof(LimitT))]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderEntryRequestMessageOrderOrderPricing
 {
     private decimal askField;
 
     private decimal bidField;
-
-    private decimal limitField;
 
     /// <remarks />
     public decimal Ask
@@ -347,17 +373,10 @@ public class OrderEntryRequestMessageOrderOrderPricing
         get => bidField;
         set => bidField = value;
     }
-
-    /// <remarks />
-    public decimal Limit
-    {
-        get => limitField;
-        set => limitField = value;
-    }
 }
 
 /// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderEntryRequestMessageOrderCharges
@@ -373,7 +392,7 @@ public class OrderEntryRequestMessageOrderCharges
 }
 
 /// <remarks />
-[SerializableAttribute]
+[Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderEntryRequestMessageOrderChargesCharge
