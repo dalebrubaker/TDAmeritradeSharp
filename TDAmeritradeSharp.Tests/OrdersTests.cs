@@ -626,5 +626,7 @@ public class OrdersTests
         await socket.DisconnectAsync();
 
         var _ = socket.MessagesReceived;
+
+        await socket.UnsubscribeAcctActivityAsync().ConfigureAwait(false);
     }
 }

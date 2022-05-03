@@ -153,9 +153,8 @@ public class ClientStream : IDisposable
     /// <summary>
     ///     Unsubscribe from the AcctActivity event service
     /// </summary>
-    /// <param name="symbols">spy,qqq,amd</param>
     /// <returns></returns>
-    public Task UnsubscribeAcctActivityAsync(string symbols)
+    public Task UnsubscribeAcctActivityAsync()
     {
         if (_account == null)
         {

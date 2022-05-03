@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Xml.Serialization;
+using Serilog;
 
 namespace TDAmeritradeSharpClient;
 
@@ -10,7 +12,7 @@ namespace TDAmeritradeSharpClient;
 /// </summary>
 public class TDStreamJsonProcessor
 {
-    // private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
+    private static readonly ILogger s_logger = Log.ForContext(MethodBase.GetCurrentMethod()?.DeclaringType!);
 
     private readonly ClientStream _clientStream;
 
@@ -380,15 +382,15 @@ public class TDStreamJsonProcessor
                 case "SUBSCRIBED":
                     return;
                 case "ERROR":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "BrokenTrade":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "ManualExecution":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "OrderActivation":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "OrderCancelReplaceRequest":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "OrderCancelRequest":
                     {
                         var serializer = new XmlSerializer(typeof(OrderCancelRequestMessage));
@@ -404,13 +406,13 @@ public class TDStreamJsonProcessor
                     }
                     break;
                 case "OrderFill":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "OrderPartialFill":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "OrderRejection":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "TooLateToCancel":
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(messageData);
                 case "UROUT":
                     {
                         var serializer = new XmlSerializer(typeof(UROUTMessage));
@@ -420,9 +422,9 @@ public class TDStreamJsonProcessor
                     break;
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
+            s_logger.Error(ex, "{Message}", ex.Message);
             throw;
         }
     }
