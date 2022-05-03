@@ -538,3 +538,74 @@ public class UROUTMessage
         set => cancelledQuantityField = value;
     }
 }
+
+[Serializable]
+[DesignerCategoryAttribute("code")]
+[XmlTypeAttribute(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+[XmlRootAttribute(Namespace = "urn:xmlns:beb.ameritrade.com", IsNullable = false)]
+public class OrderCancelReplaceRequestMessage
+{
+    private DateTime activityTimestampField;
+
+    private object[] confirmTextsField;
+
+    private DateTime lastUpdatedField;
+
+    private Order orderField;
+
+    private OrderGroupID orderGroupIDField;
+
+    private ulong originalOrderIdField;
+
+    private byte pendingCancelQuantityField;
+
+    /// <remarks />
+    public OrderGroupID OrderGroupID
+    {
+        get => orderGroupIDField;
+        set => orderGroupIDField = value;
+    }
+
+    /// <remarks />
+    public DateTime ActivityTimestamp
+    {
+        get => activityTimestampField;
+        set => activityTimestampField = value;
+    }
+
+    /// <remarks />
+    public Order Order
+    {
+        get => orderField;
+        set => orderField = value;
+    }
+
+    /// <remarks />
+    public DateTime LastUpdated
+    {
+        get => lastUpdatedField;
+        set => lastUpdatedField = value;
+    }
+
+    /// <remarks />
+    [XmlArrayItemAttribute("ConfirmText", IsNullable = false)]
+    public object[] ConfirmTexts
+    {
+        get => confirmTextsField;
+        set => confirmTextsField = value;
+    }
+
+    /// <remarks />
+    public byte PendingCancelQuantity
+    {
+        get => pendingCancelQuantityField;
+        set => pendingCancelQuantityField = value;
+    }
+
+    /// <remarks />
+    public ulong OriginalOrderId
+    {
+        get => originalOrderIdField;
+        set => originalOrderIdField = value;
+    }
+}

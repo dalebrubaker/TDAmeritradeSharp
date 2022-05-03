@@ -598,19 +598,16 @@ public class OrdersTests
     }
 
     [Test]
-    public async Task TestAcctItemStream()
+    public async Task TestAcctItemStreamSingleLimitOrder()
     {
         const int Timeout = 5000;
-        using var socket = new ClientStream(_client);
+        using var socket = await GetConnectedSocket();
+
         var events = new List<TDRealtimeResponseContainer>();
-        socket.Response += (sender, response) =>
+        socket.Response += (_, response) =>
         {
             events.Add(response);
         };
-
-        await socket.Connect().ConfigureAwait(false);
-        await socket.SubscribeAcctActivityAsync().ConfigureAwait(false);
-        Assert.IsTrue(socket.IsConnected);
 
         await TestSingleLimitOrderSendThenCancel().ConfigureAwait(false);
         var deadline = DateTime.UtcNow.AddMilliseconds(Timeout);
@@ -623,10 +620,45 @@ public class OrdersTests
         Assert.IsNotEmpty(events, "Expected at least one event back from TDA");
 
         await Task.Delay(1000).ConfigureAwait(false);
-        await socket.DisconnectAsync();
-
         var _ = socket.MessagesReceived;
-
         await socket.UnsubscribeAcctActivityAsync().ConfigureAwait(false);
+        await socket.DisconnectAsync().ConfigureAwait(false);
+    }
+
+    private async Task<ClientStream> GetConnectedSocket()
+    {
+        var socket = new ClientStream(_client);
+        await socket.Connect().ConfigureAwait(false);
+        await socket.SubscribeAcctActivityAsync().ConfigureAwait(false);
+        Assert.IsTrue(socket.IsConnected);
+        return socket;
+    }
+
+    [Test]
+    public async Task TestAcctItemStreamReplaceOrder()
+    {
+        const int Timeout = 5000;
+        using var socket = await GetConnectedSocket();
+
+        var events = new List<TDRealtimeResponseContainer>();
+        socket.Response += (_, response) =>
+        {
+            events.Add(response);
+        };
+
+        await TestReplaceLimitOrder().ConfigureAwait(false);
+        var deadline = DateTime.UtcNow.AddMilliseconds(Timeout);
+        while (events.Count == 0 && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(100).ConfigureAwait(false);
+        }
+        var elapsed = DateTime.UtcNow - deadline;
+        Assert.LessOrEqual(elapsed, TimeSpan.Zero, "Timed out.");
+        Assert.IsNotEmpty(events, "Expected at least one event back from TDA");
+
+        await Task.Delay(1000).ConfigureAwait(false);
+        var _ = socket.MessagesReceived;
+        await socket.UnsubscribeAcctActivityAsync().ConfigureAwait(false);
+        await socket.DisconnectAsync().ConfigureAwait(false);
     }
 }

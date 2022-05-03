@@ -122,4 +122,37 @@ public class AcctActivityXmlTests
             throw;
         }
     }
+
+    [Test]
+    public void TestCancelReplaceRequest()
+    {
+        const string MessageData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                                   + "<OrderCancelReplaceRequestMessage xmlns=\"urn:xmlns:beb.ameritrade.com\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                                   + "<OrderGroupID><Firm>150</Firm><Branch>865</Branch><ClientKey>123456789</ClientKey><AccountKey>123456789</AccountKey><Segment>ngoms</Segment>"
+                                   + "<SubAccountType>Margin</SubAccountType><CDDomainID>A000000031539026</CDDomainID></OrderGroupID>"
+                                   + "<ActivityTimestamp>2022-05-03T14:06:27.398-05:00</ActivityTimestamp>"
+                                   + "<Order xsi:type=\"EquityOrderT\"><OrderKey>8264700152</OrderKey><Security><CUSIP>11777Q209</CUSIP><Symbol>BTG</Symbol>"
+                                   + "<SecurityType>Common Stock</SecurityType></Security>"
+                                   + "<OrderPricing xsi:type=\"LimitT\"><Ask>4.34</Ask><Bid>4.33</Bid><Limit>2.53</Limit></OrderPricing>"
+                                   + "<OrderType>Limit</OrderType><OrderDuration>Day</OrderDuration><OrderEnteredDateTime>2022-05-03T14:06:27.368-05:00</OrderEnteredDateTime>"
+                                   + "<OrderInstructions>Buy</OrderInstructions><OriginalQuantity>2</OriginalQuantity><AmountIndicator>Shares</AmountIndicator><Discretionary>false</Discretionary>"
+                                   + "<OrderSource>Web</OrderSource><Solicited>false</Solicited><MarketCode>Normal</MarketCode>"
+                                   + "<Charges><Charge><Type>Commission Override</Type><Amount>0</Amount></Charge></Charges>"
+                                   + "<ClearingID>777</ClearingID><SettlementInstructions>Normal</SettlementInstructions><EnteringDevice>AA_MyAccount</EnteringDevice></Order>"
+                                   + "<LastUpdated>2022-05-03T14:06:27.398-05:00</LastUpdated><ConfirmTexts><ConfirmText/><ConfirmText/></ConfirmTexts>"
+                                   + "<PendingCancelQuantity>1</PendingCancelQuantity><OriginalOrderId>8264700151</OriginalOrderId></OrderCancelReplaceRequestMessage>";
+        var serializer = new XmlSerializer(typeof(OrderCancelReplaceRequestMessage));
+        using var reader = new StringReader(MessageData);
+        try
+        {
+            var test = (OrderCancelReplaceRequestMessage)serializer.Deserialize(reader);
+            Assert.IsNotNull(test);
+            Assert.AreEqual(2.53, ((LimitT)test.Order.OrderPricing).Limit);
+        }
+        catch (Exception ex)
+        {
+            s_logger.Error(ex, "{Message}", ex.Message);
+            throw;
+        }
+    }
 }

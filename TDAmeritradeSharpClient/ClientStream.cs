@@ -782,4 +782,12 @@ public class ClientStream : IDisposable
         var tmp = UROUTMessage; // for thread safety
         tmp?.Invoke(this, uroutMessage);
     }
+
+    public event EventHandler<OrderCancelReplaceRequestMessage>? OrderCancelReplaceRequest;
+
+    internal void OnOrderCancelReplaceRequestMessage(OrderCancelReplaceRequestMessage cancelReplaceRequest)
+    {
+        var tmp = OrderCancelReplaceRequest; // for thread safety
+        tmp?.Invoke(this, cancelReplaceRequest);
+    }
 }

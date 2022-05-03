@@ -390,19 +390,24 @@ public class TDStreamJsonProcessor
                 case "OrderActivation":
                     throw new NotImplementedException(messageData);
                 case "OrderCancelReplaceRequest":
-                    throw new NotImplementedException(messageData);
+                    {
+                        var serializer = new XmlSerializer(typeof(OrderCancelReplaceRequestMessage));
+                        var request = (OrderCancelReplaceRequestMessage)serializer.Deserialize(reader);
+                        _clientStream.OnOrderCancelReplaceRequestMessage(request);
+                    }
+                    break;
                 case "OrderCancelRequest":
                     {
                         var serializer = new XmlSerializer(typeof(OrderCancelRequestMessage));
-                        var orderCancelRequest = (OrderCancelRequestMessage)serializer.Deserialize(reader);
-                        _clientStream.OnOrderCancelRequest(orderCancelRequest);
+                        var request = (OrderCancelRequestMessage)serializer.Deserialize(reader);
+                        _clientStream.OnOrderCancelRequest(request);
                     }
                     break;
                 case "OrderEntryRequest":
                     {
                         var serializer = new XmlSerializer(typeof(OrderEntryRequestMessage));
-                        var orderEntryRequest = (OrderEntryRequestMessage)serializer.Deserialize(reader);
-                        _clientStream.OnOrderEntryRequest(orderEntryRequest);
+                        var request = (OrderEntryRequestMessage)serializer.Deserialize(reader);
+                        _clientStream.OnOrderEntryRequest(request);
                     }
                     break;
                 case "OrderFill":
