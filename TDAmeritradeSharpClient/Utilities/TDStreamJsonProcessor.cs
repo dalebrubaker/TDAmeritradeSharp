@@ -411,7 +411,12 @@ public class TDStreamJsonProcessor
                     }
                     break;
                 case "OrderFill":
-                    throw new NotImplementedException(messageData);
+                    {
+                        var serializer = new XmlSerializer(typeof(OrderFillMessage));
+                        var fill = (OrderFillMessage)serializer.Deserialize(reader);
+                        _clientStream.OnOrderFill(fill);
+                    }
+                    break;
                 case "OrderPartialFill":
                     throw new NotImplementedException(messageData);
                 case "OrderRejection":

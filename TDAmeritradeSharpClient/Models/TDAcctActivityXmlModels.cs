@@ -65,43 +65,43 @@ public class OrderEntryRequestMessage
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderGroupID
 {
-    private uint accountKeyField;
+    private string accountKeyField;
 
-    private ushort branchField;
+    private string branchField;
 
     private string cDDomainIDField;
 
-    private uint clientKeyField;
+    private string clientKeyField;
 
-    private byte firmField;
+    private string firmField;
 
     private string segmentField;
 
     private string subAccountTypeField;
 
     /// <remarks />
-    public byte Firm
+    public string Firm
     {
         get => firmField;
         set => firmField = value;
     }
 
     /// <remarks />
-    public ushort Branch
+    public string Branch
     {
         get => branchField;
         set => branchField = value;
     }
 
     /// <remarks />
-    public uint ClientKey
+    public string ClientKey
     {
         get => clientKeyField;
         set => clientKeyField = value;
     }
 
     /// <remarks />
-    public uint AccountKey
+    public string AccountKey
     {
         get => accountKeyField;
         set => accountKeyField = value;
@@ -147,7 +147,7 @@ public class Order
 
     private OrderCharges chargesField;
 
-    private ushort clearingIDField;
+    private string clearingIDField;
 
     private bool discretionaryField;
 
@@ -161,7 +161,7 @@ public class Order
 
     private string orderInstructionsField;
 
-    private ulong orderKeyField;
+    private string orderKeyField;
 
     private OrderPricing orderPricingField;
 
@@ -169,7 +169,7 @@ public class Order
 
     private string orderTypeField;
 
-    private byte originalQuantityField;
+    private double originalQuantityField;
 
     private Security securityField;
 
@@ -178,7 +178,7 @@ public class Order
     private bool solicitedField;
 
     /// <remarks />
-    public ulong OrderKey
+    public string OrderKey
     {
         get => orderKeyField;
         set => orderKeyField = value;
@@ -227,7 +227,7 @@ public class Order
     }
 
     /// <remarks />
-    public byte OriginalQuantity
+    public double OriginalQuantity
     {
         get => originalQuantityField;
         set => originalQuantityField = value;
@@ -276,7 +276,7 @@ public class Order
     }
 
     /// <remarks />
-    public ushort ClearingID
+    public string ClearingID
     {
         get => clearingIDField;
         set => clearingIDField = value;
@@ -335,6 +335,14 @@ public class Security
 [Serializable]
 [DesignerCategory("code")]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class MarketT : OrderPricing
+{
+}
+
+/// <remarks />
+[Serializable]
+[DesignerCategory("code")]
+[XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class LimitT : OrderPricing
 {
     private decimal limitField;
@@ -351,6 +359,7 @@ public class LimitT : OrderPricing
 [Serializable]
 [DesignerCategory("code")]
 [XmlInclude(typeof(LimitT))]
+[XmlInclude(typeof(MarketT))]
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderPricing
 {
@@ -395,7 +404,7 @@ public class OrderCharges
 [XmlType(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
 public class OrderChargesCharge
 {
-    private byte amountField;
+    private double amountField;
 
     private string typeField;
 
@@ -407,7 +416,7 @@ public class OrderChargesCharge
     }
 
     /// <remarks />
-    public byte Amount
+    public double Amount
     {
         get => amountField;
         set => amountField = value;
@@ -430,7 +439,7 @@ public class OrderCancelRequestMessage
 
     private OrderGroupID orderGroupIDField;
 
-    private byte pendingCancelQuantityField;
+    private double pendingCancelQuantityField;
 
     /// <remarks />
     public OrderGroupID OrderGroupID
@@ -469,7 +478,7 @@ public class OrderCancelRequestMessage
     }
 
     /// <remarks />
-    public byte PendingCancelQuantity
+    public double PendingCancelQuantity
     {
         get => pendingCancelQuantityField;
         set => pendingCancelQuantityField = value;
@@ -486,7 +495,7 @@ public class UROUTMessage
 {
     private DateTime activityTimestampField;
 
-    private byte cancelledQuantityField;
+    private double cancelledQuantityField;
 
     private string internalExternalRouteIndField;
 
@@ -532,7 +541,7 @@ public class UROUTMessage
     }
 
     /// <remarks />
-    public byte CancelledQuantity
+    public double CancelledQuantity
     {
         get => cancelledQuantityField;
         set => cancelledQuantityField = value;
@@ -555,9 +564,9 @@ public class OrderCancelReplaceRequestMessage
 
     private OrderGroupID orderGroupIDField;
 
-    private ulong originalOrderIdField;
+    private string originalOrderIdField;
 
-    private byte pendingCancelQuantityField;
+    private double pendingCancelQuantityField;
 
     /// <remarks />
     public OrderGroupID OrderGroupID
@@ -596,16 +605,331 @@ public class OrderCancelReplaceRequestMessage
     }
 
     /// <remarks />
-    public byte PendingCancelQuantity
+    public double PendingCancelQuantity
     {
         get => pendingCancelQuantityField;
         set => pendingCancelQuantityField = value;
     }
 
     /// <remarks />
-    public ulong OriginalOrderId
+    public string OriginalOrderId
     {
         get => originalOrderIdField;
         set => originalOrderIdField = value;
+    }
+}
+[SerializableAttribute]
+[DesignerCategoryAttribute("code")]
+[XmlTypeAttribute(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+[XmlRootAttribute(Namespace = "urn:xmlns:beb.ameritrade.com", IsNullable = false)]
+public class OrderFillMessage
+{
+    private DateTime activityTimestampField;
+
+    private object[] confirmTextsField;
+
+    private ContraInformation contraInformationField;
+
+    private ExecutionInformation executionInformationField;
+
+    private double markdownAmountField;
+
+    private double markupAmountField;
+
+    private string orderCompletionCodeField;
+
+    private Order orderField;
+
+    private OrderGroupID orderGroupIDField;
+
+    private SettlementInformation settlementInformationField;
+
+    private decimal tradeCreditAmountField;
+
+    private DateTime tradeDateField;
+
+    private double trueCommCostField;
+
+    /// <remarks />
+    public OrderGroupID OrderGroupID
+    {
+        get => orderGroupIDField;
+        set => orderGroupIDField = value;
+    }
+
+    /// <remarks />
+    public DateTime ActivityTimestamp
+    {
+        get => activityTimestampField;
+        set => activityTimestampField = value;
+    }
+
+    /// <remarks />
+    public Order Order
+    {
+        get => orderField;
+        set => orderField = value;
+    }
+
+    /// <remarks />
+    public string OrderCompletionCode
+    {
+        get => orderCompletionCodeField;
+        set => orderCompletionCodeField = value;
+    }
+
+    /// <remarks />
+    public ContraInformation ContraInformation
+    {
+        get => contraInformationField;
+        set => contraInformationField = value;
+    }
+
+    /// <remarks />
+    public SettlementInformation SettlementInformation
+    {
+        get => settlementInformationField;
+        set => settlementInformationField = value;
+    }
+
+    /// <remarks />
+    public ExecutionInformation ExecutionInformation
+    {
+        get => executionInformationField;
+        set => executionInformationField = value;
+    }
+
+    /// <remarks />
+    public double MarkupAmount
+    {
+        get => markupAmountField;
+        set => markupAmountField = value;
+    }
+
+    /// <remarks />
+    public double MarkdownAmount
+    {
+        get => markdownAmountField;
+        set => markdownAmountField = value;
+    }
+
+    /// <remarks />
+    public decimal TradeCreditAmount
+    {
+        get => tradeCreditAmountField;
+        set => tradeCreditAmountField = value;
+    }
+
+    /// <remarks />
+    [XmlArrayItemAttribute("ConfirmText", IsNullable = false)]
+    public object[] ConfirmTexts
+    {
+        get => confirmTextsField;
+        set => confirmTextsField = value;
+    }
+
+    /// <remarks />
+    public double TrueCommCost
+    {
+        get => trueCommCostField;
+        set => trueCommCostField = value;
+    }
+
+    /// <remarks />
+    [XmlElementAttribute(DataType = "date")]
+    public DateTime TradeDate
+    {
+        get => tradeDateField;
+        set => tradeDateField = value;
+    }
+}
+
+/// <remarks />
+[SerializableAttribute]
+[DesignerCategoryAttribute("code")]
+[XmlTypeAttribute(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class ContraInformation
+{
+    private ContraInformationContra contraField;
+
+    /// <remarks />
+    public ContraInformationContra Contra
+    {
+        get => contraField;
+        set => contraField = value;
+    }
+}
+
+/// <remarks />
+[SerializableAttribute]
+[DesignerCategoryAttribute("code")]
+[XmlTypeAttribute(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class ContraInformationContra
+{
+    private string accountKeyField;
+
+    private object badgeNumberField;
+
+    private string brokerField;
+
+    private double quantityField;
+
+    private DateTime reportTimeField;
+
+    private string subAccountTypeField;
+
+    /// <remarks />
+    public string AccountKey
+    {
+        get => accountKeyField;
+        set => accountKeyField = value;
+    }
+
+    /// <remarks />
+    public string SubAccountType
+    {
+        get => subAccountTypeField;
+        set => subAccountTypeField = value;
+    }
+
+    /// <remarks />
+    public string Broker
+    {
+        get => brokerField;
+        set => brokerField = value;
+    }
+
+    /// <remarks />
+    public double Quantity
+    {
+        get => quantityField;
+        set => quantityField = value;
+    }
+
+    /// <remarks />
+    public object BadgeNumber
+    {
+        get => badgeNumberField;
+        set => badgeNumberField = value;
+    }
+
+    /// <remarks />
+    public DateTime ReportTime
+    {
+        get => reportTimeField;
+        set => reportTimeField = value;
+    }
+}
+
+/// <remarks />
+[SerializableAttribute]
+[DesignerCategoryAttribute("code")]
+[XmlTypeAttribute(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class SettlementInformation
+{
+    private string currencyField;
+
+    private string instructionsField;
+
+    /// <remarks />
+    public string Instructions
+    {
+        get => instructionsField;
+        set => instructionsField = value;
+    }
+
+    /// <remarks />
+    public string Currency
+    {
+        get => currencyField;
+        set => currencyField = value;
+    }
+}
+
+/// <remarks />
+[SerializableAttribute]
+[DesignerCategoryAttribute("code")]
+[XmlTypeAttribute(AnonymousType = true, Namespace = "urn:xmlns:beb.ameritrade.com")]
+public class ExecutionInformation
+{
+    private bool averagePriceIndicatorField;
+
+    private string brokerIdField;
+
+    private string exchangeField;
+
+    private decimal executionPriceField;
+
+    private string idField;
+
+    private double leavesQuantityField;
+
+    private double quantityField;
+
+    private DateTime timestampField;
+
+    private string typeField;
+
+    /// <remarks />
+    public string Type
+    {
+        get => typeField;
+        set => typeField = value;
+    }
+
+    /// <remarks />
+    public DateTime Timestamp
+    {
+        get => timestampField;
+        set => timestampField = value;
+    }
+
+    /// <remarks />
+    public double Quantity
+    {
+        get => quantityField;
+        set => quantityField = value;
+    }
+
+    /// <remarks />
+    public decimal ExecutionPrice
+    {
+        get => executionPriceField;
+        set => executionPriceField = value;
+    }
+
+    /// <remarks />
+    public bool AveragePriceIndicator
+    {
+        get => averagePriceIndicatorField;
+        set => averagePriceIndicatorField = value;
+    }
+
+    /// <remarks />
+    public double LeavesQuantity
+    {
+        get => leavesQuantityField;
+        set => leavesQuantityField = value;
+    }
+
+    /// <remarks />
+    public string ID
+    {
+        get => idField;
+        set => idField = value;
+    }
+
+    /// <remarks />
+    public string Exchange
+    {
+        get => exchangeField;
+        set => exchangeField = value;
+    }
+
+    /// <remarks />
+    public string BrokerId
+    {
+        get => brokerIdField;
+        set => brokerIdField = value;
     }
 }

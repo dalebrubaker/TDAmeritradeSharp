@@ -633,7 +633,7 @@ public class OrdersTests
     }
 
     [Test]
-    public async Task TestAcctItemStreamSingleLimitOrder()
+    public async Task TestAcctActivityStreamSingleLimitOrder()
     {
         const int Timeout = 5000;
         using var socket = await GetConnectedSocket();
@@ -670,7 +670,7 @@ public class OrdersTests
     }
 
     [Test]
-    public async Task TestAcctItemStreamReplaceOrder()
+    public async Task TestAcctActivityStreamReplaceOrder()
     {
         const int Timeout = 5000;
         using var socket = await GetConnectedSocket();
@@ -701,7 +701,7 @@ public class OrdersTests
     ///     This test shows that the order is rejected but the OrderRejection AcctActivity message is never sent.
     /// </summary>
     [Test]
-    public async Task TestAcctItemRejectedOrder()
+    public async Task TestAcctActivityStreamRejectedOrder()
     {
         const int Timeout = 5000;
         using var socket = await GetConnectedSocket();
@@ -732,7 +732,7 @@ public class OrdersTests
     ///     This test shows that the order is rejected but the OrderRejection AcctActivity message is never sent.
     /// </summary>
     [Test]
-    //Ignore("Actually buys in your account at _testAccountId! Can run outside of RTH and cancel before it's filled.")]
+    [Ignore("Actually buys in your account at _testAccountId! Can run outside of RTH and cancel before it's filled.")]
     public async Task TestAcctItemOrderFill()
     {
         const int Timeout = 5000;

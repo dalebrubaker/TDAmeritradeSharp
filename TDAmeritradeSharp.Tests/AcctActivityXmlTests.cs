@@ -30,7 +30,38 @@ public class AcctActivityXmlTests
     }
 
     [Test]
-    public void TestOrderEntryRequest()
+    public void TestOrderEntryMarketRequest()
+    {
+        const string MessageData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                                   + "<OrderEntryRequestMessage xmlns=\"urn:xmlns:beb.ameritrade.com\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                                   + "<OrderGroupID><Firm>150</Firm><Branch>253</Branch><ClientKey>253435862</ClientKey><AccountKey>253435862</AccountKey><Segment>ngoms</Segment>"
+                                   + "<SubAccountType>Margin</SubAccountType><CDDomainID>A000000031539026</CDDomainID></OrderGroupID>"
+                                   + "<ActivityTimestamp>2022-05-06T10:32:44.27-05:00</ActivityTimestamp><Order xsi:type=\"EquityOrderT\"><OrderKey>8293109860</OrderKey>"
+                                   + "<Security><CUSIP>11777Q209</CUSIP><Symbol>BTG</Symbol><SecurityType>Common Stock</SecurityType></Security><OrderPricing xsi:type=\"MarketT\">"
+                                   + "<Ask>4.38</Ask><Bid>4.37</Bid></OrderPricing><OrderType>Market</OrderType><OrderDuration>Day</OrderDuration>"
+                                   + "<OrderEnteredDateTime>2022-05-06T10:32:44.244-05:00</OrderEnteredDateTime><OrderInstructions>Buy</OrderInstructions>"
+                                   + "<OriginalQuantity>1</OriginalQuantity><AmountIndicator>Shares</AmountIndicator><Discretionary>false</Discretionary>"
+                                   + "<OrderSource>Web</OrderSource><Solicited>false</Solicited><MarketCode>Normal</MarketCode><Charges><Charge><Type>Commission Override</Type>"
+                                   + "<Amount>0</Amount></Charge></Charges><ClearingID>777</ClearingID><SettlementInstructions>Normal</SettlementInstructions>"
+                                   + "<EnteringDevice>AA_AnitaAndMe</EnteringDevice></Order><LastUpdated>2022-05-06T10:32:44.27-05:00</LastUpdated>"
+                                   + "<ConfirmTexts><ConfirmText/><ConfirmText/></ConfirmTexts></OrderEntryRequestMessage>";
+        var serializer = new XmlSerializer(typeof(OrderEntryRequestMessage));
+        using var reader = new StringReader(MessageData);
+        try
+        {
+            var test = (OrderEntryRequestMessage)serializer.Deserialize(reader);
+            Assert.IsNotNull(test);
+            Assert.AreEqual(4.38, ((MarketT)test.Order.OrderPricing).Ask);
+        }
+        catch (Exception ex)
+        {
+            s_logger.Error(ex, "{Message}", ex.Message);
+            throw;
+        }
+    }
+    
+    [Test]
+    public void TestOrderEntryLimitRequest()
     {
         const string MessageData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
                                    + "<OrderEntryRequestMessage xmlns=\"urn:xmlns:beb.ameritrade.com\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
@@ -148,6 +179,46 @@ public class AcctActivityXmlTests
             var test = (OrderCancelReplaceRequestMessage)serializer.Deserialize(reader);
             Assert.IsNotNull(test);
             Assert.AreEqual(2.53, ((LimitT)test.Order.OrderPricing).Limit);
+        }
+        catch (Exception ex)
+        {
+            s_logger.Error(ex, "{Message}", ex.Message);
+            throw;
+        }
+    }
+    
+    [Test]
+    public void TestOrderFill()
+    {
+        const string MessageData = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><OrderFillMessage xmlns=\"urn:xmlns:beb.ameritrade.com\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                                   + "<OrderGroupID><Firm>150</Firm><Branch>253</Branch><ClientKey>253435862</ClientKey><AccountKey>253435862</AccountKey><Segment>ngoms</Segment>"
+                                   + "<SubAccountType>Margin</SubAccountType><CDDomainID>A000000031539026</CDDomainID></OrderGroupID>"
+                                   + "<ActivityTimestamp>2022-05-06T11:04:18.633-05:00</ActivityTimestamp><Order xsi:type=\"EquityOrderT\"><OrderKey>8293987283</OrderKey>"
+                                   + "<Security><CUSIP>11777Q209</CUSIP><Symbol>BTG</Symbol><SecurityType>Common Stock</SecurityType></Security>"
+                                   + "<OrderPricing xsi:type=\"MarketT\"><Ask>4.37</Ask><Bid>4.36</Bid></OrderPricing><OrderType>Market</OrderType><OrderDuration>Day</OrderDuration>"
+                                   + "<OrderEnteredDateTime>2022-05-06T11:04:18.467-05:00</OrderEnteredDateTime><OrderInstructions>Buy</OrderInstructions>"
+                                   + "<OriginalQuantity>1</OriginalQuantity><AmountIndicator>Shares</AmountIndicator><Discretionary>false</Discretionary><OrderSource>Web</OrderSource>"
+                                   + "<Solicited>false</Solicited><MarketCode>Normal</MarketCode><Charges><Charge><Type>Commission Override</Type><Amount>0</Amount></Charge>"
+                                   + "<Charge><Type>SEC Fee</Type><Amount>0</Amount></Charge><Charge><Type>OR Fee</Type><Amount>0</Amount></Charge>"
+                                   + "<Charge><Type>TAF Fee</Type><Amount>0</Amount></Charge></Charges><ClearingID>777</ClearingID><SettlementInstructions>Normal</SettlementInstructions>"
+                                   + "<EnteringDevice>AA_AnitaAndMe</EnteringDevice></Order>"
+                                   + "<OrderCompletionCode>Normal Completion</OrderCompletionCode><ContraInformation><Contra><AccountKey>253435862</AccountKey>"
+                                   + "<SubAccountType>Margin</SubAccountType><Broker>FOMA2</Broker><Quantity>1</Quantity><BadgeNumber/>"
+                                   + "<ReportTime>2022-05-06T11:04:18.529-05:00</ReportTime></Contra></ContraInformation><SettlementInformation><Instructions>Normal</Instructions>"
+                                   + "<Currency>USD</Currency></SettlementInformation><ExecutionInformation><Type>Bought</Type>"
+                                   + "<Timestamp>2022-05-06T11:04:18.529-05:00</Timestamp><Quantity>1</Quantity><ExecutionPrice>4.3656</ExecutionPrice>"
+                                   + "<AveragePriceIndicator>false</AveragePriceIndicator><LeavesQuantity>0</LeavesQuantity><ID>2205069920018727549</ID><Exchange>OTC - AGENT</Exchange>"
+                                   + "<BrokerId>ETMM</BrokerId></ExecutionInformation><MarkupAmount>0</MarkupAmount><MarkdownAmount>0</MarkdownAmount>"
+                                   + "<TradeCreditAmount>-4.37</TradeCreditAmount><ConfirmTexts><ConfirmText/><ConfirmText/></ConfirmTexts>"
+                                   + "<TrueCommCost>0</TrueCommCost><TradeDate>2022-05-06</TradeDate></OrderFillMessage>";
+        var serializer = new XmlSerializer(typeof(OrderFillMessage));
+        using var reader = new StringReader(MessageData);
+        try
+        {
+            var test = (OrderFillMessage)serializer.Deserialize(reader);
+            Assert.IsNotNull(test);
+            Assert.AreEqual(-4.37, test.TradeCreditAmount);
+            //Assert.AreEqual(2.53, ((LimitT)test.Order.OrderPricing).Limit);
         }
         catch (Exception ex)
         {

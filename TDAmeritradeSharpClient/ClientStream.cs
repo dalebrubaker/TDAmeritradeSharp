@@ -790,4 +790,12 @@ public class ClientStream : IDisposable
         var tmp = OrderCancelReplaceRequest; // for thread safety
         tmp?.Invoke(this, cancelReplaceRequest);
     }
+
+    public event EventHandler<OrderFillMessage>? OrderFill;
+
+    public void OnOrderFill(OrderFillMessage fill)
+    {
+        var tmp = OrderFill; // for thread safety
+        tmp?.Invoke(this, fill);
+    }
 }
